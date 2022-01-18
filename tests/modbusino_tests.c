@@ -3,9 +3,16 @@
 #include <stdio.h>
 #include <string.h>
 
+mbsn_error read_byte(uint8_t* b) {}
+
+mbsn_error write_byte(uint8_t b) {}
+
 int main() {
     mbsn_t mbsn = {0};
-    mbsn_error err = mbsn_client_create(&mbsn, MBSN_TRANSPORT_TCP);
+    mbsn_error err = mbsn_server_create(
+            &mbsn,
+            (mbsn_transport_conf){.transport = MBSN_TRANSPORT_TCP, .read_byte = read_byte, .write_byte = write_byte});
+
     assert(err == MBSN_ERROR_NONE);
 
     mbsn_bitfield bf;

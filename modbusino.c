@@ -1,8 +1,8 @@
 #include "modbusino.h"
-#include "modbusino_platform.h"
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
+
 
 #if !defined(MBSN_BIG_ENDIAN) && !defined(MBSN_LITTLE_ENDIAN)
 #if defined(__BYTE_ORDER) && __BYTE_ORDER == __BIG_ENDIAN || defined(__BIG_ENDIAN__) || defined(__ARMEB__) ||          \
@@ -18,49 +18,63 @@
 #endif
 
 #ifdef MBSN_BIG_ENDIAN
-#define HTONS(x) void(0)
-#define NTOHS(x) void(0)
+#define HTONS(x) (x)
+#define NTOHS(x) (x)
 #else
-#define HTONS(x) (((x) >> 8) | ((x) << 8));
-#define NTOHS(x) (((x) >> 8) | ((x) << 8));
+#define HTONS(x) (((x) >> 8) | ((x) << 8))
+#define NTOHS(x) (((x) >> 8) | ((x) << 8))
 #endif
 
+
 #define CLOCKS_PER_MS ((uint64_t) (CLOCKS_PER_SEC / 1000));
+
+
+typedef struct req_state {
+    uint8_t client_id;
+    uint8_t fc;
+    uint16_t transaction_id;
+    bool broadcast;
+    bool ignored;
+    uint16_t crc;
+} req_state;
+
 
 uint64_t clock_ms() {
     return (uint64_t) clock() / CLOCKS_PER_MS;
 }
 
-int mbsn_create(mbsn_t* mbsn, mbsn_transport transport) {
+
+int mbsn_create(mbsn_t* mbsn, mbsn_transport_conf transport_conf) {
     memset(mbsn, 0, sizeof(mbsn_t));
 
     mbsn->byte_timeout_ms = -1;
     mbsn->response_timeout_ms = -1;
 
-    mbsn->transport = transport;
-    if (mbsn->transport == MBSN_TRANSPORT_RTU) {
-        mbsn->transport_read_byte = mbsn_rtu_read_byte;
-        mbsn->transport_write_byte = mbsn_rtu_write_byte;
-    }
-    else if (mbsn->transport == MBSN_TRANSPORT_TCP) {
-        mbsn->transport_read_byte = mbsn_tcp_read_byte;
-        mbsn->transport_write_byte = mbsn_tcp_write_byte;
-    }
-    else {
+    mbsn->transport = transport_conf.transport;
+    if (mbsn->transport != MBSN_TRANSPORT_RTU && mbsn->transport != MBSN_TRANSPORT_TCP)
         return MBSN_ERROR_INVALID_ARGUMENT;
-    }
+
+    if (!transport_conf.read_byte || !transport_conf.write_byte)
+        return MBSN_ERROR_INVALID_ARGUMENT;
+
+    mbsn->transport_read_byte = transport_conf.read_byte;
+    mbsn->transport_write_byte = transport_conf.write_byte;
 
     return MBSN_ERROR_NONE;
 }
 
 
-mbsn_error mbsn_client_create(mbsn_t* mbsn, mbsn_transport transport) {
-    return mbsn_create(mbsn, transport);
+mbsn_error mbsn_client_create(mbsn_t* mbsn, mbsn_transport_conf transport_conf) {
+    return mbsn_create(mbsn, transport_conf);
 }
 
 
-mbsn_error mbsn_server_create(mbsn_t* mbsn, mbsn_transport transport, uint8_t address, mbsn_callbacks callbacks) {
-    mbsn_error ret = mbsn_create(mbsn, transport);
+mbsn_error mbsn_server_create(mbsn_t* mbsn, uint8_t address, mbsn_transport_conf transport_conf,
+                              mbsn_callbacks callbacks) {
+    if (address == 0)
+        return MBSN_ERROR_INVALID_ARGUMENT;
+
+    mbsn_error ret = mbsn_create(mbsn, transport_conf);
     mbsn->address_rtu = address;
     mbsn->callbacks = callbacks;
     return ret;
@@ -79,6 +93,33 @@ void mbsn_set_response_timeout(mbsn_t* mbsn, int64_t timeout_ms) {
 
 void mbsn_client_set_server_address_rtu(mbsn_t* mbsn, uint8_t address) {
     mbsn->server_dest_address_rtu = address;
+}
+
+
+uint16_t crc_add_n(uint16_t crc, const uint8_t* data, unsigned int length) {
+    for (int i = 0; i < length; i++) {
+        crc ^= (uint16_t) data[i];
+        for (int j = 8; j != 0; j--) {
+            if ((crc & 0x0001) != 0) {
+                crc >>= 1;
+                crc ^= 0xA001;
+            }
+            else
+                crc >>= 1;
+        }
+    }
+
+    return crc;
+}
+
+
+uint16_t crc_add_1(uint16_t crc, const uint8_t b) {
+    return crc_add_n(crc, &b, 1);
+}
+
+
+uint16_t crc_add_2(uint16_t crc, const uint8_t w) {
+    return crc_add_n(crc, &w, 2);
 }
 
 
@@ -104,7 +145,8 @@ mbsn_error read(uint8_t* buf, uint64_t len, uint64_t byte_timeout_ms, mbsn_error
 }
 */
 
-mbsn_error recv_n(mbsn_t* mbsn, uint8_t* buf, uint32_t count) {
+
+mbsn_error recv_n(mbsn_t* mbsn, uint8_t* buf, uint32_t count, uint16_t* crc) {
     //uint64_t start = clock_ms();
     int r = 0;
     while (r != count) {
@@ -120,6 +162,7 @@ mbsn_error recv_n(mbsn_t* mbsn, uint8_t* buf, uint32_t count) {
         else if (ret != 1)
             return MBSN_ERROR_TRANSPORT;
 
+        *crc = crc_add_1(*crc, buf[r]);
         r++;
         //start = clock_ms();
     }
@@ -128,13 +171,13 @@ mbsn_error recv_n(mbsn_t* mbsn, uint8_t* buf, uint32_t count) {
 }
 
 
-mbsn_error recv_1(mbsn_t* mbsn, uint8_t* b) {
-    return recv_n(mbsn, b, 1);
+mbsn_error recv_1(mbsn_t* mbsn, uint8_t* b, uint16_t* crc) {
+    return recv_n(mbsn, b, 1, crc);
 }
 
 
-mbsn_error recv_2(mbsn_t* mbsn, uint16_t* w) {
-    mbsn_error err = recv_n(mbsn, (uint8_t*) w, 2);
+mbsn_error recv_2(mbsn_t* mbsn, uint16_t* w, uint16_t* crc) {
+    mbsn_error err = recv_n(mbsn, (uint8_t*) w, 2, crc);
     if (err != MBSN_ERROR_NONE)
         return err;
 
@@ -188,7 +231,7 @@ mbsn_error send(mbsn_t* mbsn) {
 */
 
 
-mbsn_error send_n(mbsn_t* mbsn, uint8_t* buf, uint32_t count) {
+mbsn_error send_n(mbsn_t* mbsn, uint8_t* buf, uint32_t count, uint16_t* crc) {
     int w = 0;
     while (w != count) {
         int ret = mbsn->transport_write_byte(buf[w]);
@@ -200,38 +243,108 @@ mbsn_error send_n(mbsn_t* mbsn, uint8_t* buf, uint32_t count) {
         w++;
     }
 
+    if (crc)
+        *crc = crc_add_n(*crc, buf, count);
+
     return MBSN_ERROR_NONE;
 }
 
 
-mbsn_error send_1(mbsn_t* mbsn, uint8_t b) {
-    return send_n(mbsn, &b, 1);
+mbsn_error send_1(mbsn_t* mbsn, uint8_t b, uint16_t* crc) {
+    return send_n(mbsn, &b, 1, crc);
 }
 
 
-mbsn_error send_2(mbsn_t* mbsn, uint16_t w) {
+mbsn_error send_2(mbsn_t* mbsn, uint16_t w, uint16_t* crc) {
     w = HTONS(w);
-    return send_n(mbsn, (uint8_t*) &w, 2);
+    return send_n(mbsn, (uint8_t*) &w, 2, crc);
 }
 
 
-void handle_exception(mbsn_t* mbsn, uint16_t fc, uint8_t exception) {
-    send_1(mbsn, fc + 0x80);
-    send_1(mbsn, exception);
+mbsn_error send_mbap(mbsn_t* mbsn, req_state* s, uint16_t data_length) {
+    mbsn_error err = send_2(mbsn, s->transaction_id, NULL);
+    if (err != MBSN_ERROR_NONE)
+        return err;
+
+    const uint16_t protocol_id = 0;
+    err = send_2(mbsn, protocol_id, NULL);
+    if (err != MBSN_ERROR_NONE)
+        return err;
+
+    err = send_2(mbsn, 1 + 1 + data_length, NULL);
+    if (err != MBSN_ERROR_NONE)
+        return err;
+
+    err = send_1(mbsn, s->client_id, NULL);
+    if (err != MBSN_ERROR_NONE)
+        return err;
+
+    return MBSN_ERROR_NONE;
 }
 
 
-mbsn_error handle_read_discrete(mbsn_t* mbsn, uint16_t fc, bool ignored, bool broadcast,
-                                mbsn_error (*callback)(uint16_t, uint16_t, mbsn_bitfield)) {
+mbsn_error send_req_header(mbsn_t* mbsn, req_state* s, uint8_t data_length, uint16_t* crc) {
+    if (mbsn->transport == MBSN_TRANSPORT_RTU) {
+        mbsn_error err = send_1(mbsn, s->client_id, crc);
+        if (err != MBSN_ERROR_NONE)
+            return err;
+
+        err = send_1(mbsn, s->fc, crc);
+        if (err != MBSN_ERROR_NONE)
+            return err;
+    }
+    else if (mbsn->transport == MBSN_TRANSPORT_TCP) {
+        return send_mbap(mbsn, s, data_length);
+    }
+
+    return MBSN_ERROR_NONE;
+}
+
+
+mbsn_error send_req_footer(mbsn_t* mbsn, uint16_t crc) {
+    if (mbsn->transport == MBSN_TRANSPORT_RTU)
+        return send_2(mbsn, crc, NULL);
+
+    return MBSN_ERROR_NONE;
+}
+
+
+mbsn_error handle_exception(mbsn_t* mbsn, req_state* s, uint8_t exception) {
+    uint16_t crc = 0xFFFF;
+    mbsn_error err = send_req_header(mbsn, s, 1, &crc);
+    if (err != MBSN_ERROR_NONE)
+        return err;
+
+    err = send_1(mbsn, s->fc + 0x80, &crc);
+    if (err != MBSN_ERROR_NONE)
+        return err;
+
+    err = send_1(mbsn, exception, &crc);
+    if (err != MBSN_ERROR_NONE)
+        return err;
+
+    return send_req_footer(mbsn, crc);
+}
+
+
+mbsn_error handle_read_discrete(mbsn_t* mbsn, req_state* s, mbsn_error (*callback)(uint16_t, uint16_t, mbsn_bitfield)) {
     uint16_t addr;
-    mbsn_error err = recv_2(mbsn, &addr);
+    mbsn_error err = recv_2(mbsn, &addr, &s->crc);
     if (err != MBSN_ERROR_NONE)
         return err;
 
     uint16_t quantity;
-    err = recv_2(mbsn, &quantity);
+    err = recv_2(mbsn, &quantity, &s->crc);
     if (err != MBSN_ERROR_NONE)
         return err;
+
+    uint16_t recv_crc;
+    err = recv_2(mbsn, &recv_crc, NULL);
+    if (err != MBSN_ERROR_NONE)
+        return err;
+
+    if (recv_crc != s->crc)
+        return MBSN_ERROR_TRANSPORT;
 
     if (quantity < 1 || quantity > 2000)
         return MBSN_EXCEPTION_ILLEGAL_DATA_VALUE;
@@ -239,24 +352,34 @@ mbsn_error handle_read_discrete(mbsn_t* mbsn, uint16_t fc, bool ignored, bool br
     if ((uint32_t) addr + (uint32_t) quantity > 65535)
         return MBSN_EXCEPTION_ILLEGAL_DATA_ADDRESS;
 
-    if (!ignored) {
+    if (!s->ignored) {
         if (callback) {
             mbsn_bitfield bf;
             err = callback(addr, quantity, bf);
-            if (err != MBSN_ERROR_NONE)
-                return err;
-
-            if (!broadcast) {
-                err = send_1(mbsn, fc);
-                if (err != MBSN_ERROR_NONE)
+            if (err != MBSN_ERROR_NONE) {
+                if (err < 0)
+                    return MBSN_EXCEPTION_SERVER_DEVICE_FAILURE;
+                else
                     return err;
+            }
 
+            if (!s->broadcast) {
                 uint8_t discrete_bytes = (quantity / 8) + 1;
-                err = send_1(mbsn, discrete_bytes);
+                uint16_t crc = 0xFFFF;
+
+                err = send_req_header(mbsn, s, discrete_bytes, &crc);
                 if (err != MBSN_ERROR_NONE)
                     return err;
 
-                err = send_n(mbsn, bf, discrete_bytes);
+                err = send_1(mbsn, discrete_bytes, &crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+
+                err = send_n(mbsn, bf, discrete_bytes, &crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+
+                err = send_req_footer(mbsn, crc);
                 if (err != MBSN_ERROR_NONE)
                     return err;
             }
@@ -265,20 +388,29 @@ mbsn_error handle_read_discrete(mbsn_t* mbsn, uint16_t fc, bool ignored, bool br
             return MBSN_EXCEPTION_ILLEGAL_FUNCTION;
         }
     }
+
+    return MBSN_ERROR_NONE;
 }
 
 
-mbsn_error handle_read_registers(mbsn_t* mbsn, uint16_t fc, bool ignored, bool broadcast,
-                                 mbsn_error (*callback)(uint16_t, uint16_t, uint16_t*)) {
+mbsn_error handle_read_registers(mbsn_t* mbsn, req_state* s, mbsn_error (*callback)(uint16_t, uint16_t, uint16_t*)) {
     uint16_t addr;
-    mbsn_error err = recv_2(mbsn, &addr);
+    mbsn_error err = recv_2(mbsn, &addr, &s->crc);
     if (err != MBSN_ERROR_NONE)
         return err;
 
     uint16_t quantity;
-    err = recv_2(mbsn, &quantity);
+    err = recv_2(mbsn, &quantity, &s->crc);
     if (err != MBSN_ERROR_NONE)
         return err;
+
+    uint16_t recv_crc;
+    err = recv_2(mbsn, &recv_crc, NULL);
+    if (err != MBSN_ERROR_NONE)
+        return err;
+
+    if (recv_crc != s->crc)
+        return MBSN_ERROR_TRANSPORT;
 
     if (quantity < 1 || quantity > 125)
         return MBSN_EXCEPTION_ILLEGAL_DATA_VALUE;
@@ -286,23 +418,38 @@ mbsn_error handle_read_registers(mbsn_t* mbsn, uint16_t fc, bool ignored, bool b
     if ((uint32_t) addr + (uint32_t) quantity > 65535)
         return MBSN_EXCEPTION_ILLEGAL_DATA_ADDRESS;
 
-    if (!ignored) {
+    if (!s->ignored) {
         if (callback) {
             uint16_t regs[125];
+
             err = callback(addr, quantity, regs);
-            if (err != MBSN_ERROR_NONE)
-                return err;
+            if (err != MBSN_ERROR_NONE) {
+                if (err < 0)
+                    return MBSN_EXCEPTION_SERVER_DEVICE_FAILURE;
+                else
+                    return err;
+            }
 
             for (int i = 0; i < quantity; i++)
                 regs[i] = HTONS(regs[i]);
 
-            if (!broadcast) {
-                send_1(mbsn, fc);
-
+            if (!s->broadcast) {
                 uint8_t regs_bytes = quantity * 2;
-                send_1(mbsn, regs_bytes);
+                uint16_t crc = 0xFFFF;
 
-                err = send_n(mbsn, (uint8_t*) regs, regs_bytes);
+                err = send_req_header(mbsn, s, regs_bytes, &crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+
+                err = send_1(mbsn, regs_bytes, &crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+
+                err = send_n(mbsn, (uint8_t*) regs, regs_bytes, &crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+
+                err = send_req_footer(mbsn, crc);
                 if (err != MBSN_ERROR_NONE)
                     return err;
             }
@@ -316,120 +463,165 @@ mbsn_error handle_read_registers(mbsn_t* mbsn, uint16_t fc, bool ignored, bool b
 }
 
 
-mbsn_error handle_read_coils(mbsn_t* mbsn, bool ignored, bool broadcast) {
-    return handle_read_discrete(mbsn, 1, ignored, broadcast, mbsn->callbacks.read_coils);
+mbsn_error handle_read_coils(mbsn_t* mbsn, req_state* s) {
+    return handle_read_discrete(mbsn, s, mbsn->callbacks.read_coils);
 }
 
 
-mbsn_error handle_read_discrete_inputs(mbsn_t* mbsn, bool ignored, bool broadcast) {
-    return handle_read_discrete(mbsn, 2, ignored, broadcast, mbsn->callbacks.read_discrete_inputs);
+mbsn_error handle_read_discrete_inputs(mbsn_t* mbsn, req_state* s) {
+    return handle_read_discrete(mbsn, s, mbsn->callbacks.read_discrete_inputs);
 }
 
 
-mbsn_error handle_read_holding_registers(mbsn_t* mbsn, bool ignored, bool broadcast) {
-    return handle_read_registers(mbsn, 3, ignored, broadcast, mbsn->callbacks.read_holding_registers);
+mbsn_error handle_read_holding_registers(mbsn_t* mbsn, req_state* s) {
+    return handle_read_registers(mbsn, s, mbsn->callbacks.read_holding_registers);
 }
 
 
-mbsn_error handle_read_input_registers(mbsn_t* mbsn, bool ignored, bool broadcast) {
-    return handle_read_registers(mbsn, 4, ignored, broadcast, mbsn->callbacks.read_input_registers);
+mbsn_error handle_read_input_registers(mbsn_t* mbsn, req_state* s) {
+    return handle_read_registers(mbsn, s, mbsn->callbacks.read_input_registers);
 }
 
 
-mbsn_error handle_write_single_coil(mbsn_t* mbsn, bool ignored, bool broadcast) {
+mbsn_error handle_write_single_coil(mbsn_t* mbsn, req_state* s) {
     uint16_t addr;
-    mbsn_error err = recv_2(mbsn, &addr);
+    mbsn_error err = recv_2(mbsn, &addr, &s->crc);
     if (err != MBSN_ERROR_NONE)
         return err;
 
     uint16_t value;
-    err = recv_2(mbsn, &value);
+    err = recv_2(mbsn, &value, &s->crc);
     if (err != MBSN_ERROR_NONE)
         return err;
+
+    uint16_t recv_crc;
+    err = recv_2(mbsn, &recv_crc, NULL);
+    if (err != MBSN_ERROR_NONE)
+        return err;
+
+    if (recv_crc != s->crc)
+        return MBSN_ERROR_TRANSPORT;
 
     if (value != 0 && value != 0xFF00)
         return MBSN_EXCEPTION_ILLEGAL_DATA_VALUE;
 
-    if (!ignored) {
+    if (!s->ignored) {
         if (mbsn->callbacks.write_single_coil) {
             err = mbsn->callbacks.write_single_coil(addr, value == 0 ? false : true);
-            if (err != MBSN_ERROR_NONE)
-                return err;
+            if (err != MBSN_ERROR_NONE) {
+                if (err < 0)
+                    return MBSN_EXCEPTION_SERVER_DEVICE_FAILURE;
+                else
+                    return err;
+            }
+
+            if (!s->broadcast) {
+                uint16_t crc = 0xFFFF;
+
+                err = send_req_header(mbsn, s, 2, &crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+
+                err = send_2(mbsn, addr, &crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+
+                err = send_req_footer(mbsn, crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+            }
         }
         else {
             return MBSN_EXCEPTION_ILLEGAL_FUNCTION;
         }
     }
 
-    if (!broadcast) {
-        err = send_1(mbsn, 5);
-        if (err != MBSN_ERROR_NONE)
-            return err;
-
-        err = send_2(mbsn, addr);
-        if (err != MBSN_ERROR_NONE)
-            return err;
-    }
-
     return MBSN_ERROR_NONE;
 }
 
 
-mbsn_error handle_write_single_register(mbsn_t* mbsn, bool ignored, bool broadcast) {
+mbsn_error handle_write_single_register(mbsn_t* mbsn, req_state* s) {
     uint16_t addr;
-    mbsn_error err = recv_2(mbsn, &addr);
+    mbsn_error err = recv_2(mbsn, &addr, &s->crc);
     if (err != MBSN_ERROR_NONE)
         return err;
 
     uint16_t value;
-    err = recv_2(mbsn, &value);
+    err = recv_2(mbsn, &value, &s->crc);
     if (err != MBSN_ERROR_NONE)
         return err;
 
-    if (!ignored) {
+    uint16_t recv_crc;
+    err = recv_2(mbsn, &recv_crc, NULL);
+    if (err != MBSN_ERROR_NONE)
+        return err;
+
+    if (recv_crc != s->crc)
+        return MBSN_ERROR_TRANSPORT;
+
+    if (!s->ignored) {
         if (mbsn->callbacks.write_single_register) {
             err = mbsn->callbacks.write_single_register(addr, value);
-            if (err != MBSN_ERROR_NONE)
-                return err;
+            if (err != MBSN_ERROR_NONE) {
+                if (err < 0)
+                    return MBSN_EXCEPTION_SERVER_DEVICE_FAILURE;
+                else
+                    return err;
+            }
+
+            if (!s->broadcast) {
+                uint16_t crc = 0xFFFF;
+
+                err = send_req_header(mbsn, s, 1, &crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+
+                err = send_2(mbsn, value, &crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+
+                err = send_req_footer(mbsn, crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+            }
         }
         else {
             return MBSN_EXCEPTION_ILLEGAL_FUNCTION;
         }
     }
 
-    if (!broadcast) {
-        err = send_1(mbsn, 6);
-        if (err != MBSN_ERROR_NONE)
-            return err;
-
-        err = send_2(mbsn, addr);
-        if (err != MBSN_ERROR_NONE)
-            return err;
-
-        err = send_2(mbsn, value);
-        if (err != MBSN_ERROR_NONE)
-            return err;
-    }
-
     return MBSN_ERROR_NONE;
 }
 
 
-mbsn_error handle_write_multiple_coils(mbsn_t* mbsn, bool ignored, bool broadcast) {
+mbsn_error handle_write_multiple_coils(mbsn_t* mbsn, req_state* s) {
     uint16_t addr;
-    mbsn_error err = recv_2(mbsn, &addr);
+    mbsn_error err = recv_2(mbsn, &addr, &s->crc);
     if (err != MBSN_ERROR_NONE)
         return err;
 
     uint16_t quantity;
-    err = recv_2(mbsn, &quantity);
+    err = recv_2(mbsn, &quantity, &s->crc);
     if (err != MBSN_ERROR_NONE)
         return err;
 
     uint8_t coils_bytes;
-    err = recv_1(mbsn, &coils_bytes);
+    err = recv_1(mbsn, &coils_bytes, &s->crc);
     if (err != MBSN_ERROR_NONE)
         return err;
+
+    mbsn_bitfield coils;
+    err = recv_n(mbsn, coils, coils_bytes, &s->crc);
+    if (err != MBSN_ERROR_NONE)
+        return err;
+
+    uint16_t recv_crc;
+    err = recv_2(mbsn, &recv_crc, NULL);
+    if (err != MBSN_ERROR_NONE)
+        return err;
+
+    if (recv_crc != s->crc)
+        return MBSN_ERROR_TRANSPORT;
 
     if (quantity < 1 || quantity > 0x07B0)    // 0x07B0 == 1968
         return MBSN_EXCEPTION_ILLEGAL_DATA_VALUE;
@@ -440,55 +632,73 @@ mbsn_error handle_write_multiple_coils(mbsn_t* mbsn, bool ignored, bool broadcas
     if ((quantity / 8) + 1 != coils_bytes)
         return MBSN_EXCEPTION_ILLEGAL_DATA_VALUE;
 
-    mbsn_bitfield coils;
-    err = recv_n(mbsn, coils, coils_bytes);
-    if (err != MBSN_ERROR_NONE)
-        return err;
-
-    if (!ignored) {
+    if (!s->ignored) {
         if (mbsn->callbacks.write_multiple_coils) {
             err = mbsn->callbacks.write_multiple_coils(addr, quantity, coils);
-            if (err != MBSN_ERROR_NONE)
-                return err;
+            if (err != MBSN_ERROR_NONE) {
+                if (err < 0)
+                    return MBSN_EXCEPTION_SERVER_DEVICE_FAILURE;
+                else
+                    return err;
+            }
+
+            if (!s->broadcast) {
+                uint16_t crc = 0xFFFF;
+
+                err = send_req_header(mbsn, s, 4, &crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+
+                err = send_2(mbsn, addr, &crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+
+                err = send_2(mbsn, quantity, &crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+
+                err = send_req_footer(mbsn, crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+            }
         }
         else {
             return MBSN_EXCEPTION_ILLEGAL_FUNCTION;
         }
     }
 
-    if (!broadcast) {
-        err = send_1(mbsn, 15);
-        if (err != MBSN_ERROR_NONE)
-            return err;
-
-        err = send_2(mbsn, addr);
-        if (err != MBSN_ERROR_NONE)
-            return err;
-
-        err = send_2(mbsn, quantity);
-        if (err != MBSN_ERROR_NONE)
-            return err;
-    }
-
     return MBSN_ERROR_NONE;
 }
 
 
-mbsn_error handle_write_multiple_registers(mbsn_t* mbsn, bool ignored, bool broadcast) {
+mbsn_error handle_write_multiple_registers(mbsn_t* mbsn, req_state* s) {
     uint16_t addr;
-    mbsn_error err = recv_2(mbsn, &addr);
+    mbsn_error err = recv_2(mbsn, &addr, &s->crc);
     if (err != MBSN_ERROR_NONE)
         return err;
 
     uint16_t quantity;
-    err = recv_2(mbsn, &quantity);
+    err = recv_2(mbsn, &quantity, &s->crc);
     if (err != MBSN_ERROR_NONE)
         return err;
 
     uint8_t registers_bytes;
-    err = recv_1(mbsn, &registers_bytes);
+    err = recv_1(mbsn, &registers_bytes, &s->crc);
     if (err != MBSN_ERROR_NONE)
         return err;
+
+    uint16_t registers[0x007B];
+    err = recv_n(mbsn, (uint8_t*) registers, registers_bytes, &s->crc);
+    if (err != MBSN_ERROR_NONE)
+        return err;
+
+    uint16_t recv_crc;
+    err = recv_2(mbsn, &recv_crc, NULL);
+    if (err != MBSN_ERROR_NONE)
+        return err;
+
+    if (recv_crc != s->crc)
+        return MBSN_ERROR_TRANSPORT;
 
     if (quantity < 1 || quantity > 0x007B)    // 0x007B == 123
         return MBSN_EXCEPTION_ILLEGAL_DATA_VALUE;
@@ -499,103 +709,134 @@ mbsn_error handle_write_multiple_registers(mbsn_t* mbsn, bool ignored, bool broa
     if (registers_bytes != quantity * 2)
         return MBSN_EXCEPTION_ILLEGAL_DATA_VALUE;
 
-    uint16_t registers[0x007B];
-    err = recv_n(mbsn, (uint8_t*) registers, registers_bytes);
-    if (err != MBSN_ERROR_NONE)
-        return err;
-
     for (int i = 0; i < quantity; i++)
         registers[i] = NTOHS(registers[i]);
 
-    if (!ignored) {
+    if (!s->ignored) {
         if (mbsn->callbacks.write_multiple_registers) {
             err = mbsn->callbacks.write_multiple_registers(addr, quantity, registers);
-            if (err != MBSN_ERROR_NONE)
-                return err;
+            if (err != MBSN_ERROR_NONE) {
+                if (err < 0)
+                    return MBSN_EXCEPTION_SERVER_DEVICE_FAILURE;
+                else
+                    return err;
+            }
+
+            if (!s->broadcast) {
+                uint16_t crc = 0xFFFF;
+
+                err = send_req_header(mbsn, s, 4, &crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+
+                err = send_2(mbsn, addr, &crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+
+                err = send_2(mbsn, quantity, &crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+
+                err = send_req_footer(mbsn, crc);
+                if (err != MBSN_ERROR_NONE)
+                    return err;
+            }
         }
         else {
             return MBSN_EXCEPTION_ILLEGAL_FUNCTION;
         }
     }
 
-    if (!broadcast) {
-        err = send_1(mbsn, 16);
-        if (err != MBSN_ERROR_NONE)
-            return err;
-
-        err = send_2(mbsn, addr);
-        if (err != MBSN_ERROR_NONE)
-            return err;
-
-        err = send_2(mbsn, quantity);
-        if (err != MBSN_ERROR_NONE)
-            return err;
-    }
-
     return MBSN_ERROR_NONE;
 }
 
+
 int mbsn_server_receive(mbsn_t* mbsn) {
-    mbsn_error err = MBSN_ERROR_NONE;
-    uint8_t fc = 0;
-    bool broadcast = false;
-    bool ignored = false;
+    req_state s = {0};
+    s.crc = 0xFFFF;
 
     if (mbsn->transport == MBSN_TRANSPORT_RTU) {
         uint8_t id;
-        err = recv_1(mbsn, &id);
+        mbsn_error err = recv_1(mbsn, &id, &s.crc);
         if (err != 0)
             return err;
 
         // Check if request is for us
         if (id == 0)
-            broadcast = true;
+            s.broadcast = true;
         else if (id != mbsn->address_rtu)
-            ignored = true;
+            s.ignored = true;
         else
-            ignored = false;
+            s.ignored = false;
 
-        err = recv_1(mbsn, &fc);
+        err = recv_1(mbsn, &s.fc, &s.crc);
         if (err != MBSN_ERROR_NONE)
             return err;
     }
     else if (mbsn->transport == MBSN_TRANSPORT_TCP) {
-        err = recv_1(mbsn, &fc);
+        mbsn_error err = recv_2(mbsn, &s.transaction_id, NULL);
         if (err != MBSN_ERROR_NONE)
             return err;
+
+        uint16_t protocol_id = 0xFFFF;
+        err = recv_2(mbsn, &protocol_id, NULL);
+        if (err != MBSN_ERROR_NONE)
+            return err;
+
+        uint16_t length = 0xFFFF;
+        err = recv_2(mbsn, &length, NULL);
+        if (err != MBSN_ERROR_NONE)
+            return err;
+
+        err = recv_1(mbsn, &s.client_id, NULL);
+        if (err != MBSN_ERROR_NONE)
+            return err;
+
+        err = recv_1(mbsn, &s.fc, NULL);
+        if (err != MBSN_ERROR_NONE)
+            return err;
+
+        if (protocol_id != 0)
+            return MBSN_ERROR_TRANSPORT;
+
+        // TODO maybe we should actually check the length of the request against this value
+        if (length == 0xFFFF)
+            return MBSN_ERROR_TRANSPORT;
     }
 
-    switch (fc) {
+    mbsn_error err;
+
+    switch (s.fc) {
         case 1:
-            err = handle_read_coils(mbsn, ignored, broadcast);
+            err = handle_read_coils(mbsn, &s);
             break;
 
         case 2:
-            err = handle_read_discrete_inputs(mbsn, ignored, broadcast);
+            err = handle_read_discrete_inputs(mbsn, &s);
             break;
 
         case 3:
-            err = handle_read_holding_registers(mbsn, ignored, broadcast);
+            err = handle_read_holding_registers(mbsn, &s);
             break;
 
         case 4:
-            err = handle_read_input_registers(mbsn, ignored, broadcast);
+            err = handle_read_input_registers(mbsn, &s);
             break;
 
         case 5:
-            err = handle_write_single_coil(mbsn, ignored, broadcast);
+            err = handle_write_single_coil(mbsn, &s);
             break;
 
         case 6:
-            err = handle_write_single_register(mbsn, ignored, broadcast);
+            err = handle_write_single_register(mbsn, &s);
             break;
 
         case 15:
-            err = handle_write_multiple_coils(mbsn, ignored, broadcast);
+            err = handle_write_multiple_coils(mbsn, &s);
             break;
 
         case 16:
-            err = handle_write_multiple_registers(mbsn, ignored, broadcast);
+            err = handle_write_multiple_registers(mbsn, &s);
             break;
 
         default:
@@ -603,8 +844,11 @@ int mbsn_server_receive(mbsn_t* mbsn) {
     }
 
     if (err != MBSN_ERROR_NONE) {
-        if (!broadcast && !ignored && mbsn_error_is_exception(err))
-            handle_exception(mbsn, fc, err);
+        if (!s.broadcast && !s.ignored && mbsn_error_is_exception(err)) {
+            err = handle_exception(mbsn, &s, err);
+            if (err != MBSN_ERROR_NONE)
+                return err;
+        }
         else
             return err;
     }
