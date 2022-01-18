@@ -39,16 +39,19 @@ typedef struct req_state {
 } req_state;
 
 
-uint64_t clock_ms() {
+static uint64_t clock_ms() {
     return (uint64_t) clock() / CLOCKS_PER_MS;
 }
 
 
 int mbsn_create(mbsn_t* mbsn, mbsn_transport_conf transport_conf) {
+    if (!mbsn)
+        return MBSN_ERROR_INVALID_ARGUMENT;
+
     memset(mbsn, 0, sizeof(mbsn_t));
 
     mbsn->byte_timeout_ms = -1;
-    mbsn->response_timeout_ms = -1;
+    mbsn->read_timeout_ms = -1;
 
     mbsn->transport = transport_conf.transport;
     if (mbsn->transport != MBSN_TRANSPORT_RTU && mbsn->transport != MBSN_TRANSPORT_TCP)
@@ -75,19 +78,23 @@ mbsn_error mbsn_server_create(mbsn_t* mbsn, uint8_t address, mbsn_transport_conf
         return MBSN_ERROR_INVALID_ARGUMENT;
 
     mbsn_error ret = mbsn_create(mbsn, transport_conf);
+    if (ret != MBSN_ERROR_NONE)
+        return ret;
+
     mbsn->address_rtu = address;
     mbsn->callbacks = callbacks;
-    return ret;
+
+    return MBSN_ERROR_NONE;
 }
 
 
-void mbsn_set_byte_timeout(mbsn_t* mbsn, int64_t timeout_ms) {
+void mbsn_set_read_timeout(mbsn_t* mbsn, int32_t timeout_ms) {
+    mbsn->read_timeout_ms = timeout_ms;
+}
+
+
+void mbsn_set_byte_timeout(mbsn_t* mbsn, int32_t timeout_ms) {
     mbsn->byte_timeout_ms = timeout_ms;
-}
-
-
-void mbsn_set_response_timeout(mbsn_t* mbsn, int64_t timeout_ms) {
-    mbsn->response_timeout_ms = timeout_ms;
 }
 
 
@@ -96,7 +103,7 @@ void mbsn_client_set_server_address_rtu(mbsn_t* mbsn, uint8_t address) {
 }
 
 
-uint16_t crc_add_n(uint16_t crc, const uint8_t* data, unsigned int length) {
+static uint16_t crc_add_n(uint16_t crc, const uint8_t* data, unsigned int length) {
     for (int i = 0; i < length; i++) {
         crc ^= (uint16_t) data[i];
         for (int j = 8; j != 0; j--) {
@@ -113,12 +120,12 @@ uint16_t crc_add_n(uint16_t crc, const uint8_t* data, unsigned int length) {
 }
 
 
-uint16_t crc_add_1(uint16_t crc, const uint8_t b) {
+static uint16_t crc_add_1(uint16_t crc, const uint8_t b) {
     return crc_add_n(crc, &b, 1);
 }
 
 
-uint16_t crc_add_2(uint16_t crc, const uint8_t w) {
+static uint16_t crc_add_2(uint16_t crc, const uint8_t w) {
     return crc_add_n(crc, &w, 2);
 }
 
@@ -146,19 +153,12 @@ mbsn_error read(uint8_t* buf, uint64_t len, uint64_t byte_timeout_ms, mbsn_error
 */
 
 
-mbsn_error recv_n(mbsn_t* mbsn, uint8_t* buf, uint32_t count, uint16_t* crc) {
-    //uint64_t start = clock_ms();
+static mbsn_error recv_n(mbsn_t* mbsn, uint8_t* buf, uint32_t count, uint16_t* crc) {
     int r = 0;
     while (r != count) {
-        int ret = mbsn->transport_read_byte(buf + r);
-
-        /*
-        if (mbsn->byte_timeout_ms > 0 && clock_ms() - start >= mbsn->byte_timeout_ms)
-            return MBSN_ERROR_TIMEOUT;
-        */
-
+        int ret = mbsn->transport_read_byte(buf + r, mbsn->byte_timeout_ms);
         if (ret == 0)
-            continue;
+            return MBSN_ERROR_TIMEOUT;
         else if (ret != 1)
             return MBSN_ERROR_TRANSPORT;
 
@@ -171,12 +171,12 @@ mbsn_error recv_n(mbsn_t* mbsn, uint8_t* buf, uint32_t count, uint16_t* crc) {
 }
 
 
-mbsn_error recv_1(mbsn_t* mbsn, uint8_t* b, uint16_t* crc) {
+static mbsn_error recv_1(mbsn_t* mbsn, uint8_t* b, uint16_t* crc) {
     return recv_n(mbsn, b, 1, crc);
 }
 
 
-mbsn_error recv_2(mbsn_t* mbsn, uint16_t* w, uint16_t* crc) {
+static mbsn_error recv_2(mbsn_t* mbsn, uint16_t* w, uint16_t* crc) {
     mbsn_error err = recv_n(mbsn, (uint8_t*) w, 2, crc);
     if (err != MBSN_ERROR_NONE)
         return err;
@@ -231,12 +231,12 @@ mbsn_error send(mbsn_t* mbsn) {
 */
 
 
-mbsn_error send_n(mbsn_t* mbsn, uint8_t* buf, uint32_t count, uint16_t* crc) {
+static mbsn_error send_n(mbsn_t* mbsn, uint8_t* buf, uint32_t count, uint16_t* crc) {
     int w = 0;
     while (w != count) {
-        int ret = mbsn->transport_write_byte(buf[w]);
+        int ret = mbsn->transport_write_byte(buf[w], mbsn->read_timeout_ms);
         if (ret == 0)
-            continue;
+            return MBSN_ERROR_TIMEOUT;
         else if (ret != 1)
             return MBSN_ERROR_TRANSPORT;
 
@@ -250,18 +250,18 @@ mbsn_error send_n(mbsn_t* mbsn, uint8_t* buf, uint32_t count, uint16_t* crc) {
 }
 
 
-mbsn_error send_1(mbsn_t* mbsn, uint8_t b, uint16_t* crc) {
+static mbsn_error send_1(mbsn_t* mbsn, uint8_t b, uint16_t* crc) {
     return send_n(mbsn, &b, 1, crc);
 }
 
 
-mbsn_error send_2(mbsn_t* mbsn, uint16_t w, uint16_t* crc) {
+static mbsn_error send_2(mbsn_t* mbsn, uint16_t w, uint16_t* crc) {
     w = HTONS(w);
     return send_n(mbsn, (uint8_t*) &w, 2, crc);
 }
 
 
-mbsn_error send_mbap(mbsn_t* mbsn, req_state* s, uint16_t data_length) {
+static mbsn_error send_mbap(mbsn_t* mbsn, req_state* s, uint16_t data_length) {
     mbsn_error err = send_2(mbsn, s->transaction_id, NULL);
     if (err != MBSN_ERROR_NONE)
         return err;
@@ -283,7 +283,7 @@ mbsn_error send_mbap(mbsn_t* mbsn, req_state* s, uint16_t data_length) {
 }
 
 
-mbsn_error send_req_header(mbsn_t* mbsn, req_state* s, uint8_t data_length, uint16_t* crc) {
+static mbsn_error send_req_header(mbsn_t* mbsn, req_state* s, uint8_t data_length, uint16_t* crc) {
     if (mbsn->transport == MBSN_TRANSPORT_RTU) {
         mbsn_error err = send_1(mbsn, s->client_id, crc);
         if (err != MBSN_ERROR_NONE)
@@ -301,7 +301,7 @@ mbsn_error send_req_header(mbsn_t* mbsn, req_state* s, uint8_t data_length, uint
 }
 
 
-mbsn_error send_req_footer(mbsn_t* mbsn, uint16_t crc) {
+static mbsn_error send_req_footer(mbsn_t* mbsn, uint16_t crc) {
     if (mbsn->transport == MBSN_TRANSPORT_RTU)
         return send_2(mbsn, crc, NULL);
 
@@ -309,7 +309,7 @@ mbsn_error send_req_footer(mbsn_t* mbsn, uint16_t crc) {
 }
 
 
-mbsn_error handle_exception(mbsn_t* mbsn, req_state* s, uint8_t exception) {
+static mbsn_error handle_exception(mbsn_t* mbsn, req_state* s, uint8_t exception) {
     uint16_t crc = 0xFFFF;
     mbsn_error err = send_req_header(mbsn, s, 1, &crc);
     if (err != MBSN_ERROR_NONE)
@@ -327,7 +327,8 @@ mbsn_error handle_exception(mbsn_t* mbsn, req_state* s, uint8_t exception) {
 }
 
 
-mbsn_error handle_read_discrete(mbsn_t* mbsn, req_state* s, mbsn_error (*callback)(uint16_t, uint16_t, mbsn_bitfield)) {
+static mbsn_error handle_read_discrete(mbsn_t* mbsn, req_state* s,
+                                       mbsn_error (*callback)(uint16_t, uint16_t, mbsn_bitfield)) {
     uint16_t addr;
     mbsn_error err = recv_2(mbsn, &addr, &s->crc);
     if (err != MBSN_ERROR_NONE)
@@ -393,7 +394,8 @@ mbsn_error handle_read_discrete(mbsn_t* mbsn, req_state* s, mbsn_error (*callbac
 }
 
 
-mbsn_error handle_read_registers(mbsn_t* mbsn, req_state* s, mbsn_error (*callback)(uint16_t, uint16_t, uint16_t*)) {
+static mbsn_error handle_read_registers(mbsn_t* mbsn, req_state* s,
+                                        mbsn_error (*callback)(uint16_t, uint16_t, uint16_t*)) {
     uint16_t addr;
     mbsn_error err = recv_2(mbsn, &addr, &s->crc);
     if (err != MBSN_ERROR_NONE)
@@ -463,27 +465,27 @@ mbsn_error handle_read_registers(mbsn_t* mbsn, req_state* s, mbsn_error (*callba
 }
 
 
-mbsn_error handle_read_coils(mbsn_t* mbsn, req_state* s) {
+static mbsn_error handle_read_coils(mbsn_t* mbsn, req_state* s) {
     return handle_read_discrete(mbsn, s, mbsn->callbacks.read_coils);
 }
 
 
-mbsn_error handle_read_discrete_inputs(mbsn_t* mbsn, req_state* s) {
+static mbsn_error handle_read_discrete_inputs(mbsn_t* mbsn, req_state* s) {
     return handle_read_discrete(mbsn, s, mbsn->callbacks.read_discrete_inputs);
 }
 
 
-mbsn_error handle_read_holding_registers(mbsn_t* mbsn, req_state* s) {
+static mbsn_error handle_read_holding_registers(mbsn_t* mbsn, req_state* s) {
     return handle_read_registers(mbsn, s, mbsn->callbacks.read_holding_registers);
 }
 
 
-mbsn_error handle_read_input_registers(mbsn_t* mbsn, req_state* s) {
+static mbsn_error handle_read_input_registers(mbsn_t* mbsn, req_state* s) {
     return handle_read_registers(mbsn, s, mbsn->callbacks.read_input_registers);
 }
 
 
-mbsn_error handle_write_single_coil(mbsn_t* mbsn, req_state* s) {
+static mbsn_error handle_write_single_coil(mbsn_t* mbsn, req_state* s) {
     uint16_t addr;
     mbsn_error err = recv_2(mbsn, &addr, &s->crc);
     if (err != MBSN_ERROR_NONE)
@@ -540,7 +542,7 @@ mbsn_error handle_write_single_coil(mbsn_t* mbsn, req_state* s) {
 }
 
 
-mbsn_error handle_write_single_register(mbsn_t* mbsn, req_state* s) {
+static mbsn_error handle_write_single_register(mbsn_t* mbsn, req_state* s) {
     uint16_t addr;
     mbsn_error err = recv_2(mbsn, &addr, &s->crc);
     if (err != MBSN_ERROR_NONE)
@@ -594,7 +596,7 @@ mbsn_error handle_write_single_register(mbsn_t* mbsn, req_state* s) {
 }
 
 
-mbsn_error handle_write_multiple_coils(mbsn_t* mbsn, req_state* s) {
+static mbsn_error handle_write_multiple_coils(mbsn_t* mbsn, req_state* s) {
     uint16_t addr;
     mbsn_error err = recv_2(mbsn, &addr, &s->crc);
     if (err != MBSN_ERROR_NONE)
@@ -671,7 +673,7 @@ mbsn_error handle_write_multiple_coils(mbsn_t* mbsn, req_state* s) {
 }
 
 
-mbsn_error handle_write_multiple_registers(mbsn_t* mbsn, req_state* s) {
+static mbsn_error handle_write_multiple_registers(mbsn_t* mbsn, req_state* s) {
     uint16_t addr;
     mbsn_error err = recv_2(mbsn, &addr, &s->crc);
     if (err != MBSN_ERROR_NONE)
@@ -755,11 +757,22 @@ int mbsn_server_receive(mbsn_t* mbsn) {
     req_state s = {0};
     s.crc = 0xFFFF;
 
+    // We should wait for the read timeout for the first message byte
+    int32_t old_byte_timeout = mbsn->byte_timeout_ms;
+    mbsn->byte_timeout_ms = mbsn->read_timeout_ms;
+
     if (mbsn->transport == MBSN_TRANSPORT_RTU) {
         uint8_t id;
         mbsn_error err = recv_1(mbsn, &id, &s.crc);
-        if (err != 0)
-            return err;
+
+        mbsn->byte_timeout_ms = old_byte_timeout;
+
+        if (err != 0) {
+            if (err == MBSN_ERROR_TIMEOUT)
+                return MBSN_ERROR_NONE;
+            else
+                return err;
+        }
 
         // Check if request is for us
         if (id == 0)
@@ -775,8 +788,15 @@ int mbsn_server_receive(mbsn_t* mbsn) {
     }
     else if (mbsn->transport == MBSN_TRANSPORT_TCP) {
         mbsn_error err = recv_2(mbsn, &s.transaction_id, NULL);
-        if (err != MBSN_ERROR_NONE)
-            return err;
+
+        mbsn->byte_timeout_ms = old_byte_timeout;
+
+        if (err != 0) {
+            if (err == MBSN_ERROR_TIMEOUT)
+                return MBSN_ERROR_NONE;
+            else
+                return err;
+        }
 
         uint16_t protocol_id = 0xFFFF;
         err = recv_2(mbsn, &protocol_id, NULL);

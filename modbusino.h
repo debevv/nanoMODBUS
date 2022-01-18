@@ -37,8 +37,8 @@ typedef enum mbsn_transport {
 
 typedef struct mbsn_transport_conf {
     mbsn_transport transport;
-    int (*read_byte)(uint8_t* b);
-    int (*write_byte)(uint8_t b);
+    int (*read_byte)(uint8_t* b, uint32_t);
+    int (*write_byte)(uint8_t b, uint32_t);
 } mbsn_transport_conf;
 
 
@@ -70,12 +70,12 @@ typedef struct mbsn_t {
     // Private fields
     mbsn_callbacks callbacks;
 
-    int64_t byte_timeout_ms;
-    int64_t response_timeout_ms;
+    int32_t byte_timeout_ms;
+    int32_t read_timeout_ms;
 
     mbsn_transport transport;
-    mbsn_error (*transport_read_byte)(uint8_t*);
-    mbsn_error (*transport_write_byte)(uint8_t);
+    mbsn_error (*transport_read_byte)(uint8_t*, uint32_t);
+    mbsn_error (*transport_write_byte)(uint8_t, uint32_t);
 
     uint8_t address_rtu;
     uint8_t server_dest_address_rtu;
@@ -87,13 +87,13 @@ mbsn_error mbsn_client_create(mbsn_t* mbsn, mbsn_transport_conf transport_conf);
 mbsn_error mbsn_server_create(mbsn_t* mbsn, uint8_t address, mbsn_transport_conf transport_conf,
                               mbsn_callbacks callbacks);
 
-void mbsn_set_response_timeout(mbsn_t* mbsn, int64_t timeout_ms);
+void mbsn_set_read_timeout(mbsn_t* mbsn, int32_t timeout_ms);
 
-void mbsn_set_byte_timeout(mbsn_t* mbsn, int64_t timeout_ms);
+void mbsn_set_byte_timeout(mbsn_t* mbsn, int32_t timeout_ms);
 
 void mbsn_client_set_server_address(mbsn_t* mbsn, uint16_t address);
 
-mbsn_error mbsn_server_poll(mbsn_t* mbsn);
+mbsn_error mbsn_server_receive(mbsn_t* mbsn);
 
 mbsn_error mbsn_read_coils(uint16_t address, uint16_t quantity, uint8_t* coils_out);
 
