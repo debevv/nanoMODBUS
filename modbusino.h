@@ -36,23 +36,12 @@ typedef enum mbsn_transport {
     MBSN_TRANSPORT_TCP = 2,
 } mbsn_transport;
 
-typedef struct mbsn_transport_conf {
+typedef struct mbsn_platform_conf {
     mbsn_transport transport;
     int (*read_byte)(uint8_t* b, int32_t);
     int (*write_byte)(uint8_t b, int32_t);
-} mbsn_transport_conf;
-
-
-typedef struct {
-    char* vendor_name;
-    char* product_code;
-    char* major_minor_revision;
-    char* vendor_uri;
-    char* product_name;
-    char* model_name;
-    char* user_application_name;
-    char* extended;
-} mbsn_device_identification_data_t;
+    void (*sleep)(uint32_t milliseconds);
+} mbsn_platform_conf;
 
 
 typedef struct mbsn_callbacks {
@@ -77,25 +66,23 @@ typedef struct mbsn_t {
     int32_t byte_timeout_ms;
     int32_t read_timeout_ms;
 
-    mbsn_transport transport;
-    mbsn_error (*transport_read_byte)(uint8_t*, int32_t);
-    mbsn_error (*transport_write_byte)(uint8_t, int32_t);
+    mbsn_platform_conf platform;
 
     uint8_t address_rtu;
-    uint8_t server_dest_address_rtu;
+    uint8_t dest_address_rtu;
 } mbsn_t;
 
 
-mbsn_error mbsn_client_create(mbsn_t* mbsn, mbsn_transport_conf transport_conf);
+mbsn_error mbsn_client_create(mbsn_t* mbsn, const mbsn_platform_conf* platform_conf);
 
-mbsn_error mbsn_server_create(mbsn_t* mbsn, uint8_t address, mbsn_transport_conf transport_conf,
+mbsn_error mbsn_server_create(mbsn_t* mbsn, uint8_t address, const mbsn_platform_conf* platform_conf,
                               mbsn_callbacks callbacks);
 
 void mbsn_set_read_timeout(mbsn_t* mbsn, int32_t timeout_ms);
 
 void mbsn_set_byte_timeout(mbsn_t* mbsn, int32_t timeout_ms);
 
-void mbsn_client_set_server_address_rtu(mbsn_t* mbsn, uint8_t address);
+void mbsn_set_destination_rtu_address(mbsn_t* mbsn, uint8_t address);
 
 mbsn_error mbsn_server_receive(mbsn_t* mbsn);
 

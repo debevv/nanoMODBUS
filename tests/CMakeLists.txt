@@ -9,3 +9,4 @@ add_definitions(-DMODBUSINO_USE_PRINTF)
 
 add_executable(modbusino_tests ../modbusino.c modbusino_tests.c)
 
+target_link_libraries(modbusino_tests pthread)
