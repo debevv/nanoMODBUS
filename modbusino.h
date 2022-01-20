@@ -38,8 +38,8 @@ typedef enum mbsn_transport {
 
 typedef struct mbsn_transport_conf {
     mbsn_transport transport;
-    int (*read_byte)(uint8_t* b, uint32_t);
-    int (*write_byte)(uint8_t b, uint32_t);
+    int (*read_byte)(uint8_t* b, int32_t);
+    int (*write_byte)(uint8_t b, int32_t);
 } mbsn_transport_conf;
 
 
@@ -69,14 +69,17 @@ typedef struct mbsn_callbacks {
 
 typedef struct mbsn_t {
     // Private fields
+    uint8_t msg_buf[260];
+    uint16_t msg_buf_idx;
+
     mbsn_callbacks callbacks;
 
     int32_t byte_timeout_ms;
     int32_t read_timeout_ms;
 
     mbsn_transport transport;
-    mbsn_error (*transport_read_byte)(uint8_t*, uint32_t);
-    mbsn_error (*transport_write_byte)(uint8_t, uint32_t);
+    mbsn_error (*transport_read_byte)(uint8_t*, int32_t);
+    mbsn_error (*transport_write_byte)(uint8_t, int32_t);
 
     uint8_t address_rtu;
     uint8_t server_dest_address_rtu;
@@ -96,9 +99,9 @@ void mbsn_client_set_server_address_rtu(mbsn_t* mbsn, uint8_t address);
 
 mbsn_error mbsn_server_receive(mbsn_t* mbsn);
 
-mbsn_error mbsn_read_coils(mbsn_t* mbsn, uint16_t address, uint16_t quantity, mbsn_bitfield* coils_out);
+mbsn_error mbsn_read_coils(mbsn_t* mbsn, uint16_t address, uint16_t quantity, mbsn_bitfield coils_out);
 
-mbsn_error mbsn_read_discrete_inputs(mbsn_t* mbsn, uint16_t address, uint16_t quantity, mbsn_bitfield* inputs_out);
+mbsn_error mbsn_read_discrete_inputs(mbsn_t* mbsn, uint16_t address, uint16_t quantity, mbsn_bitfield inputs_out);
 
 mbsn_error mbsn_read_holding_registers(mbsn_t* mbsn, uint16_t address, uint16_t quantity, uint16_t* registers_out);
 
@@ -108,7 +111,7 @@ mbsn_error mbsn_write_single_coil(mbsn_t* mbsn, uint16_t address, bool value);
 
 mbsn_error mbsn_write_single_register(mbsn_t* mbsn, uint16_t address, uint16_t value);
 
-mbsn_error mbsn_write_multiple_coils(mbsn_t* mbsn, uint16_t address, uint16_t quantity, const mbsn_bitfield* coils);
+mbsn_error mbsn_write_multiple_coils(mbsn_t* mbsn, uint16_t address, uint16_t quantity, const mbsn_bitfield coils);
 
 mbsn_error mbsn_write_multiple_registers(mbsn_t* mbsn, uint16_t address, uint16_t quantity, const uint16_t* registers);
 

@@ -74,9 +74,7 @@ void test_server_receive_base(mbsn_transport transport) {
 
         uint64_t diff = now_ms() - start;
 
-        if (diff < read_timeout_ms) {
-            fail();
-        }
+        assert(diff >= read_timeout_ms);
     }
 
     should("honor byte_timeout and return MBSN_ERROR_TIMEOUT");
@@ -90,7 +88,7 @@ void test_server_receive_base(mbsn_transport transport) {
     err = mbsn_server_create(&mbsn, TEST_SERVER_ADDR, transport_conf, (mbsn_callbacks){});
     check(err);
 
-    mbsn_set_read_timeout(&mbsn, -1);
+    mbsn_set_read_timeout(&mbsn, 1000);
     mbsn_set_byte_timeout(&mbsn, byte_timeout_ms);
 
     err = mbsn_server_receive(&mbsn);

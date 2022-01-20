@@ -1,10 +1,10 @@
 #include "modbusino.h"
+#include <assert.h>
+#include <stdio.h>
 #include <time.h>
 #include <unistd.h>
 
 unsigned int nesting = 0;
-
-#define fail() (assert(false))
 
 #define should(s)                                                                                                      \
     {                                                                                                                  \
@@ -25,26 +25,31 @@ unsigned int nesting = 0;
 
 const uint8_t TEST_SERVER_ADDR = 1;
 
-static uint64_t now_ms() {
+
+uint64_t now_ms() {
     struct timespec ts = {0, 0};
     clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
     return (uint64_t) (ts.tv_sec) * 1000 + (uint64_t) (ts.tv_nsec) / 1000000;
 }
 
-int read_byte_empty(uint8_t* b, uint32_t timeout) {
+
+int read_byte_empty(uint8_t* b, int32_t timeout) {
     return 0;
 }
 
-int write_byte_empty(uint8_t b, uint32_t timeout) {
+
+int write_byte_empty(uint8_t b, int32_t timeout) {
     return 0;
 }
 
-int read_byte_timeout_1s(uint8_t* b, uint32_t timeout) {
+
+int read_byte_timeout_1s(uint8_t* b, int32_t timeout) {
     usleep(timeout * 1000);
     return 0;
 }
 
-int read_byte_timeout_third(uint8_t* b, uint32_t timeout) {
+
+int read_byte_timeout_third(uint8_t* b, int32_t timeout) {
     static int stage = 0;
     switch (stage) {
         case 0:
@@ -53,7 +58,8 @@ int read_byte_timeout_third(uint8_t* b, uint32_t timeout) {
             stage++;
             return 1;
         case 2:
-            usleep(timeout * 1000 + 100);
+            assert(timeout > 0);
+            usleep(timeout * 1000 + 100 * 1000);
             stage = 0;
             return 0;
         default:
