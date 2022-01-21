@@ -28,7 +28,7 @@ typedef uint8_t mbsn_bitfield[250];
 #define mbsn_bitfield_read(bf, b) ((bool) ((bf)[(b) / 8] & (0x1 << ((b) % 8))))
 
 #define mbsn_bitfield_write(bf, b, v)                                                                                  \
-    (((bf)[(b) / 8]) = ((v) ? (((bf)[(b) / 8]) | (0x1 << ((b) % 8))) : (((bf)[(b) / 8]) & !(0x1 << ((b) % 8)))))
+    (((bf)[(b) / 8]) = ((v) ? (((bf)[(b) / 8]) | (0x1 << ((b) % 8))) : (((bf)[(b) / 8]) & ~(0x1 << ((b) % 8)))))
 
 
 typedef enum mbsn_transport {
@@ -57,9 +57,16 @@ typedef struct mbsn_callbacks {
 
 
 typedef struct mbsn_t {
-    // Private fields
-    uint8_t msg_buf[260];
-    uint16_t msg_buf_idx;
+    struct {
+        uint8_t buf[260];
+        uint16_t buf_idx;
+
+        uint8_t unit_id;
+        uint8_t fc;
+        uint16_t transaction_id;
+        bool broadcast;
+        bool ignored;
+    } msg;
 
     mbsn_callbacks callbacks;
 
@@ -71,6 +78,9 @@ typedef struct mbsn_t {
     uint8_t address_rtu;
     uint8_t dest_address_rtu;
 } mbsn_t;
+
+
+static const uint8_t MBSN_BROADCAST_ADDRESS = 0;
 
 
 mbsn_error mbsn_client_create(mbsn_t* mbsn, const mbsn_platform_conf* platform_conf);
@@ -101,6 +111,10 @@ mbsn_error mbsn_write_single_register(mbsn_t* mbsn, uint16_t address, uint16_t v
 mbsn_error mbsn_write_multiple_coils(mbsn_t* mbsn, uint16_t address, uint16_t quantity, const mbsn_bitfield coils);
 
 mbsn_error mbsn_write_multiple_registers(mbsn_t* mbsn, uint16_t address, uint16_t quantity, const uint16_t* registers);
+
+mbsn_error mbsn_send_raw_pdu(mbsn_t* mbsn, uint8_t fc, const void* data, uint32_t data_len);
+
+mbsn_error mbsn_receive_raw_pdu_response(mbsn_t* mbsn, void* data_out, uint32_t data_out_len);
 
 const char* mbsn_strerror(int error);
 

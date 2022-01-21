@@ -16,6 +16,10 @@
 
 #define test(f) (nesting++, (f), nesting--)
 
+/*
+#define htons(w) (((((uint16_t) (w) &0xFF)) << 8) | (((uint16_t) (w) &0xFF00) >> 8))
+#define ntohs(w) (((((uint16_t) (w) &0xFF)) << 8) | (((uint16_t) (w) &0xFF00) >> 8))
+*/
 
 const uint8_t TEST_SERVER_ADDR = 1;
 
@@ -174,7 +178,8 @@ void* server_listen_thread() {
         if (is_server_listen_thread_stopped())
             break;
 
-        check(mbsn_server_receive(&SERVER));
+        mbsn_error err = mbsn_server_receive(&SERVER);
+        check(err);
     }
 
     return NULL;
@@ -206,6 +211,9 @@ void start_client_and_server(mbsn_transport transport, mbsn_callbacks server_cal
     mbsn_set_destination_rtu_address(&CLIENT, TEST_SERVER_ADDR);
     mbsn_set_read_timeout(&SERVER, 1000);
     mbsn_set_byte_timeout(&SERVER, 100);
+
+    mbsn_set_read_timeout(&CLIENT, -1);
+    mbsn_set_byte_timeout(&CLIENT, 100);
 
     assert(pthread_mutex_lock(&server_stopped_m) == 0);
     server_stopped = false;
