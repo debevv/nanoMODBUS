@@ -51,8 +51,8 @@ typedef struct mbsn_callbacks {
     mbsn_error (*read_input_registers)(uint16_t address, uint16_t quantity, uint16_t* registers_out);
     mbsn_error (*write_single_coil)(uint16_t address, bool value);
     mbsn_error (*write_single_register)(uint16_t address, uint16_t value);
-    mbsn_error (*write_multiple_coils)(uint16_t address, uint16_t quantity, mbsn_bitfield coils);
-    mbsn_error (*write_multiple_registers)(uint16_t address, uint16_t quantity, uint16_t* registers);
+    mbsn_error (*write_multiple_coils)(uint16_t address, uint16_t quantity, const mbsn_bitfield coils);
+    mbsn_error (*write_multiple_registers)(uint16_t address, uint16_t quantity, const uint16_t* registers);
 } mbsn_callbacks;
 
 
@@ -72,6 +72,7 @@ typedef struct mbsn_t {
 
     int32_t byte_timeout_ms;
     int32_t read_timeout_ms;
+    uint32_t byte_spacing_ms;
 
     mbsn_platform_conf platform;
 

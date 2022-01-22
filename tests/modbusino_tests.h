@@ -209,10 +209,10 @@ void start_client_and_server(mbsn_transport transport, mbsn_callbacks server_cal
     check(mbsn_client_create(&CLIENT, platform_conf_pipe_client(transport)));
 
     mbsn_set_destination_rtu_address(&CLIENT, TEST_SERVER_ADDR);
-    mbsn_set_read_timeout(&SERVER, 1000);
+    mbsn_set_read_timeout(&SERVER, 500);
     mbsn_set_byte_timeout(&SERVER, 100);
 
-    mbsn_set_read_timeout(&CLIENT, -1);
+    mbsn_set_read_timeout(&CLIENT, 5000);
     mbsn_set_byte_timeout(&CLIENT, 100);
 
     assert(pthread_mutex_lock(&server_stopped_m) == 0);

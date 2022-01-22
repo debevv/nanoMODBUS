@@ -1,7 +1,7 @@
 #include "modbusino.h"
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #ifdef MBSN_DEBUG
 #include <stdio.h>
@@ -43,18 +43,6 @@
     (m)->msg.buf_idx += 2
 #endif
 
-/*
-static msg_state msg_state_create() {
-    msg_state s;
-    memset(&s, 0, sizeof(msg_state));
-    return s;
-}
-
-static msg_state res_from_req(msg_state* req) {
-    msg_state res = *req;
-    return res;
-}
-*/
 
 static void msg_buf_reset(mbsn_t* mbsn) {
     mbsn->msg.buf_idx = 0;
@@ -93,6 +81,7 @@ int mbsn_create(mbsn_t* mbsn, const mbsn_platform_conf* platform_conf) {
 
     mbsn->byte_timeout_ms = -1;
     mbsn->read_timeout_ms = -1;
+    mbsn->byte_spacing_ms = 0;
 
     if (!platform_conf)
         return MBSN_ERROR_INVALID_ARGUMENT;
@@ -104,7 +93,6 @@ int mbsn_create(mbsn_t* mbsn, const mbsn_platform_conf* platform_conf) {
         return MBSN_ERROR_INVALID_ARGUMENT;
 
     mbsn->platform = *platform_conf;
-
 
     return MBSN_ERROR_NONE;
 }
@@ -138,6 +126,11 @@ void mbsn_set_read_timeout(mbsn_t* mbsn, int32_t timeout_ms) {
 
 void mbsn_set_byte_timeout(mbsn_t* mbsn, int32_t timeout_ms) {
     mbsn->byte_timeout_ms = timeout_ms;
+}
+
+
+void mbsn_set_byte_spacing(mbsn_t* mbsn, uint32_t spacing_ms) {
+    mbsn->byte_spacing_ms = spacing_ms;
 }
 
 
@@ -196,7 +189,14 @@ static mbsn_error recv(mbsn_t* mbsn, uint32_t count) {
 
 
 static mbsn_error send(mbsn_t* mbsn) {
+    uint32_t spacing_ms = 0;
+    if (mbsn->platform.transport == MBSN_TRANSPORT_RTU)
+        spacing_ms = mbsn->byte_spacing_ms;
+
     for (int i = 0; i < mbsn->msg.buf_idx; i++) {
+        if (spacing_ms != 0)
+            mbsn->platform.sleep(spacing_ms);
+
         int ret = mbsn->platform.write_byte(mbsn->msg.buf[i], mbsn->read_timeout_ms);
         if (ret == 0) {
             return MBSN_ERROR_TIMEOUT;
@@ -539,10 +539,10 @@ static mbsn_error handle_write_single_coil(mbsn_t* mbsn) {
         return err;
 
     if (!mbsn->msg.ignored) {
-        if (value != 0 && value != 0xFF00)
-            return handle_exception(mbsn, MBSN_EXCEPTION_ILLEGAL_DATA_VALUE);
-
         if (mbsn->callbacks.write_single_coil) {
+            if (value != 0 && value != 0xFF00)
+                return handle_exception(mbsn, MBSN_EXCEPTION_ILLEGAL_DATA_VALUE);
+
             err = mbsn->callbacks.write_single_coil(address, value == 0 ? false : true);
             if (err != MBSN_ERROR_NONE) {
                 if (mbsn_error_is_exception(err))
@@ -552,8 +552,9 @@ static mbsn_error handle_write_single_coil(mbsn_t* mbsn) {
             }
 
             if (!mbsn->msg.broadcast) {
-                send_msg_header(mbsn, 2);
+                send_msg_header(mbsn, 4);
                 put_2(mbsn, address);
+                put_2(mbsn, value);
                 err = send_msg_footer(mbsn);
                 if (err != MBSN_ERROR_NONE)
                     return err;
@@ -591,7 +592,8 @@ static mbsn_error handle_write_single_register(mbsn_t* mbsn) {
             }
 
             if (!mbsn->msg.broadcast) {
-                send_msg_header(mbsn, 1);
+                send_msg_header(mbsn, 4);
+                put_2(mbsn, address);
                 put_2(mbsn, value);
                 err = send_msg_footer(mbsn);
                 if (err != MBSN_ERROR_NONE)
@@ -621,8 +623,9 @@ static mbsn_error handle_write_multiple_coils(mbsn_t* mbsn) {
         return err;
 
     mbsn_bitfield coils;
-    for (int i = 0; i < coils_bytes; i++)
+    for (int i = 0; i < coils_bytes; i++) {
         coils[i] = get_1(mbsn);
+    }
 
     err = recv_msg_footer(mbsn);
     if (err != MBSN_ERROR_NONE)
@@ -682,7 +685,7 @@ static mbsn_error handle_write_multiple_registers(mbsn_t* mbsn) {
         return err;
 
     uint16_t registers[0x007B];
-    for (int i = 0; i < quantity; i++) {
+    for (int i = 0; i < registers_bytes / 2; i++) {
         registers[i] = get_2(mbsn);
     }
 
@@ -865,9 +868,6 @@ mbsn_error mbsn_server_receive(mbsn_t* mbsn) {
 
 
 static mbsn_error read_discrete(mbsn_t* mbsn, uint8_t fc, uint16_t address, uint16_t quantity, mbsn_bitfield values) {
-    if (address == MBSN_BROADCAST_ADDRESS)
-        return MBSN_ERROR_INVALID_ARGUMENT;
-
     if (quantity < 1 || quantity > 2000)
         return MBSN_ERROR_INVALID_ARGUMENT;
 
@@ -920,10 +920,7 @@ mbsn_error mbsn_read_discrete_inputs(mbsn_t* mbsn, uint16_t address, uint16_t qu
 }
 
 
-mbsn_error read_registers(mbsn_t* mbsn, uint8_t fc, uint16_t address, uint16_t quantity, uint16_t* registers) {
-    if (address == MBSN_BROADCAST_ADDRESS)
-        return MBSN_ERROR_INVALID_ARGUMENT;
-
+static mbsn_error read_registers(mbsn_t* mbsn, uint8_t fc, uint16_t address, uint16_t quantity, uint16_t* registers) {
     if (quantity < 1 || quantity > 125)
         return MBSN_ERROR_INVALID_ARGUMENT;
 
@@ -983,8 +980,10 @@ mbsn_error mbsn_write_single_coil(mbsn_t* mbsn, uint16_t address, bool value) {
     msg_state_req(mbsn, 5);
     send_msg_header(mbsn, 4);
 
+    uint16_t value_req = value ? 0xFF00 : 0;
+
     put_2(mbsn, address);
-    put_2(mbsn, value ? 0xFF00 : 0);
+    put_2(mbsn, value_req);
 
     mbsn_error err = send_msg_footer(mbsn);
     if (err != MBSN_ERROR_NONE)
@@ -1009,7 +1008,7 @@ mbsn_error mbsn_write_single_coil(mbsn_t* mbsn, uint16_t address, bool value) {
         if (address_res != address)
             return MBSN_ERROR_INVALID_RESPONSE;
 
-        if (value_res != value)
+        if (value_res != value_req)
             return MBSN_ERROR_INVALID_RESPONSE;
     }
 
@@ -1018,7 +1017,7 @@ mbsn_error mbsn_write_single_coil(mbsn_t* mbsn, uint16_t address, bool value) {
 
 
 mbsn_error mbsn_write_single_register(mbsn_t* mbsn, uint16_t address, uint16_t value) {
-    msg_state_req(mbsn, 5);
+    msg_state_req(mbsn, 6);
     send_msg_header(mbsn, 4);
 
     put_2(mbsn, address);
@@ -1056,7 +1055,7 @@ mbsn_error mbsn_write_single_register(mbsn_t* mbsn, uint16_t address, uint16_t v
 
 
 mbsn_error mbsn_write_multiple_coils(mbsn_t* mbsn, uint16_t address, uint16_t quantity, const mbsn_bitfield coils) {
-    if (quantity < 0 || quantity > 0x07B0)
+    if (quantity < 1 || quantity > 0x07B0)
         return MBSN_ERROR_INVALID_ARGUMENT;
 
     if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
@@ -1107,7 +1106,7 @@ mbsn_error mbsn_write_multiple_coils(mbsn_t* mbsn, uint16_t address, uint16_t qu
 
 
 mbsn_error mbsn_write_multiple_registers(mbsn_t* mbsn, uint16_t address, uint16_t quantity, const uint16_t* registers) {
-    if (quantity < 0 || quantity > 0x007B)
+    if (quantity < 1 || quantity > 0x007B)
         return MBSN_ERROR_INVALID_ARGUMENT;
 
     if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
