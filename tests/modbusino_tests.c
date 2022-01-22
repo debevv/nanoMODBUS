@@ -86,7 +86,7 @@ int read_byte_timeout_third(uint8_t* b, int32_t timeout) {
 
 
 void test_server_receive_base(mbsn_transport transport) {
-    mbsn_t server;
+    mbsn_t server, client;
     mbsn_error err;
     mbsn_platform_conf platform_conf;
 
@@ -134,6 +134,26 @@ void test_server_receive_base(mbsn_transport transport) {
 
     err = mbsn_server_receive(&server);
     expect(err == MBSN_ERROR_TIMEOUT);
+
+
+    should("honor byte spacing on RTU");
+    if (transport == MBSN_TRANSPORT_RTU) {
+        reset(client);
+        platform_conf.transport = transport;
+        platform_conf.read_byte = read_byte_socket_client;
+        platform_conf.write_byte = write_byte_socket_client;
+
+        reset_sockets();
+
+        check(mbsn_client_create(&client, &platform_conf));
+
+        mbsn_set_byte_spacing(&client, 200);
+
+        uint64_t start = now_ms();
+        check(mbsn_send_raw_pdu(&client, 1, (uint16_t[]){htons(1), htons(1)}, 4));
+        uint64_t diff = now_ms() - start;
+        assert(diff >= 200 * 8);
+    }
 }
 
 

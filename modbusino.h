@@ -93,6 +93,8 @@ void mbsn_set_read_timeout(mbsn_t* mbsn, int32_t timeout_ms);
 
 void mbsn_set_byte_timeout(mbsn_t* mbsn, int32_t timeout_ms);
 
+void mbsn_set_byte_spacing(mbsn_t* mbsn, uint32_t spacing_ms);
+
 void mbsn_set_destination_rtu_address(mbsn_t* mbsn, uint8_t address);
 
 mbsn_error mbsn_server_receive(mbsn_t* mbsn);

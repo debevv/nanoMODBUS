@@ -124,41 +124,41 @@ int write_byte_fd(int fd, uint8_t b, int32_t timeout_ms) {
 }
 
 
-int read_byte_pipe_server(uint8_t* b, int32_t timeout_ms) {
+int read_byte_socket_server(uint8_t* b, int32_t timeout_ms) {
     return read_byte_fd(sockets[0], b, timeout_ms);
 }
 
 
-int write_byte_pipe_server(uint8_t b, int32_t timeout_ms) {
+int write_byte_socket_server(uint8_t b, int32_t timeout_ms) {
     return write_byte_fd(sockets[0], b, timeout_ms);
 }
 
 
-int read_byte_pipe_client(uint8_t* b, int32_t timeout_ms) {
+int read_byte_socket_client(uint8_t* b, int32_t timeout_ms) {
     return read_byte_fd(sockets[1], b, timeout_ms);
 }
 
 
-int write_byte_pipe_client(uint8_t b, int32_t timeout_ms) {
+int write_byte_socket_client(uint8_t b, int32_t timeout_ms) {
     return write_byte_fd(sockets[1], b, timeout_ms);
 }
 
 
 mbsn_platform_conf mbsn_platform_conf_server;
-mbsn_platform_conf* platform_conf_pipe_server(mbsn_transport transport) {
+mbsn_platform_conf* platform_conf_socket_server(mbsn_transport transport) {
     mbsn_platform_conf_server.transport = transport;
-    mbsn_platform_conf_server.read_byte = read_byte_pipe_server;
-    mbsn_platform_conf_server.write_byte = write_byte_pipe_server;
+    mbsn_platform_conf_server.read_byte = read_byte_socket_server;
+    mbsn_platform_conf_server.write_byte = write_byte_socket_server;
     mbsn_platform_conf_server.sleep = platform_sleep;
     return &mbsn_platform_conf_server;
 }
 
 
 mbsn_platform_conf mbsn_platform_conf_client;
-mbsn_platform_conf* platform_conf_pipe_client(mbsn_transport transport) {
+mbsn_platform_conf* platform_conf_socket_client(mbsn_transport transport) {
     mbsn_platform_conf_client.transport = transport;
-    mbsn_platform_conf_client.read_byte = read_byte_pipe_client;
-    mbsn_platform_conf_client.write_byte = write_byte_pipe_client;
+    mbsn_platform_conf_client.read_byte = read_byte_socket_client;
+    mbsn_platform_conf_client.write_byte = write_byte_socket_client;
     mbsn_platform_conf_client.sleep = platform_sleep;
     return &mbsn_platform_conf_client;
 }
@@ -178,8 +178,7 @@ void* server_listen_thread() {
         if (is_server_listen_thread_stopped())
             break;
 
-        mbsn_error err = mbsn_server_receive(&SERVER);
-        check(err);
+        check(mbsn_server_receive(&SERVER));
     }
 
     return NULL;
@@ -205,8 +204,8 @@ void start_client_and_server(mbsn_transport transport, mbsn_callbacks server_cal
     reset(SERVER);
     reset(CLIENT);
 
-    check(mbsn_server_create(&SERVER, TEST_SERVER_ADDR, platform_conf_pipe_server(transport), server_callbacks));
-    check(mbsn_client_create(&CLIENT, platform_conf_pipe_client(transport)));
+    check(mbsn_server_create(&SERVER, TEST_SERVER_ADDR, platform_conf_socket_server(transport), server_callbacks));
+    check(mbsn_client_create(&CLIENT, platform_conf_socket_client(transport)));
 
     mbsn_set_destination_rtu_address(&CLIENT, TEST_SERVER_ADDR);
     mbsn_set_read_timeout(&SERVER, 500);
