@@ -1,4 +1,4 @@
-#include "modbusino.h"
+#include "nanomodbus.h"
 #undef NDEBUG
 #include <assert.h>
 #include <pthread.h>
@@ -11,9 +11,9 @@
 
 #define expect(expr) assert(expr)
 
-#define check(err) (expect((err) == MBSN_ERROR_NONE))
+#define check(err) (expect((err) == NMBS_ERROR_NONE))
 
-#define reset(mbsn) (memset(&(mbsn), 0, sizeof(mbsn_t)))
+#define reset(nmbs) (memset(&(nmbs), 0, sizeof(nmbs_t)))
 
 #define test(f) (nesting++, (f), nesting--)
 
@@ -30,7 +30,7 @@ int sockets[2] = {-1, -1};
 bool server_stopped = true;
 pthread_mutex_t server_stopped_m = PTHREAD_MUTEX_INITIALIZER;
 pthread_t server_thread;
-mbsn_t CLIENT, SERVER;
+nmbs_t CLIENT, SERVER;
 
 
 #define should(s)                                                                                                      \
@@ -148,23 +148,23 @@ int write_byte_socket_client(uint8_t b, int32_t timeout_ms, void* arg) {
 }
 
 
-mbsn_platform_conf mbsn_platform_conf_server;
-mbsn_platform_conf* platform_conf_socket_server(mbsn_transport transport) {
-    mbsn_platform_conf_server.transport = transport;
-    mbsn_platform_conf_server.read_byte = read_byte_socket_server;
-    mbsn_platform_conf_server.write_byte = write_byte_socket_server;
-    mbsn_platform_conf_server.sleep = platform_sleep;
-    return &mbsn_platform_conf_server;
+nmbs_platform_conf nmbs_platform_conf_server;
+nmbs_platform_conf* platform_conf_socket_server(nmbs_transport transport) {
+    nmbs_platform_conf_server.transport = transport;
+    nmbs_platform_conf_server.read_byte = read_byte_socket_server;
+    nmbs_platform_conf_server.write_byte = write_byte_socket_server;
+    nmbs_platform_conf_server.sleep = platform_sleep;
+    return &nmbs_platform_conf_server;
 }
 
 
-mbsn_platform_conf mbsn_platform_conf_client;
-mbsn_platform_conf* platform_conf_socket_client(mbsn_transport transport) {
-    mbsn_platform_conf_client.transport = transport;
-    mbsn_platform_conf_client.read_byte = read_byte_socket_client;
-    mbsn_platform_conf_client.write_byte = write_byte_socket_client;
-    mbsn_platform_conf_client.sleep = platform_sleep;
-    return &mbsn_platform_conf_client;
+nmbs_platform_conf nmbs_platform_conf_client;
+nmbs_platform_conf* platform_conf_socket_client(nmbs_transport transport) {
+    nmbs_platform_conf_client.transport = transport;
+    nmbs_platform_conf_client.read_byte = read_byte_socket_client;
+    nmbs_platform_conf_client.write_byte = write_byte_socket_client;
+    nmbs_platform_conf_client.sleep = platform_sleep;
+    return &nmbs_platform_conf_client;
 }
 
 
@@ -182,7 +182,7 @@ void* server_listen_thread() {
         if (is_server_listen_thread_stopped())
             break;
 
-        check(mbsn_server_poll(&SERVER));
+        check(nmbs_server_poll(&SERVER));
     }
 
     return NULL;
@@ -199,7 +199,7 @@ void stop_client_and_server() {
 }
 
 
-void start_client_and_server(mbsn_transport transport, const mbsn_callbacks* server_callbacks) {
+void start_client_and_server(nmbs_transport transport, const nmbs_callbacks* server_callbacks) {
     expect(pthread_mutex_destroy(&server_stopped_m) == 0);
     expect(pthread_mutex_init(&server_stopped_m, NULL) == 0);
 
@@ -208,15 +208,15 @@ void start_client_and_server(mbsn_transport transport, const mbsn_callbacks* ser
     reset(SERVER);
     reset(CLIENT);
 
-    check(mbsn_server_create(&SERVER, TEST_SERVER_ADDR, platform_conf_socket_server(transport), server_callbacks));
-    check(mbsn_client_create(&CLIENT, platform_conf_socket_client(transport)));
+    check(nmbs_server_create(&SERVER, TEST_SERVER_ADDR, platform_conf_socket_server(transport), server_callbacks));
+    check(nmbs_client_create(&CLIENT, platform_conf_socket_client(transport)));
 
-    mbsn_set_destination_rtu_address(&CLIENT, TEST_SERVER_ADDR);
-    mbsn_set_read_timeout(&SERVER, 500);
-    mbsn_set_byte_timeout(&SERVER, 100);
+    nmbs_set_destination_rtu_address(&CLIENT, TEST_SERVER_ADDR);
+    nmbs_set_read_timeout(&SERVER, 500);
+    nmbs_set_byte_timeout(&SERVER, 100);
 
-    mbsn_set_read_timeout(&CLIENT, 5000);
-    mbsn_set_byte_timeout(&CLIENT, 100);
+    nmbs_set_read_timeout(&CLIENT, 5000);
+    nmbs_set_byte_timeout(&CLIENT, 100);
 
     expect(pthread_mutex_lock(&server_stopped_m) == 0);
     server_stopped = false;

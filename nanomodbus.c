@@ -1,0 +1,1244 @@
+#include "nanomodbus.h"
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+#ifdef NMBS_DEBUG
+#include <stdio.h>
+#define DEBUG(...) printf(__VA_ARGS__)
+#else
+#define DEBUG(...) (void) (0)
+#endif
+
+#if !defined(NMBS_BIG_ENDIAN) && !defined(NMBS_LITTLE_ENDIAN)
+#if defined(__BYTE_ORDER) && __BYTE_ORDER == __BIG_ENDIAN || defined(__BIG_ENDIAN__) || defined(__ARMEB__) ||          \
+        defined(__THUMBEB__) || defined(__AARCH64EB__) || defined(_MIBSEB) || defined(__MIBSEB) || defined(__MIBSEB__)
+#define NMBS_BIG_ENDIAN
+#elif defined(__BYTE_ORDER) && __BYTE_ORDER == __LITTLE_ENDIAN || defined(__LITTLE_ENDIAN__) || defined(__ARMEL__) ||  \
+        defined(__THUMBEL__) || defined(__AARCH64EL__) || defined(_MIPSEL) || defined(__MIPSEL) || defined(__MIPSEL__)
+#define NMBS_LITTLE_ENDIAN
+#else
+#error "Failed to automatically detect platform endianness. Please define either NMBS_BIG_ENDIAN or NMBS_LITTLE_ENDIAN."
+#endif
+#endif
+
+#define get_1(m)                                                                                                       \
+    (m)->msg.buf[(m)->msg.buf_idx];                                                                                    \
+    (m)->msg.buf_idx++
+#define put_1(m, b)                                                                                                    \
+    (m)->msg.buf[(m)->msg.buf_idx] = (b);                                                                              \
+    (m)->msg.buf_idx++
+#define discard_1(m) (m)->msg.buf_idx++
+
+#ifdef NMBS_BIG_ENDIAN
+#define get_2(m)                                                                                                       \
+    (*(uint16_t*) ((m)->msg.buf + (m)->msg.buf_idx));                                                                  \
+    (m)->msg.buf_idx += 2
+#define put_2(m, w)                                                                                                    \
+    (*(uint16_t*) ((m)->msg.buf + (m)->msg.buf_idx)) = (w);                                                            \
+    (m)->msg.buf_idx += 2
+#else
+#define get_2(m)                                                                                                       \
+    ((uint16_t) ((m)->msg.buf[(m)->msg.buf_idx + 1])) | (((uint16_t) (m)->msg.buf[(m)->msg.buf_idx] << 8));            \
+    (m)->msg.buf_idx += 2
+#define put_2(m, w)                                                                                                    \
+    (m)->msg.buf[(m)->msg.buf_idx] = ((uint8_t) ((((uint16_t) (w)) & 0xFF00) >> 8));                                   \
+    (m)->msg.buf[(m)->msg.buf_idx + 1] = ((uint8_t) (((uint16_t) (w)) & 0x00FF));                                      \
+    (m)->msg.buf_idx += 2
+#endif
+
+
+static void msg_buf_reset(nmbs_t* nmbs) {
+    nmbs->msg.buf_idx = 0;
+}
+
+
+static void msg_state_reset(nmbs_t* nmbs) {
+    msg_buf_reset(nmbs);
+    nmbs->msg.unit_id = 0;
+    nmbs->msg.fc = 0;
+    nmbs->msg.transaction_id = 0;
+    nmbs->msg.broadcast = false;
+    nmbs->msg.ignored = 0;
+}
+
+
+static void msg_state_req(nmbs_t* nmbs, uint8_t fc) {
+    if (nmbs->current_tid == UINT16_MAX)
+        nmbs->current_tid = 1;
+    else
+        nmbs->current_tid++;
+
+    msg_state_reset(nmbs);
+    nmbs->msg.unit_id = nmbs->dest_address_rtu;
+    nmbs->msg.fc = fc;
+    nmbs->msg.transaction_id = nmbs->current_tid;
+    if (nmbs->msg.unit_id == 0 && nmbs->platform.transport == NMBS_TRANSPORT_RTU)
+        nmbs->msg.broadcast = true;
+}
+
+
+int nmbs_create(nmbs_t* nmbs, const nmbs_platform_conf* platform_conf) {
+    if (!nmbs)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    memset(nmbs, 0, sizeof(nmbs_t));
+
+    nmbs->byte_timeout_ms = -1;
+    nmbs->read_timeout_ms = -1;
+    nmbs->byte_spacing_ms = 0;
+
+    if (!platform_conf)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    if (platform_conf->transport != NMBS_TRANSPORT_RTU && platform_conf->transport != NMBS_TRANSPORT_TCP)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    if (!platform_conf->read_byte || !platform_conf->write_byte || !platform_conf->sleep)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    nmbs->platform = *platform_conf;
+
+    return NMBS_ERROR_NONE;
+}
+
+
+nmbs_error nmbs_client_create(nmbs_t* nmbs, const nmbs_platform_conf* platform_conf) {
+    return nmbs_create(nmbs, platform_conf);
+}
+
+
+nmbs_error nmbs_server_create(nmbs_t* nmbs, uint8_t address_rtu, const nmbs_platform_conf* platform_conf,
+                              const nmbs_callbacks* callbacks) {
+    if (platform_conf->transport == NMBS_TRANSPORT_RTU && address_rtu == 0)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    nmbs_error ret = nmbs_create(nmbs, platform_conf);
+    if (ret != NMBS_ERROR_NONE)
+        return ret;
+
+    nmbs->address_rtu = address_rtu;
+    nmbs->callbacks = *callbacks;
+
+    return NMBS_ERROR_NONE;
+}
+
+
+void nmbs_set_read_timeout(nmbs_t* nmbs, int32_t timeout_ms) {
+    nmbs->read_timeout_ms = timeout_ms;
+}
+
+
+void nmbs_set_byte_timeout(nmbs_t* nmbs, int32_t timeout_ms) {
+    nmbs->byte_timeout_ms = timeout_ms;
+}
+
+
+void nmbs_set_byte_spacing(nmbs_t* nmbs, uint32_t spacing_ms) {
+    nmbs->byte_spacing_ms = spacing_ms;
+}
+
+
+void nmbs_set_destination_rtu_address(nmbs_t* nmbs, uint8_t address) {
+    nmbs->dest_address_rtu = address;
+}
+
+
+void nmbs_set_platform_arg(nmbs_t* nmbs, void* arg) {
+    nmbs->platform.arg = arg;
+}
+
+
+static uint16_t crc_calc(const uint8_t* data, uint32_t length) {
+    uint16_t crc = 0xFFFF;
+    for (uint32_t i = 0; i < length; i++) {
+        crc ^= (uint16_t) data[i];
+        for (int j = 8; j != 0; j--) {
+            if ((crc & 0x0001) != 0) {
+                crc >>= 1;
+                crc ^= 0xA001;
+            }
+            else
+                crc >>= 1;
+        }
+    }
+
+    return crc;
+}
+
+
+static nmbs_error recv(nmbs_t* nmbs, uint32_t count) {
+    uint32_t r = 0;
+    while (r != count) {
+        int ret = nmbs->platform.read_byte(nmbs->msg.buf + nmbs->msg.buf_idx + r, nmbs->byte_timeout_ms,
+                                           nmbs->platform.arg);
+        if (ret == 0) {
+            return NMBS_ERROR_TIMEOUT;
+        }
+        else if (ret != 1) {
+            return NMBS_ERROR_TRANSPORT;
+        }
+
+        r++;
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
+
+static nmbs_error send(nmbs_t* nmbs) {
+    uint32_t spacing_ms = 0;
+    if (nmbs->platform.transport == NMBS_TRANSPORT_RTU)
+        spacing_ms = nmbs->byte_spacing_ms;
+
+    for (int i = 0; i < nmbs->msg.buf_idx; i++) {
+        if (spacing_ms != 0)
+            nmbs->platform.sleep(spacing_ms, nmbs->platform.arg);
+
+        int ret = nmbs->platform.write_byte(nmbs->msg.buf[i], nmbs->read_timeout_ms, nmbs->platform.arg);
+        if (ret == 0) {
+            return NMBS_ERROR_TIMEOUT;
+        }
+        else if (ret != 1) {
+            return NMBS_ERROR_TRANSPORT;
+        }
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
+
+static nmbs_error recv_msg_footer(nmbs_t* nmbs) {
+    if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
+        uint16_t crc = crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx);
+
+        nmbs_error err = recv(nmbs, 2);
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+        uint16_t recv_crc = get_2(nmbs);
+
+        if (recv_crc != crc)
+            return NMBS_ERROR_TRANSPORT;
+    }
+
+    DEBUG("\n");
+
+    return NMBS_ERROR_NONE;
+}
+
+
+static nmbs_error recv_msg_header(nmbs_t* nmbs, bool* first_byte_received) {
+    // We wait for the read timeout here, just for the first message byte
+    int32_t old_byte_timeout = nmbs->byte_timeout_ms;
+    nmbs->byte_timeout_ms = nmbs->read_timeout_ms;
+
+    msg_state_reset(nmbs);
+
+    if (first_byte_received)
+        *first_byte_received = false;
+
+    if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
+        nmbs_error err = recv(nmbs, 1);
+
+        nmbs->byte_timeout_ms = old_byte_timeout;
+
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+        if (first_byte_received)
+            *first_byte_received = true;
+
+        nmbs->msg.unit_id = get_1(nmbs);
+
+        err = recv(nmbs, 1);
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+        nmbs->msg.fc = get_1(nmbs);
+    }
+    else if (nmbs->platform.transport == NMBS_TRANSPORT_TCP) {
+        nmbs_error err = recv(nmbs, 1);
+
+        nmbs->byte_timeout_ms = old_byte_timeout;
+
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+        if (first_byte_received)
+            *first_byte_received = true;
+
+        // Advance buf_idx
+        discard_1(nmbs);
+
+        err = recv(nmbs, 7);
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+        // Starting over
+        msg_buf_reset(nmbs);
+
+        nmbs->msg.transaction_id = get_2(nmbs);
+        uint16_t protocol_id = get_2(nmbs);
+        uint16_t length = get_2(nmbs);    // We should actually check the length of the request against this value
+        nmbs->msg.unit_id = get_1(nmbs);
+        nmbs->msg.fc = get_1(nmbs);
+
+        if (protocol_id != 0)
+            return NMBS_ERROR_TRANSPORT;
+
+        if (length > 255)
+            return NMBS_ERROR_TRANSPORT;
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
+
+static nmbs_error recv_req_header(nmbs_t* nmbs, bool* first_byte_received) {
+    nmbs_error err = recv_msg_header(nmbs, first_byte_received);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
+        // Check if request is for us
+        if (nmbs->msg.unit_id == NMBS_BROADCAST_ADDRESS)
+            nmbs->msg.broadcast = true;
+        else if (nmbs->msg.unit_id != nmbs->address_rtu)
+            nmbs->msg.ignored = true;
+        else
+            nmbs->msg.ignored = false;
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
+
+static nmbs_error recv_res_header(nmbs_t* nmbs) {
+    uint16_t req_transaction_id = nmbs->msg.transaction_id;
+    uint8_t req_fc = nmbs->msg.fc;
+
+    nmbs_error err = recv_msg_header(nmbs, NULL);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (nmbs->platform.transport == NMBS_TRANSPORT_TCP) {
+        if (nmbs->msg.transaction_id != req_transaction_id)
+            return NMBS_ERROR_INVALID_RESPONSE;
+    }
+
+    if (nmbs->msg.ignored)
+        return NMBS_ERROR_INVALID_RESPONSE;
+
+    if (nmbs->msg.fc != req_fc) {
+        if (nmbs->msg.fc - 0x80 == req_fc) {
+            err = recv(nmbs, 1);
+            if (err != NMBS_ERROR_NONE)
+                return err;
+
+            uint8_t exception = get_1(nmbs);
+            err = recv_msg_footer(nmbs);
+            if (err != NMBS_ERROR_NONE)
+                return err;
+
+            if (exception < 1 || exception > 4)
+                return NMBS_ERROR_INVALID_RESPONSE;
+            else {
+                DEBUG("exception %d\n", exception);
+                return exception;
+            }
+        }
+        else {
+            return NMBS_ERROR_INVALID_RESPONSE;
+        }
+    }
+
+    DEBUG("NMBS res <- fc %d\t", nmbs->msg.fc);
+
+    return NMBS_ERROR_NONE;
+}
+
+
+static void send_msg_header(nmbs_t* nmbs, uint16_t data_length) {
+    msg_buf_reset(nmbs);
+
+    if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
+        put_1(nmbs, nmbs->msg.unit_id);
+    }
+    else if (nmbs->platform.transport == NMBS_TRANSPORT_TCP) {
+        put_2(nmbs, nmbs->msg.transaction_id);
+        put_2(nmbs, 0);
+        put_2(nmbs, (uint16_t) (1 + 1 + data_length));
+        put_1(nmbs, nmbs->msg.unit_id);
+    }
+
+    put_1(nmbs, nmbs->msg.fc);
+}
+
+
+static nmbs_error send_msg_footer(nmbs_t* nmbs) {
+    if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
+        uint16_t crc = crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx);
+        put_2(nmbs, crc);
+    }
+
+    nmbs_error err = send(nmbs);
+
+    DEBUG("\n");
+
+    return err;
+}
+
+
+static void send_req_header(nmbs_t* nmbs, uint16_t data_length) {
+    send_msg_header(nmbs, data_length);
+    DEBUG("NMBS req -> fc %d\t", nmbs->msg.fc);
+}
+
+
+static void send_res_header(nmbs_t* nmbs, uint16_t data_length) {
+    send_msg_header(nmbs, data_length);
+    DEBUG("NMBS res -> fc %d\t", nmbs->msg.fc);
+}
+
+
+static nmbs_error handle_exception(nmbs_t* nmbs, uint8_t exception) {
+    nmbs->msg.fc += 0x80;
+    send_msg_header(nmbs, 1);
+    put_1(nmbs, exception);
+
+    DEBUG("NMBS res -> exception %d\n", exception);
+
+    return send_msg_footer(nmbs);
+}
+
+
+static nmbs_error handle_read_discrete(nmbs_t* nmbs, nmbs_error (*callback)(uint16_t, uint16_t, nmbs_bitfield)) {
+    nmbs_error err = recv(nmbs, 4);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    uint16_t address = get_2(nmbs);
+    uint16_t quantity = get_2(nmbs);
+
+    DEBUG("a %d\tq %d", address, quantity);
+
+    err = recv_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (!nmbs->msg.ignored) {
+        if (quantity < 1 || quantity > 2000)
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+        if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+        if (callback) {
+            nmbs_bitfield bf = {0};
+            err = callback(address, quantity, bf);
+            if (err != NMBS_ERROR_NONE) {
+                if (nmbs_error_is_exception(err))
+                    return handle_exception(nmbs, err);
+                else
+                    return handle_exception(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+            }
+
+            if (!nmbs->msg.broadcast) {
+                uint8_t discrete_bytes = (quantity / 8) + 1;
+                send_res_header(nmbs, discrete_bytes);
+
+                put_1(nmbs, discrete_bytes);
+
+                DEBUG("b %d\t", discrete_bytes);
+
+                DEBUG("coils ");
+                for (int i = 0; i < discrete_bytes; i++) {
+                    put_1(nmbs, bf[i]);
+                    DEBUG("%d", bf[i]);
+                }
+
+                err = send_msg_footer(nmbs);
+                if (err != NMBS_ERROR_NONE)
+                    return err;
+            }
+        }
+        else {
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+        }
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
+
+static nmbs_error handle_read_registers(nmbs_t* nmbs, nmbs_error (*callback)(uint16_t, uint16_t, uint16_t*)) {
+    nmbs_error err = recv(nmbs, 4);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    uint16_t address = get_2(nmbs);
+    uint16_t quantity = get_2(nmbs);
+
+    DEBUG("a %d\tq %d", address, quantity);
+
+    err = recv_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (!nmbs->msg.ignored) {
+        if (quantity < 1 || quantity > 125)
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+        if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+        if (callback) {
+            uint16_t regs[125] = {0};
+            err = callback(address, quantity, regs);
+            if (err != NMBS_ERROR_NONE) {
+                if (nmbs_error_is_exception(err))
+                    return handle_exception(nmbs, err);
+                else
+                    return handle_exception(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+            }
+
+            if (!nmbs->msg.broadcast) {
+                uint8_t regs_bytes = quantity * 2;
+                send_res_header(nmbs, regs_bytes);
+
+                put_1(nmbs, regs_bytes);
+
+                DEBUG("b %d\t", regs_bytes);
+
+                DEBUG("regs ");
+                for (int i = 0; i < quantity; i++) {
+                    put_2(nmbs, regs[i]);
+                    DEBUG("%d", regs[i]);
+                }
+
+                err = send_msg_footer(nmbs);
+                if (err != NMBS_ERROR_NONE)
+                    return err;
+            }
+        }
+        else {
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+        }
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
+
+static nmbs_error handle_read_coils(nmbs_t* nmbs) {
+    return handle_read_discrete(nmbs, nmbs->callbacks.read_coils);
+}
+
+
+static nmbs_error handle_read_discrete_inputs(nmbs_t* nmbs) {
+    return handle_read_discrete(nmbs, nmbs->callbacks.read_discrete_inputs);
+}
+
+
+static nmbs_error handle_read_holding_registers(nmbs_t* nmbs) {
+    return handle_read_registers(nmbs, nmbs->callbacks.read_holding_registers);
+}
+
+
+static nmbs_error handle_read_input_registers(nmbs_t* nmbs) {
+    return handle_read_registers(nmbs, nmbs->callbacks.read_input_registers);
+}
+
+
+static nmbs_error handle_write_single_coil(nmbs_t* nmbs) {
+    nmbs_error err = recv(nmbs, 4);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    uint16_t address = get_2(nmbs);
+    uint16_t value = get_2(nmbs);
+
+    DEBUG("a %d\tvalue %d", address, value);
+
+    err = recv_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (!nmbs->msg.ignored) {
+        if (nmbs->callbacks.write_single_coil) {
+            if (value != 0 && value != 0xFF00)
+                return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+            err = nmbs->callbacks.write_single_coil(address, value == 0 ? false : true);
+            if (err != NMBS_ERROR_NONE) {
+                if (nmbs_error_is_exception(err))
+                    return handle_exception(nmbs, err);
+                else
+                    return handle_exception(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+            }
+
+            if (!nmbs->msg.broadcast) {
+                send_res_header(nmbs, 4);
+
+                put_2(nmbs, address);
+                put_2(nmbs, value);
+                DEBUG("a %d\tvalue %d", address, value);
+
+                err = send_msg_footer(nmbs);
+                if (err != NMBS_ERROR_NONE)
+                    return err;
+            }
+        }
+        else {
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+        }
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
+
+static nmbs_error handle_write_single_register(nmbs_t* nmbs) {
+    nmbs_error err = recv(nmbs, 4);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    uint16_t address = get_2(nmbs);
+    uint16_t value = get_2(nmbs);
+
+    DEBUG("a %d\tvalue %d", address, value);
+
+    err = recv_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (!nmbs->msg.ignored) {
+        if (nmbs->callbacks.write_single_register) {
+            err = nmbs->callbacks.write_single_register(address, value);
+            if (err != NMBS_ERROR_NONE) {
+                if (nmbs_error_is_exception(err))
+                    return handle_exception(nmbs, err);
+                else
+                    return handle_exception(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+            }
+
+            if (!nmbs->msg.broadcast) {
+                send_res_header(nmbs, 4);
+
+                put_2(nmbs, address);
+                put_2(nmbs, value);
+                DEBUG("a %d\tvalue %d", address, value);
+
+                err = send_msg_footer(nmbs);
+                if (err != NMBS_ERROR_NONE)
+                    return err;
+            }
+        }
+        else {
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+        }
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
+
+static nmbs_error handle_write_multiple_coils(nmbs_t* nmbs) {
+    nmbs_error err = recv(nmbs, 5);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    uint16_t address = get_2(nmbs);
+    uint16_t quantity = get_2(nmbs);
+    uint8_t coils_bytes = get_1(nmbs);
+
+    DEBUG("a %d\tq %d\tb %d\tcoils ", address, quantity, coils_bytes);
+
+    err = recv(nmbs, coils_bytes);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    nmbs_bitfield coils;
+    for (int i = 0; i < coils_bytes; i++) {
+        coils[i] = get_1(nmbs);
+        DEBUG("%d ", coils[i]);
+    }
+
+    err = recv_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (!nmbs->msg.ignored) {
+        if (quantity < 1 || quantity > 0x07B0)
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+        if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+        if (coils_bytes == 0)
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+        if ((quantity / 8) + 1 != coils_bytes)
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+        if (nmbs->callbacks.write_multiple_coils) {
+            err = nmbs->callbacks.write_multiple_coils(address, quantity, coils);
+            if (err != NMBS_ERROR_NONE) {
+                if (nmbs_error_is_exception(err))
+                    return handle_exception(nmbs, err);
+                else
+                    return handle_exception(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+            }
+
+            if (!nmbs->msg.broadcast) {
+                send_res_header(nmbs, 4);
+
+                put_2(nmbs, address);
+                put_2(nmbs, quantity);
+                DEBUG("a %d\tq %d", address, quantity);
+
+                err = send_msg_footer(nmbs);
+                if (err != NMBS_ERROR_NONE)
+                    return err;
+            }
+        }
+        else {
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+        }
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
+
+static nmbs_error handle_write_multiple_registers(nmbs_t* nmbs) {
+    nmbs_error err = recv(nmbs, 5);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    uint16_t address = get_2(nmbs);
+    uint16_t quantity = get_2(nmbs);
+    uint8_t registers_bytes = get_1(nmbs);
+
+    DEBUG("a %d\tq %d\tb %d\tregs ", address, quantity, registers_bytes);
+
+    err = recv(nmbs, registers_bytes);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    uint16_t registers[0x007B];
+    for (int i = 0; i < registers_bytes / 2; i++) {
+        registers[i] = get_2(nmbs);
+        DEBUG("%d ", registers[i]);
+    }
+
+    err = recv_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (!nmbs->msg.ignored) {
+        if (quantity < 1 || quantity > 0x007B)
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+        if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+        if (registers_bytes == 0)
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+        if (registers_bytes != quantity * 2)
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+        if (nmbs->callbacks.write_multiple_registers) {
+            err = nmbs->callbacks.write_multiple_registers(address, quantity, registers);
+            if (err != NMBS_ERROR_NONE) {
+                if (nmbs_error_is_exception(err))
+                    return handle_exception(nmbs, err);
+                else
+                    return handle_exception(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+            }
+
+            if (!nmbs->msg.broadcast) {
+                send_res_header(nmbs, 4);
+
+                put_2(nmbs, address);
+                put_2(nmbs, quantity);
+                DEBUG("a %d\tq %d", address, quantity);
+
+                err = send_msg_footer(nmbs);
+                if (err != NMBS_ERROR_NONE)
+                    return err;
+            }
+        }
+        else {
+            return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+        }
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
+
+static nmbs_error handle_req_fc(nmbs_t* nmbs) {
+    DEBUG("fc %d\t", nmbs->msg.fc);
+
+    nmbs_error err;
+    switch (nmbs->msg.fc) {
+        case 1:
+            err = handle_read_coils(nmbs);
+            break;
+
+        case 2:
+            err = handle_read_discrete_inputs(nmbs);
+            break;
+
+        case 3:
+            err = handle_read_holding_registers(nmbs);
+            break;
+
+        case 4:
+            err = handle_read_input_registers(nmbs);
+            break;
+
+        case 5:
+            err = handle_write_single_coil(nmbs);
+            break;
+
+        case 6:
+            err = handle_write_single_register(nmbs);
+            break;
+
+        case 15:
+            err = handle_write_multiple_coils(nmbs);
+            break;
+
+        case 16:
+            err = handle_write_multiple_registers(nmbs);
+            break;
+
+        default:
+            err = NMBS_EXCEPTION_ILLEGAL_FUNCTION;
+    }
+
+    return err;
+}
+
+
+nmbs_error nmbs_server_poll(nmbs_t* nmbs) {
+    msg_state_reset(nmbs);
+
+    bool first_byte_received = false;
+    nmbs_error err = recv_req_header(nmbs, &first_byte_received);
+    if (err != NMBS_ERROR_NONE) {
+        if (!first_byte_received && err == NMBS_ERROR_TIMEOUT)
+            return NMBS_ERROR_NONE;
+        else
+            return err;
+    }
+
+#ifdef NMBS_DEBUG
+    printf("NMBS req <- ");
+    if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
+        if (nmbs->msg.broadcast)
+            printf("broadcast\t");
+
+        printf("client_id %d\t", nmbs->msg.unit_id);
+    }
+#endif
+
+    err = handle_req_fc(nmbs);
+    if (err != NMBS_ERROR_NONE) {
+        if (!nmbs_error_is_exception(err))
+            return err;
+    }
+
+    return err;
+}
+
+
+static nmbs_error read_discrete(nmbs_t* nmbs, uint8_t fc, uint16_t address, uint16_t quantity, nmbs_bitfield values) {
+    if (quantity < 1 || quantity > 2000)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    msg_state_req(nmbs, fc);
+    send_req_header(nmbs, 4);
+
+    put_2(nmbs, address);
+    put_2(nmbs, quantity);
+
+    DEBUG("a %d\tq %d", address, quantity);
+
+    nmbs_error err = send_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    err = recv_res_header(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    err = recv(nmbs, 1);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    uint8_t coils_bytes = get_1(nmbs);
+    DEBUG("b %d\t", coils_bytes);
+
+    err = recv(nmbs, coils_bytes);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    DEBUG("coils ");
+    for (int i = 0; i < coils_bytes; i++) {
+        values[i] = get_1(nmbs);
+        DEBUG("%d", values[i]);
+    }
+
+    err = recv_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    return NMBS_ERROR_NONE;
+}
+
+
+nmbs_error nmbs_read_coils(nmbs_t* nmbs, uint16_t address, uint16_t quantity, nmbs_bitfield coils_out) {
+    return read_discrete(nmbs, 1, address, quantity, coils_out);
+}
+
+
+nmbs_error nmbs_read_discrete_inputs(nmbs_t* nmbs, uint16_t address, uint16_t quantity, nmbs_bitfield inputs_out) {
+    return read_discrete(nmbs, 2, address, quantity, inputs_out);
+}
+
+
+static nmbs_error read_registers(nmbs_t* nmbs, uint8_t fc, uint16_t address, uint16_t quantity, uint16_t* registers) {
+    if (quantity < 1 || quantity > 125)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    msg_state_req(nmbs, fc);
+    send_req_header(nmbs, 4);
+
+    put_2(nmbs, address);
+    put_2(nmbs, quantity);
+
+    DEBUG("a %d\tq %d ", address, quantity);
+
+    nmbs_error err = send_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    err = recv_res_header(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    err = recv(nmbs, 1);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    uint8_t registers_bytes = get_1(nmbs);
+    DEBUG("b %d\t", registers_bytes);
+
+    err = recv(nmbs, registers_bytes);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    DEBUG("regs ");
+    for (int i = 0; i < registers_bytes / 2; i++) {
+        registers[i] = get_2(nmbs);
+        DEBUG("%d", registers[i]);
+    }
+
+    err = recv_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (registers_bytes != quantity * 2)
+        return NMBS_ERROR_INVALID_RESPONSE;
+
+    return NMBS_ERROR_NONE;
+}
+
+
+nmbs_error nmbs_read_holding_registers(nmbs_t* nmbs, uint16_t address, uint16_t quantity, uint16_t* registers_out) {
+    return read_registers(nmbs, 3, address, quantity, registers_out);
+}
+
+
+nmbs_error nmbs_read_input_registers(nmbs_t* nmbs, uint16_t address, uint16_t quantity, uint16_t* registers_out) {
+    return read_registers(nmbs, 4, address, quantity, registers_out);
+}
+
+
+nmbs_error nmbs_write_single_coil(nmbs_t* nmbs, uint16_t address, bool value) {
+    msg_state_req(nmbs, 5);
+    send_req_header(nmbs, 4);
+
+    uint16_t value_req = value ? 0xFF00 : 0;
+
+    put_2(nmbs, address);
+    put_2(nmbs, value_req);
+
+    DEBUG("a %d\tvalue %d ", address, value_req);
+
+    nmbs_error err = send_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (!nmbs->msg.broadcast) {
+        err = recv_res_header(nmbs);
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+        err = recv(nmbs, 4);
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+        uint16_t address_res = get_2(nmbs);
+        uint16_t value_res = get_2(nmbs);
+
+        DEBUG("a %d\tvalue %d", address, value_res);
+
+        err = recv_msg_footer(nmbs);
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+        if (address_res != address)
+            return NMBS_ERROR_INVALID_RESPONSE;
+
+        if (value_res != value_req)
+            return NMBS_ERROR_INVALID_RESPONSE;
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
+
+nmbs_error nmbs_write_single_register(nmbs_t* nmbs, uint16_t address, uint16_t value) {
+    msg_state_req(nmbs, 6);
+    send_req_header(nmbs, 4);
+
+    put_2(nmbs, address);
+    put_2(nmbs, value);
+
+    DEBUG("a %d\tvalue %d", address, value);
+
+    nmbs_error err = send_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (!nmbs->msg.broadcast) {
+        err = recv_res_header(nmbs);
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+        err = recv(nmbs, 4);
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+        uint16_t address_res = get_2(nmbs);
+        uint16_t value_res = get_2(nmbs);
+        DEBUG("a %d\tvalue %d ", address, value_res);
+
+        err = recv_msg_footer(nmbs);
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+        if (address_res != address)
+            return NMBS_ERROR_INVALID_RESPONSE;
+
+        if (value_res != value)
+            return NMBS_ERROR_INVALID_RESPONSE;
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
+
+nmbs_error nmbs_write_multiple_coils(nmbs_t* nmbs, uint16_t address, uint16_t quantity, const nmbs_bitfield coils) {
+    if (quantity < 1 || quantity > 0x07B0)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    uint8_t coils_bytes = (quantity / 8) + 1;
+
+    msg_state_req(nmbs, 15);
+    send_req_header(nmbs, 5 + coils_bytes);
+
+    put_2(nmbs, address);
+    put_2(nmbs, quantity);
+    put_1(nmbs, coils_bytes);
+    DEBUG("a %d\tq %d\tb %d\t", address, quantity, coils_bytes);
+
+    DEBUG("coils ");
+    for (int i = 0; i < coils_bytes; i++) {
+        put_1(nmbs, coils[i]);
+        DEBUG("%d ", coils[i]);
+    }
+
+    nmbs_error err = send_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (!nmbs->msg.broadcast) {
+        err = recv_res_header(nmbs);
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+        err = recv(nmbs, 4);
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+        uint16_t address_res = get_2(nmbs);
+        uint16_t quantity_res = get_2(nmbs);
+        DEBUG("a %d\tq %d", address_res, quantity_res);
+
+        err = recv_msg_footer(nmbs);
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+        if (address_res != address)
+            return NMBS_ERROR_INVALID_RESPONSE;
+
+        if (quantity_res != quantity)
+            return NMBS_ERROR_INVALID_RESPONSE;
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
+
+nmbs_error nmbs_write_multiple_registers(nmbs_t* nmbs, uint16_t address, uint16_t quantity, const uint16_t* registers) {
+    if (quantity < 1 || quantity > 0x007B)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    uint8_t registers_bytes = quantity * 2;
+
+    msg_state_req(nmbs, 16);
+    send_req_header(nmbs, 5 + registers_bytes);
+
+    put_2(nmbs, address);
+    put_2(nmbs, quantity);
+    put_1(nmbs, registers_bytes);
+    DEBUG("a %d\tq %d\tb %d\t", address, quantity, registers_bytes);
+
+    DEBUG("regs ");
+    for (int i = 0; i < quantity; i++) {
+        put_2(nmbs, registers[i]);
+        DEBUG("%d ", registers[i]);
+    }
+
+    nmbs_error err = send_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (!nmbs->msg.broadcast) {
+        err = recv_res_header(nmbs);
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+        err = recv(nmbs, 4);
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+        uint16_t address_res = get_2(nmbs);
+        uint16_t quantity_res = get_2(nmbs);
+        DEBUG("a %d\tq %d", address_res, quantity_res);
+
+        err = recv_msg_footer(nmbs);
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+        if (address_res != address)
+            return NMBS_ERROR_INVALID_RESPONSE;
+
+        if (quantity_res != quantity)
+            return NMBS_ERROR_INVALID_RESPONSE;
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
+
+nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const void* data, uint32_t data_len) {
+    msg_state_req(nmbs, fc);
+    send_msg_header(nmbs, data_len);
+
+    DEBUG("raw ");
+    for (uint32_t i = 0; i < data_len; i++) {
+        put_1(nmbs, ((uint8_t*) (data))[i]);
+        DEBUG("%d ", ((uint8_t*) (data))[i]);
+    }
+
+    return send_msg_footer(nmbs);
+}
+
+
+nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, void* data_out, uint32_t data_out_len) {
+    nmbs_error err = recv_res_header(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    err = recv(nmbs, data_out_len);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    for (uint32_t i = 0; i < data_out_len; i++) {
+        ((uint8_t*) (data_out))[i] = get_1(nmbs);
+    }
+
+    err = recv_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    return NMBS_ERROR_NONE;
+}
+
+
+#ifndef NMBS_STRERROR_DISABLED
+const char* nmbs_strerror(nmbs_error error) {
+    switch (error) {
+        case NMBS_ERROR_TRANSPORT:
+            return "transport error";
+
+        case NMBS_ERROR_TIMEOUT:
+            return "timeout";
+
+        case NMBS_ERROR_INVALID_RESPONSE:
+            return "invalid response received";
+
+        case NMBS_ERROR_INVALID_ARGUMENT:
+            return "invalid argument provided";
+
+        case NMBS_ERROR_NONE:
+            return "no error";
+
+        case NMBS_EXCEPTION_ILLEGAL_FUNCTION:
+            return "modbus exception 1: illegal function";
+
+        case NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS:
+            return "modbus exception 2: illegal data address";
+
+        case NMBS_EXCEPTION_ILLEGAL_DATA_VALUE:
+            return "modbus exception 3: data value";
+
+        case NMBS_EXCEPTION_SERVER_DEVICE_FAILURE:
+            return "modbus exception 4: server device failure";
+
+        default:
+            return "unknown error";
+    }
+}
+#endif

@@ -1,4 +1,4 @@
-#include "modbusino.h"
+#include "nanomodbus.h"
 #include "platform.h"
 #include <stdio.h>
 
@@ -23,58 +23,58 @@
 #define COILS_ADDR_MAX 100
 #define REGS_ADDR_MAX 32
 
-// A single mbsn_bitfield variable can keep 2000 coils
-mbsn_bitfield server_coils = {0};
+// A single nmbs_bitfield variable can keep 2000 coils
+nmbs_bitfield server_coils = {0};
 uint16_t server_registers[REGS_ADDR_MAX] = {0};
 
-mbsn_error handle_read_coils(uint16_t address, uint16_t quantity, mbsn_bitfield coils_out) {
+nmbs_error handle_read_coils(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out) {
     if (address + quantity > COILS_ADDR_MAX + 1)
-        return MBSN_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+        return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
 
     // Read our coils values into coils_out
     for (int i = 0; i < quantity; i++) {
-        bool value = mbsn_bitfield_read(server_coils, address + i);
-        mbsn_bitfield_write(coils_out, i, value);
+        bool value = nmbs_bitfield_read(server_coils, address + i);
+        nmbs_bitfield_write(coils_out, i, value);
     }
 
-    return MBSN_ERROR_NONE;
+    return NMBS_ERROR_NONE;
 }
 
 
-mbsn_error handle_write_multiple_coils(uint16_t address, uint16_t quantity, const mbsn_bitfield coils) {
+nmbs_error handle_write_multiple_coils(uint16_t address, uint16_t quantity, const nmbs_bitfield coils) {
     if (address + quantity > COILS_ADDR_MAX + 1)
-        return MBSN_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+        return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
 
     // Write coils values to our server_coils
     for (int i = 0; i < quantity; i++) {
-        mbsn_bitfield_write(server_coils, address + i, mbsn_bitfield_read(coils, i));
+        nmbs_bitfield_write(server_coils, address + i, nmbs_bitfield_read(coils, i));
     }
 
-    return MBSN_ERROR_NONE;
+    return NMBS_ERROR_NONE;
 }
 
 
-mbsn_error handler_read_holding_registers(uint16_t address, uint16_t quantity, uint16_t* registers_out) {
+nmbs_error handler_read_holding_registers(uint16_t address, uint16_t quantity, uint16_t* registers_out) {
     if (address + quantity > REGS_ADDR_MAX + 1)
-        return MBSN_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+        return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
 
     // Read our registers values into registers_out
     for (int i = 0; i < quantity; i++)
         registers_out[i] = server_registers[address + i];
 
-    return MBSN_ERROR_NONE;
+    return NMBS_ERROR_NONE;
 }
 
 
-mbsn_error handle_write_multiple_registers(uint16_t address, uint16_t quantity, const uint16_t* registers) {
+nmbs_error handle_write_multiple_registers(uint16_t address, uint16_t quantity, const uint16_t* registers) {
     if (address + quantity > REGS_ADDR_MAX + 1)
-        return MBSN_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+        return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
 
     // Write registers values to our server_registers
     for (int i = 0; i < quantity; i++)
         server_registers[address + i] = registers[i];
 
-    return MBSN_ERROR_NONE;
+    return NMBS_ERROR_NONE;
 }
 
 
@@ -91,30 +91,30 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    mbsn_platform_conf platform_conf = {0};
-    platform_conf.transport = MBSN_TRANSPORT_TCP;
+    nmbs_platform_conf platform_conf = {0};
+    platform_conf.transport = NMBS_TRANSPORT_TCP;
     platform_conf.read_byte = read_byte_fd_linux;
     platform_conf.write_byte = write_byte_fd_linux;
     platform_conf.sleep = sleep_linux;
     platform_conf.arg = NULL;    // We will set the arg (socket fd) later
 
     // These functions are defined in server.h
-    mbsn_callbacks callbacks = {0};
+    nmbs_callbacks callbacks = {0};
     callbacks.read_coils = handle_read_coils;
     callbacks.write_multiple_coils = handle_write_multiple_coils;
     callbacks.read_holding_registers = handler_read_holding_registers;
     callbacks.write_multiple_registers = handle_write_multiple_registers;
 
     // Create the modbus server. It's ok to set address_rtu to 0 since we are on TCP
-    mbsn_t mbsn;
-    mbsn_error err = mbsn_server_create(&mbsn, 0, &platform_conf, &callbacks);
-    if (err != MBSN_ERROR_NONE) {
+    nmbs_t nmbs;
+    nmbs_error err = nmbs_server_create(&nmbs, 0, &platform_conf, &callbacks);
+    if (err != NMBS_ERROR_NONE) {
         fprintf(stderr, "Error creating modbus server\n");
         return 1;
     }
 
     // Set only the polling timeout. Byte timeout will be handled by the TCP connection
-    mbsn_set_read_timeout(&mbsn, 1000);
+    nmbs_set_read_timeout(&nmbs, 1000);
 
     printf("Modbus TCP server started\n");
 
@@ -126,11 +126,11 @@ int main(int argc, char* argv[]) {
             break;
 
         // Set the next connection handler used by the read/write platform functions
-        mbsn_set_platform_arg(&mbsn, conn);
+        nmbs_set_platform_arg(&nmbs, conn);
 
-        err = mbsn_server_poll(&mbsn);
-        if (err != MBSN_ERROR_NONE) {
-            fprintf(stderr, "Error polling modbus connection - %s\n", mbsn_strerror(err));
+        err = nmbs_server_poll(&nmbs);
+        if (err != NMBS_ERROR_NONE) {
+            fprintf(stderr, "Error polling modbus connection - %s\n", nmbs_strerror(err));
             // In a more complete example, we should handle this error by closing the connection from our side
             break;
         }
@@ -139,6 +139,6 @@ int main(int argc, char* argv[]) {
     // Close the TCP server
     close_server();
 
-    // No need to destroy the mbsn instance, bye bye
+    // No need to destroy the nmbs instance, bye bye
     return 0;
 }

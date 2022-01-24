@@ -1,6 +1,6 @@
-# MODBUSino - A compact MODBUS RTU/TCP C library for microcontrollers
+# nanoMODBUS - A compact MODBUS RTU/TCP C library for microcontrollers
 
-MODBUSino is a small C library that implements the Modbus protocol. It is especially useful in resource-constrained
+nanoMODBUS is a small C library that implements the Modbus protocol. It is especially useful in resource-constrained
 system like microcontrollers.  
 Its main features are:
 
@@ -29,7 +29,7 @@ Its main features are:
 ## At a glance
 
 ```C
-#include "modbusino.h"
+#include "nanomodbus.h"
 #include "my_platform_stuff.h"
 #include <stdio.h>
 
@@ -42,37 +42,37 @@ int main(int argc, char* argv[]) {
     }
 
     // my_transport_read_byte, my_transport_write_byte and my_sleep are implemented by the user 
-    mbsn_platform_conf platform_conf;
-    platform_conf.transport = MBSN_TRANSPORT_TCP;
+    nmbs_platform_conf platform_conf;
+    platform_conf.transport = NMBS_TRANSPORT_TCP;
     platform_conf.read_byte = my_transport_read_byte;
     platform_conf.write_byte = my_transport_write_byte;
     platform_conf.sleep = my_sleep_linux;
     platform_conf.arg = conn;    // Passing our TCP connection handle to the read/write functions
 
     // Create the modbus client
-    mbsn_t mbsn;
-    mbsn_error err = mbsn_client_create(&mbsn, &platform_conf);
-    if (err != MBSN_ERROR_NONE) {
+    nmbs_t nmbs;
+    nmbs_error err = nmbs_client_create(&nmbs, &platform_conf);
+    if (err != NMBS_ERROR_NONE) {
         fprintf(stderr, "Error creating modbus client\n");
         return 1;
     }
 
     // Set only the response timeout. Byte timeout will be handled by the TCP connection
-    mbsn_set_read_timeout(&mbsn, 1000);
+    nmbs_set_read_timeout(&nmbs, 1000);
 
     // Write 2 holding registers at address 26
     uint16_t w_regs[2] = {123, 124};
-    err = mbsn_write_multiple_registers(&mbsn, 26, 2, w_regs);
-    if (err != MBSN_ERROR_NONE) {
-        fprintf(stderr, "Error writing register at address 26 - %s", mbsn_strerror(err));
+    err = nmbs_write_multiple_registers(&nmbs, 26, 2, w_regs);
+    if (err != NMBS_ERROR_NONE) {
+        fprintf(stderr, "Error writing register at address 26 - %s", nmbs_strerror(err));
         return 1;
     }
 
     // Read 2 holding registers from address 26
     uint16_t r_regs[2];
-    err = mbsn_read_holding_registers(&mbsn, 26, 2, r_regs);
-    if (err != MBSN_ERROR_NONE) {
-        fprintf(stderr, "Error reading 2 holding registers at address 26 - %s\n", mbsn_strerror(err));
+    err = nmbs_read_holding_registers(&nmbs, 26, 2, r_regs);
+    if (err != NMBS_ERROR_NONE) {
+        fprintf(stderr, "Error reading 2 holding registers at address 26 - %s\n", nmbs_strerror(err));
         return 1;
     }
     
@@ -85,15 +85,15 @@ int main(int argc, char* argv[]) {
 
 ## Installation
 
-Just copy `modbusino.c` and `modbusino.h` inside your application codebase.
+Just copy `nanomodbus.c` and `nanomodbus.h` inside your application codebase.
 
 ## API reference
 
-API reference is available in the repository's [GitHub Pages](https://debevv.github.io/MODBUSino/modbusino_8h.html).
+API reference is available in the repository's [GitHub Pages](https://debevv.github.io/nanoMODBUS/nanomodbus_8h.html).
 
 ## Platform functions
 
-MODBUSino requires the implementation of 3 platform-specific functions, which are passed as function pointers when creating a
+nanoMODBUS requires the implementation of 3 platform-specific functions, which are passed as function pointers when creating a
 client/server instance.
 
 ### Transport read/write
@@ -124,13 +124,13 @@ This function should sleep for the specified amount of milliseconds.
 
 Platform functions can access arbitrary user data through their `void* arg` argument. The argument is useful, for
 example, to pass to read/write function the connection they should operate on.  
-Its initial value can be set inside the `mbsn_platform_conf` struct when creating the client/server instance,
-and changed at any time via the `mbsn_set_platform_arg` API method.
+Its initial value can be set inside the `nmbs_platform_conf` struct when creating the client/server instance,
+and changed at any time via the `nmbs_set_platform_arg` API method.
 
 ## Platform endianness
 
-MODBUSino will attempt to detect the endianness of the platform at build time. If the automatic detection fails, you can
-manually set the endianness of the platform by defining either `MBSN_BIG_ENDIAN` or `MBSN_LITTLE_ENDIAN` in your build
+nanoMODBUS will attempt to detect the endianness of the platform at build time. If the automatic detection fails, you can
+manually set the endianness of the platform by defining either `NMBS_BIG_ENDIAN` or `NMBS_LITTLE_ENDIAN` in your build
 flags.
 
 ## Tests and examples
@@ -145,6 +145,6 @@ make
 
 ## Misc
 
-- To reduce code size, you can define `MBSN_STRERROR_DISABLED` to disable the code that converts `mbsn_error`s to
+- To reduce code size, you can define `NMBS_STRERROR_DISABLED` to disable the code that converts `nmbs_error`s to
   strings
-- Debug prints about received and sent messages can be enabled by defining `MBSN_DEBUG`
+- Debug prints about received and sent messages can be enabled by defining `NMBS_DEBUG`
