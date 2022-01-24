@@ -6,12 +6,18 @@
 #include <string.h>
 
 
-int read_byte_empty(uint8_t* b, int32_t timeout) {
+int read_byte_empty(uint8_t* b, int32_t timeout, void* arg) {
+    UNUSED_PARAM(b);
+    UNUSED_PARAM(timeout);
+    UNUSED_PARAM(arg);
     return 0;
 }
 
 
-int write_byte_empty(uint8_t b, int32_t timeout) {
+int write_byte_empty(uint8_t b, int32_t timeout, void* arg) {
+    UNUSED_PARAM(b);
+    UNUSED_PARAM(timeout);
+    UNUSED_PARAM(arg);
     return 0;
 }
 
@@ -25,47 +31,56 @@ void test_server_create(mbsn_transport transport) {
                                               .write_byte = write_byte_empty,
                                               .sleep = platform_sleep};
 
+    mbsn_callbacks callbacks_empty;
+
     should("create a modbus server");
     reset(mbsn);
-    err = mbsn_server_create(&mbsn, TEST_SERVER_ADDR, &platform_conf_empty, (mbsn_callbacks){});
+    err = mbsn_server_create(&mbsn, TEST_SERVER_ADDR, &platform_conf_empty, &callbacks_empty);
     check(err);
 
     should("check parameters and fail to create a modbus server");
     reset(mbsn);
-    err = mbsn_server_create(NULL, TEST_SERVER_ADDR, &platform_conf_empty, (mbsn_callbacks){});
+    err = mbsn_server_create(NULL, TEST_SERVER_ADDR, &platform_conf_empty, &callbacks_empty);
     expect(err == MBSN_ERROR_INVALID_ARGUMENT);
 
     reset(mbsn);
-    err = mbsn_server_create(&mbsn, 0, &platform_conf_empty, (mbsn_callbacks){});
-    expect(err == MBSN_ERROR_INVALID_ARGUMENT);
+    err = mbsn_server_create(&mbsn, 0, &platform_conf_empty, &callbacks_empty);
+    if (transport == MBSN_TRANSPORT_RTU)
+        expect(err == MBSN_ERROR_INVALID_ARGUMENT);
+    else
+        expect(err == MBSN_ERROR_NONE);
 
     reset(mbsn);
     mbsn_platform_conf p = platform_conf_empty;
     p.transport = 3;
-    err = mbsn_server_create(&mbsn, 0, &p, (mbsn_callbacks){});
+    err = mbsn_server_create(&mbsn, 0, &p, &callbacks_empty);
     expect(err == MBSN_ERROR_INVALID_ARGUMENT);
 
     reset(mbsn);
     p = platform_conf_empty;
     p.read_byte = NULL;
-    err = mbsn_server_create(&mbsn, 0, &p, (mbsn_callbacks){});
+    err = mbsn_server_create(&mbsn, 0, &p, &callbacks_empty);
     expect(err == MBSN_ERROR_INVALID_ARGUMENT);
 
     reset(mbsn);
     p = platform_conf_empty;
     p.write_byte = NULL;
-    err = mbsn_server_create(&mbsn, 0, &p, (mbsn_callbacks){});
+    err = mbsn_server_create(&mbsn, 0, &p, &callbacks_empty);
     expect(err == MBSN_ERROR_INVALID_ARGUMENT);
 }
 
 
-int read_byte_timeout(uint8_t* b, int32_t timeout) {
+int read_byte_timeout(uint8_t* b, int32_t timeout, void* arg) {
+    UNUSED_PARAM(b);
+    UNUSED_PARAM(arg);
     usleep(timeout * 1000);
     return 0;
 }
 
 
-int read_byte_timeout_third(uint8_t* b, int32_t timeout) {
+int read_byte_timeout_third(uint8_t* b, int32_t timeout, void* arg) {
+    UNUSED_PARAM(arg);
+
     static int stage = 0;
     switch (stage) {
         case 0:
@@ -89,6 +104,7 @@ void test_server_receive_base(mbsn_transport transport) {
     mbsn_t server, client;
     mbsn_error err;
     mbsn_platform_conf platform_conf;
+    mbsn_callbacks callbacks_empty;
 
 
     should("honor read_timeout and return normally");
@@ -100,7 +116,7 @@ void test_server_receive_base(mbsn_transport transport) {
 
     const int32_t read_timeout_ms = 250;
 
-    err = mbsn_server_create(&server, TEST_SERVER_ADDR, &platform_conf, (mbsn_callbacks){});
+    err = mbsn_server_create(&server, TEST_SERVER_ADDR, &platform_conf, &callbacks_empty);
     check(err);
 
     mbsn_set_read_timeout(&server, read_timeout_ms);
@@ -109,12 +125,12 @@ void test_server_receive_base(mbsn_transport transport) {
     const int polls = 5;
     for (int i = 0; i < polls; i++) {
         uint64_t start = now_ms();
-        err = mbsn_server_receive(&server);
+        err = mbsn_server_poll(&server);
         check(err);
 
         uint64_t diff = now_ms() - start;
 
-        assert(diff >= read_timeout_ms);
+        assert(diff >= (uint64_t) read_timeout_ms);
     }
 
 
@@ -126,13 +142,13 @@ void test_server_receive_base(mbsn_transport transport) {
 
     const int32_t byte_timeout_ms = 250;
 
-    err = mbsn_server_create(&server, TEST_SERVER_ADDR, &platform_conf, (mbsn_callbacks){});
+    err = mbsn_server_create(&server, TEST_SERVER_ADDR, &platform_conf, &callbacks_empty);
     check(err);
 
     mbsn_set_read_timeout(&server, 1000);
     mbsn_set_byte_timeout(&server, byte_timeout_ms);
 
-    err = mbsn_server_receive(&server);
+    err = mbsn_server_poll(&server);
     expect(err == MBSN_ERROR_TIMEOUT);
 
 
@@ -193,15 +209,16 @@ mbsn_error read_discrete(uint16_t address, uint16_t quantity, mbsn_bitfield coil
 void test_fc1(mbsn_transport transport) {
     const uint8_t fc = 1;
     uint8_t raw_res[260];
+    mbsn_callbacks callbacks_empty = {0};
 
-    start_client_and_server(transport, (mbsn_callbacks){});
+    start_client_and_server(transport, &callbacks_empty);
 
     should("return MBSN_EXCEPTION_ILLEGAL_FUNCTION when callback is not registered server-side");
     assert(mbsn_read_coils(&CLIENT, 0, 1, NULL) == MBSN_EXCEPTION_ILLEGAL_FUNCTION);
 
     stop_client_and_server();
 
-    start_client_and_server(transport, (mbsn_callbacks){.read_coils = read_discrete});
+    start_client_and_server(transport, &(mbsn_callbacks){.read_coils = read_discrete});
 
     should("immediately return MBSN_ERROR_INVALID_ARGUMENT when calling with quantity 0");
     assert(mbsn_read_coils(&CLIENT, 1, 0, NULL) == MBSN_ERROR_INVALID_ARGUMENT);
@@ -259,15 +276,16 @@ void test_fc1(mbsn_transport transport) {
 void test_fc2(mbsn_transport transport) {
     const uint8_t fc = 2;
     uint8_t raw_res[260];
+    mbsn_callbacks callbacks_empty = {0};
 
-    start_client_and_server(transport, (mbsn_callbacks){});
+    start_client_and_server(transport, &callbacks_empty);
 
     should("return MBSN_EXCEPTION_ILLEGAL_FUNCTION when callback is not registered server-side");
     assert(mbsn_read_discrete_inputs(&CLIENT, 0, 1, NULL) == MBSN_EXCEPTION_ILLEGAL_FUNCTION);
 
     stop_client_and_server();
 
-    start_client_and_server(transport, (mbsn_callbacks){.read_discrete_inputs = read_discrete});
+    start_client_and_server(transport, &(mbsn_callbacks){.read_discrete_inputs = read_discrete});
 
     should("immediately return MBSN_ERROR_INVALID_ARGUMENT when calling with quantity 0");
     assert(mbsn_read_discrete_inputs(&CLIENT, 1, 0, NULL) == MBSN_ERROR_INVALID_ARGUMENT);
@@ -345,15 +363,16 @@ mbsn_error read_registers(uint16_t address, uint16_t quantity, uint16_t* registe
 void test_fc3(mbsn_transport transport) {
     const uint8_t fc = 3;
     uint8_t raw_res[260];
+    mbsn_callbacks callbacks_empty = {0};
 
-    start_client_and_server(transport, (mbsn_callbacks){});
+    start_client_and_server(transport, &callbacks_empty);
 
     should("return MBSN_EXCEPTION_ILLEGAL_FUNCTION when callback is not registered server-side");
     assert(mbsn_read_holding_registers(&CLIENT, 0, 1, NULL) == MBSN_EXCEPTION_ILLEGAL_FUNCTION);
 
     stop_client_and_server();
 
-    start_client_and_server(transport, (mbsn_callbacks){.read_holding_registers = read_registers});
+    start_client_and_server(transport, &(mbsn_callbacks){.read_holding_registers = read_registers});
 
     should("immediately return MBSN_ERROR_INVALID_ARGUMENT when calling with quantity 0");
     assert(mbsn_read_holding_registers(&CLIENT, 1, 0, NULL) == MBSN_ERROR_INVALID_ARGUMENT);
@@ -399,15 +418,16 @@ void test_fc3(mbsn_transport transport) {
 void test_fc4(mbsn_transport transport) {
     const uint8_t fc = 4;
     uint8_t raw_res[260];
+    mbsn_callbacks callbacks_empty = {0};
 
-    start_client_and_server(transport, (mbsn_callbacks){});
+    start_client_and_server(transport, &callbacks_empty);
 
     should("return MBSN_EXCEPTION_ILLEGAL_FUNCTION when callback is not registered server-side");
     assert(mbsn_read_input_registers(&CLIENT, 0, 1, NULL) == MBSN_EXCEPTION_ILLEGAL_FUNCTION);
 
     stop_client_and_server();
 
-    start_client_and_server(transport, (mbsn_callbacks){.read_input_registers = read_registers});
+    start_client_and_server(transport, &(mbsn_callbacks){.read_input_registers = read_registers});
 
     should("immediately return MBSN_ERROR_INVALID_ARGUMENT when calling with quantity 0");
     assert(mbsn_read_input_registers(&CLIENT, 1, 0, NULL) == MBSN_ERROR_INVALID_ARGUMENT);
@@ -473,15 +493,16 @@ mbsn_error write_coil(uint16_t address, bool value) {
 void test_fc5(mbsn_transport transport) {
     const uint8_t fc = 5;
     uint8_t raw_res[260];
+    mbsn_callbacks callbacks_empty = {0};
 
-    start_client_and_server(transport, (mbsn_callbacks){});
+    start_client_and_server(transport, &callbacks_empty);
 
     should("return MBSN_EXCEPTION_ILLEGAL_FUNCTION when callback is not registered server-side");
     assert(mbsn_write_single_coil(&CLIENT, 0, true) == MBSN_EXCEPTION_ILLEGAL_FUNCTION);
 
     stop_client_and_server();
 
-    start_client_and_server(transport, (mbsn_callbacks){.write_single_coil = write_coil});
+    start_client_and_server(transport, &(mbsn_callbacks){.write_single_coil = write_coil});
 
     should("return MBSN_EXCEPTION_ILLEGAL_DATA_VALUE when calling with value !0x0000 or 0xFF000");
     check(mbsn_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(6), htons(0x0001)}, 4));
@@ -537,15 +558,16 @@ mbsn_error write_register(uint16_t address, uint16_t value) {
 void test_fc6(mbsn_transport transport) {
     const uint8_t fc = 6;
     uint8_t raw_res[260];
+    mbsn_callbacks callbacks_empty = {0};
 
-    start_client_and_server(transport, (mbsn_callbacks){});
+    start_client_and_server(transport, &callbacks_empty);
 
     should("return MBSN_EXCEPTION_ILLEGAL_FUNCTION when callback is not registered server-side");
     assert(mbsn_write_single_register(&CLIENT, 0, 123) == MBSN_EXCEPTION_ILLEGAL_FUNCTION);
 
     stop_client_and_server();
 
-    start_client_and_server(transport, (mbsn_callbacks){.write_single_register = write_register});
+    start_client_and_server(transport, &(mbsn_callbacks){.write_single_register = write_register});
 
     should("return MBSN_EXCEPTION_SERVER_DEVICE_FAILURE when server handler returns any non-exception error");
     assert(mbsn_write_single_register(&CLIENT, 1, 123) == MBSN_EXCEPTION_SERVER_DEVICE_FAILURE);
@@ -617,15 +639,16 @@ void test_fc15(mbsn_transport transport) {
     const uint8_t fc = 15;
     uint8_t raw_res[260];
     mbsn_bitfield bf = {0};
+    mbsn_callbacks callbacks_empty = {0};
 
-    start_client_and_server(transport, (mbsn_callbacks){});
+    start_client_and_server(transport, &callbacks_empty);
 
     should("return MBSN_EXCEPTION_ILLEGAL_FUNCTION when callback is not registered server-side");
     assert(mbsn_write_multiple_coils(&CLIENT, 0, 1, bf) == MBSN_EXCEPTION_ILLEGAL_FUNCTION);
 
     stop_client_and_server();
 
-    start_client_and_server(transport, (mbsn_callbacks){.write_multiple_coils = write_coils});
+    start_client_and_server(transport, &(mbsn_callbacks){.write_multiple_coils = write_coils});
 
     should("immediately return MBSN_ERROR_INVALID_ARGUMENT when calling with quantity 0");
     assert(mbsn_write_multiple_coils(&CLIENT, 1, 0, bf) == MBSN_ERROR_INVALID_ARGUMENT);
@@ -730,15 +753,16 @@ void test_fc16(mbsn_transport transport) {
     const uint8_t fc = 16;
     uint8_t raw_res[260];
     uint16_t registers[125];
+    mbsn_callbacks callbacks_empty = {0};
 
-    start_client_and_server(transport, (mbsn_callbacks){});
+    start_client_and_server(transport, &callbacks_empty);
 
     should("return MBSN_EXCEPTION_ILLEGAL_FUNCTION when callback is not registered server-side");
     assert(mbsn_write_multiple_registers(&CLIENT, 0, 1, registers) == MBSN_EXCEPTION_ILLEGAL_FUNCTION);
 
     stop_client_and_server();
 
-    start_client_and_server(transport, (mbsn_callbacks){.write_multiple_registers = write_registers});
+    start_client_and_server(transport, &(mbsn_callbacks){.write_multiple_registers = write_registers});
 
     should("immediately return MBSN_ERROR_INVALID_ARGUMENT when calling with quantity 0");
     assert(mbsn_write_multiple_registers(&CLIENT, 1, 0, registers) == MBSN_ERROR_INVALID_ARGUMENT);
@@ -801,7 +825,7 @@ mbsn_transport transports[2] = {MBSN_TRANSPORT_RTU, MBSN_TRANSPORT_TCP};
 const char* transports_str[2] = {"RTU", "TCP"};
 
 void for_transports(void (*test_fn)(mbsn_transport), const char* should_str) {
-    for (int t = 0; t < sizeof(transports) / sizeof(mbsn_transport); t++) {
+    for (unsigned long t = 0; t < sizeof(transports) / sizeof(mbsn_transport); t++) {
         printf("Should %s on %s:\n", should_str, transports_str[t]);
         test(test_fn(transports[t]));
     }

@@ -16,10 +16,8 @@
 
 #define test(f) (nesting++, (f), nesting--)
 
-/*
-#define htons(w) (((((uint16_t) (w) &0xFF)) << 8) | (((uint16_t) (w) &0xFF00) >> 8))
-#define ntohs(w) (((((uint16_t) (w) &0xFF)) << 8) | (((uint16_t) (w) &0xFF00) >> 8))
-*/
+#define UNUSED_PARAM(x) ((x) = (x))
+
 
 const uint8_t TEST_SERVER_ADDR = 1;
 
@@ -35,7 +33,7 @@ mbsn_t CLIENT, SERVER;
 
 
 #define should(s)                                                                                                      \
-    for (int i = 0; i < nesting; i++) {                                                                                \
+    for (unsigned int i = 0; i < nesting; i++) {                                                                       \
         printf("\t");                                                                                                  \
     }                                                                                                                  \
     printf("Should %s\n", (s))
@@ -48,7 +46,8 @@ uint64_t now_ms() {
 }
 
 
-void platform_sleep(uint32_t milliseconds) {
+void platform_sleep(uint32_t milliseconds, void* arg) {
+    UNUSED_PARAM(arg);
     usleep(milliseconds * 1000);
 }
 
@@ -124,22 +123,26 @@ int write_byte_fd(int fd, uint8_t b, int32_t timeout_ms) {
 }
 
 
-int read_byte_socket_server(uint8_t* b, int32_t timeout_ms) {
+int read_byte_socket_server(uint8_t* b, int32_t timeout_ms, void* arg) {
+    UNUSED_PARAM(arg);
     return read_byte_fd(sockets[0], b, timeout_ms);
 }
 
 
-int write_byte_socket_server(uint8_t b, int32_t timeout_ms) {
+int write_byte_socket_server(uint8_t b, int32_t timeout_ms, void* arg) {
+    UNUSED_PARAM(arg);
     return write_byte_fd(sockets[0], b, timeout_ms);
 }
 
 
-int read_byte_socket_client(uint8_t* b, int32_t timeout_ms) {
+int read_byte_socket_client(uint8_t* b, int32_t timeout_ms, void* arg) {
+    UNUSED_PARAM(arg);
     return read_byte_fd(sockets[1], b, timeout_ms);
 }
 
 
-int write_byte_socket_client(uint8_t b, int32_t timeout_ms) {
+int write_byte_socket_client(uint8_t b, int32_t timeout_ms, void* arg) {
+    UNUSED_PARAM(arg);
     return write_byte_fd(sockets[1], b, timeout_ms);
 }
 
@@ -178,7 +181,7 @@ void* server_listen_thread() {
         if (is_server_listen_thread_stopped())
             break;
 
-        check(mbsn_server_receive(&SERVER));
+        check(mbsn_server_poll(&SERVER));
     }
 
     return NULL;
@@ -195,7 +198,7 @@ void stop_client_and_server() {
 }
 
 
-void start_client_and_server(mbsn_transport transport, mbsn_callbacks server_callbacks) {
+void start_client_and_server(mbsn_transport transport, const mbsn_callbacks* server_callbacks) {
     assert(pthread_mutex_destroy(&server_stopped_m) == 0);
     assert(pthread_mutex_init(&server_stopped_m, NULL) == 0);
 

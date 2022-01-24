@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 
 
 typedef enum mbsn_error {
@@ -30,6 +31,8 @@ typedef uint8_t mbsn_bitfield[250];
 #define mbsn_bitfield_write(bf, b, v)                                                                                  \
     (((bf)[(b) / 8]) = ((v) ? (((bf)[(b) / 8]) | (0x1 << ((b) % 8))) : (((bf)[(b) / 8]) & ~(0x1 << ((b) % 8)))))
 
+#define mbsn_bitfield_reset(bf) memset(bf, 0, sizeof(mbsn_bitfield))
+
 
 typedef enum mbsn_transport {
     MBSN_TRANSPORT_RTU = 1,
@@ -38,9 +41,10 @@ typedef enum mbsn_transport {
 
 typedef struct mbsn_platform_conf {
     mbsn_transport transport;
-    int (*read_byte)(uint8_t* b, int32_t);
-    int (*write_byte)(uint8_t b, int32_t);
-    void (*sleep)(uint32_t milliseconds);
+    int (*read_byte)(uint8_t* b, int32_t, void* arg);
+    int (*write_byte)(uint8_t b, int32_t, void* arg);
+    void (*sleep)(uint32_t milliseconds, void* arg);
+    void* arg;
 } mbsn_platform_conf;
 
 
@@ -78,6 +82,7 @@ typedef struct mbsn_t {
 
     uint8_t address_rtu;
     uint8_t dest_address_rtu;
+    uint16_t current_tid;
 } mbsn_t;
 
 
@@ -86,8 +91,8 @@ static const uint8_t MBSN_BROADCAST_ADDRESS = 0;
 
 mbsn_error mbsn_client_create(mbsn_t* mbsn, const mbsn_platform_conf* platform_conf);
 
-mbsn_error mbsn_server_create(mbsn_t* mbsn, uint8_t address, const mbsn_platform_conf* platform_conf,
-                              mbsn_callbacks callbacks);
+mbsn_error mbsn_server_create(mbsn_t* mbsn, uint8_t address_rtu, const mbsn_platform_conf* platform_conf,
+                              const mbsn_callbacks* callbacks);
 
 void mbsn_set_read_timeout(mbsn_t* mbsn, int32_t timeout_ms);
 
@@ -95,9 +100,11 @@ void mbsn_set_byte_timeout(mbsn_t* mbsn, int32_t timeout_ms);
 
 void mbsn_set_byte_spacing(mbsn_t* mbsn, uint32_t spacing_ms);
 
+void mbsn_set_platform_arg(mbsn_t* mbsn, void* arg);
+
 void mbsn_set_destination_rtu_address(mbsn_t* mbsn, uint8_t address);
 
-mbsn_error mbsn_server_receive(mbsn_t* mbsn);
+mbsn_error mbsn_server_poll(mbsn_t* mbsn);
 
 mbsn_error mbsn_read_coils(mbsn_t* mbsn, uint16_t address, uint16_t quantity, mbsn_bitfield coils_out);
 
@@ -119,7 +126,9 @@ mbsn_error mbsn_send_raw_pdu(mbsn_t* mbsn, uint8_t fc, const void* data, uint32_
 
 mbsn_error mbsn_receive_raw_pdu_response(mbsn_t* mbsn, void* data_out, uint32_t data_out_len);
 
-const char* mbsn_strerror(int error);
+#ifndef MBSN_STRERROR_DISABLED
+const char* mbsn_strerror(mbsn_error error);
+#endif
 
 
 #endif    //MODBUSINO_H

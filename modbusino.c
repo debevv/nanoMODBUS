@@ -60,16 +60,17 @@ static void msg_state_reset(mbsn_t* mbsn) {
 
 
 static void msg_state_req(mbsn_t* mbsn, uint8_t fc) {
-    static uint16_t TID = 1;
+    if (mbsn->current_tid == UINT16_MAX)
+        mbsn->current_tid = 1;
+    else
+        mbsn->current_tid++;
 
     msg_state_reset(mbsn);
     mbsn->msg.unit_id = mbsn->dest_address_rtu;
     mbsn->msg.fc = fc;
-    mbsn->msg.transaction_id = TID;
-    if (mbsn->msg.unit_id == 0)
+    mbsn->msg.transaction_id = mbsn->current_tid;
+    if (mbsn->msg.unit_id == 0 && mbsn->platform.transport == MBSN_TRANSPORT_RTU)
         mbsn->msg.broadcast = true;
-
-    TID++;
 }
 
 
@@ -103,17 +104,17 @@ mbsn_error mbsn_client_create(mbsn_t* mbsn, const mbsn_platform_conf* platform_c
 }
 
 
-mbsn_error mbsn_server_create(mbsn_t* mbsn, uint8_t address, const mbsn_platform_conf* transport_conf,
-                              mbsn_callbacks callbacks) {
-    if (address == 0)
+mbsn_error mbsn_server_create(mbsn_t* mbsn, uint8_t address_rtu, const mbsn_platform_conf* platform_conf,
+                              const mbsn_callbacks* callbacks) {
+    if (platform_conf->transport == MBSN_TRANSPORT_RTU && address_rtu == 0)
         return MBSN_ERROR_INVALID_ARGUMENT;
 
-    mbsn_error ret = mbsn_create(mbsn, transport_conf);
+    mbsn_error ret = mbsn_create(mbsn, platform_conf);
     if (ret != MBSN_ERROR_NONE)
         return ret;
 
-    mbsn->address_rtu = address;
-    mbsn->callbacks = callbacks;
+    mbsn->address_rtu = address_rtu;
+    mbsn->callbacks = *callbacks;
 
     return MBSN_ERROR_NONE;
 }
@@ -139,9 +140,14 @@ void mbsn_set_destination_rtu_address(mbsn_t* mbsn, uint8_t address) {
 }
 
 
-static uint16_t crc_calc(const uint8_t* data, unsigned int length) {
+void mbsn_set_platform_arg(mbsn_t* mbsn, void* arg) {
+    mbsn->platform.arg = arg;
+}
+
+
+static uint16_t crc_calc(const uint8_t* data, uint32_t length) {
     uint16_t crc = 0xFFFF;
-    for (int i = 0; i < length; i++) {
+    for (uint32_t i = 0; i < length; i++) {
         crc ^= (uint16_t) data[i];
         for (int j = 8; j != 0; j--) {
             if ((crc & 0x0001) != 0) {
@@ -158,9 +164,10 @@ static uint16_t crc_calc(const uint8_t* data, unsigned int length) {
 
 
 static mbsn_error recv(mbsn_t* mbsn, uint32_t count) {
-    int r = 0;
+    uint32_t r = 0;
     while (r != count) {
-        int ret = mbsn->platform.read_byte(mbsn->msg.buf + mbsn->msg.buf_idx + r, mbsn->byte_timeout_ms);
+        int ret = mbsn->platform.read_byte(mbsn->msg.buf + mbsn->msg.buf_idx + r, mbsn->byte_timeout_ms,
+                                           mbsn->platform.arg);
         if (ret == 0) {
 #ifdef MBSN_DEBUG
             if (mbsn->address_rtu == 0)
@@ -195,9 +202,9 @@ static mbsn_error send(mbsn_t* mbsn) {
 
     for (int i = 0; i < mbsn->msg.buf_idx; i++) {
         if (spacing_ms != 0)
-            mbsn->platform.sleep(spacing_ms);
+            mbsn->platform.sleep(spacing_ms, mbsn->platform.arg);
 
-        int ret = mbsn->platform.write_byte(mbsn->msg.buf[i], mbsn->read_timeout_ms);
+        int ret = mbsn->platform.write_byte(mbsn->msg.buf[i], mbsn->read_timeout_ms, mbsn->platform.arg);
         if (ret == 0) {
             return MBSN_ERROR_TIMEOUT;
         }
@@ -307,13 +314,15 @@ static mbsn_error recv_req_header(mbsn_t* mbsn, bool* first_byte_received) {
     if (err != MBSN_ERROR_NONE)
         return err;
 
-    // Check if request is for us
-    if (mbsn->msg.unit_id == MBSN_BROADCAST_ADDRESS)
-        mbsn->msg.broadcast = true;
-    else if (mbsn->msg.unit_id != mbsn->address_rtu)
-        mbsn->msg.ignored = true;
-    else
-        mbsn->msg.ignored = false;
+    if (mbsn->platform.transport == MBSN_TRANSPORT_RTU) {
+        // Check if request is for us
+        if (mbsn->msg.unit_id == MBSN_BROADCAST_ADDRESS)
+            mbsn->msg.broadcast = true;
+        else if (mbsn->msg.unit_id != mbsn->address_rtu)
+            mbsn->msg.ignored = true;
+        else
+            mbsn->msg.ignored = false;
+    }
 
     return MBSN_ERROR_NONE;
 }
@@ -374,9 +383,6 @@ static void send_msg_header(mbsn_t* mbsn, uint16_t data_length) {
     }
 
     put_1(mbsn, mbsn->msg.fc);
-
-    if (mbsn->msg.unit_id == MBSN_BROADCAST_ADDRESS)
-        mbsn->msg.broadcast = true;
 }
 
 
@@ -776,7 +782,7 @@ static mbsn_error handle_req_fc(mbsn_t* mbsn) {
 }
 
 
-mbsn_error mbsn_server_receive(mbsn_t* mbsn) {
+mbsn_error mbsn_server_poll(mbsn_t* mbsn) {
     msg_state_reset(mbsn);
 
     bool first_byte_received = false;
@@ -787,75 +793,6 @@ mbsn_error mbsn_server_receive(mbsn_t* mbsn) {
         else
             return err;
     }
-
-    /*
-    // We should wait for the read timeout for the first message byte
-    int32_t old_byte_timeout = mbsn->byte_timeout_ms;
-    mbsn->byte_timeout_ms = mbsn->read_timeout_ms;
-
-    if (mbsn->transport == MBSN_TRANSPORT_RTU) {
-        uint8_t id;
-        mbsn_error err = recv_1(mbsn, &id, &req.crc);
-
-        mbsn->byte_timeout_ms = old_byte_timeout;
-
-        if (err != 0) {
-            if (err == MBSN_ERROR_TIMEOUT)
-                return MBSN_ERROR_NONE;
-            else
-                return err;
-        }
-
-        // Check if request is for us
-        if (id == 0)
-            req.broadcast = true;
-        else if (id != mbsn->address_rtu)
-            req.ignored = true;
-        else
-            req.ignored = false;
-
-        err = recv_1(mbsn, &req.fc, &req.crc);
-        if (err != MBSN_ERROR_NONE)
-            return err;
-    }
-    else if (mbsn->transport == MBSN_TRANSPORT_TCP) {
-        mbsn_error err = recv_2(mbsn, &req.transaction_id, NULL);
-
-        mbsn->byte_timeout_ms = old_byte_timeout;
-
-        if (err != 0) {
-            if (err == MBSN_ERROR_TIMEOUT)
-                return MBSN_ERROR_NONE;
-            else
-                return err;
-        }
-
-        uint16_t protocol_id = 0xFFFF;
-        err = recv_2(mbsn, &protocol_id, NULL);
-        if (err != MBSN_ERROR_NONE)
-            return err;
-
-        uint16_t length = 0xFFFF;
-        err = recv_2(mbsn, &length, NULL);
-        if (err != MBSN_ERROR_NONE)
-            return err;
-
-        err = recv_1(mbsn, &req.unit_id, NULL);
-        if (err != MBSN_ERROR_NONE)
-            return err;
-
-        err = recv_1(mbsn, &req.fc, NULL);
-        if (err != MBSN_ERROR_NONE)
-            return err;
-
-        if (protocol_id != 0)
-            return MBSN_ERROR_TRANSPORT;
-
-        // TODO maybe we should actually check the length of the request against this value
-        if (length == 0xFFFF)
-            return MBSN_ERROR_TRANSPORT;
-    }
-     */
 
     err = handle_req_fc(mbsn);
     if (err != MBSN_ERROR_NONE) {
@@ -1159,7 +1096,7 @@ mbsn_error mbsn_write_multiple_registers(mbsn_t* mbsn, uint16_t address, uint16_
 mbsn_error mbsn_send_raw_pdu(mbsn_t* mbsn, uint8_t fc, const void* data, uint32_t data_len) {
     msg_state_req(mbsn, fc);
     send_msg_header(mbsn, data_len);
-    for (int i = 0; i < data_len; i++) {
+    for (uint32_t i = 0; i < data_len; i++) {
         put_1(mbsn, ((uint8_t*) (data))[i]);
     }
 
@@ -1176,7 +1113,7 @@ mbsn_error mbsn_receive_raw_pdu_response(mbsn_t* mbsn, void* data_out, uint32_t 
     if (err != MBSN_ERROR_NONE)
         return err;
 
-    for (int i = 0; i < data_out_len; i++) {
+    for (uint32_t i = 0; i < data_out_len; i++) {
         ((uint8_t*) (data_out))[i] = get_1(mbsn);
     }
 
@@ -1186,3 +1123,40 @@ mbsn_error mbsn_receive_raw_pdu_response(mbsn_t* mbsn, void* data_out, uint32_t 
 
     return MBSN_ERROR_NONE;
 }
+
+
+#ifndef MBSN_STRERROR_DISABLED
+const char* mbsn_strerror(mbsn_error error) {
+    switch (error) {
+        case MBSN_ERROR_TRANSPORT:
+            return "transport error";
+
+        case MBSN_ERROR_TIMEOUT:
+            return "timeout";
+
+        case MBSN_ERROR_INVALID_RESPONSE:
+            return "invalid response received";
+
+        case MBSN_ERROR_INVALID_ARGUMENT:
+            return "invalid argument provided";
+
+        case MBSN_ERROR_NONE:
+            return "no error";
+
+        case MBSN_EXCEPTION_ILLEGAL_FUNCTION:
+            return "modbus exception 1: illegal function";
+
+        case MBSN_EXCEPTION_ILLEGAL_DATA_ADDRESS:
+            return "modbus exception 2: illegal data address";
+
+        case MBSN_EXCEPTION_ILLEGAL_DATA_VALUE:
+            return "modbus exception 3: data value";
+
+        case MBSN_EXCEPTION_SERVER_DEVICE_FAILURE:
+            return "modbus exception 4: server device failure";
+
+        default:
+            return "unknown error";
+    }
+}
+#endif
