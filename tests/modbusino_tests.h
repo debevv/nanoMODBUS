@@ -1,4 +1,5 @@
 #include "modbusino.h"
+#undef NDEBUG
 #include <assert.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -8,7 +9,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#define expect(c) (assert(c))
+#define expect(expr) assert(expr)
 
 #define check(err) (expect((err) == MBSN_ERROR_NONE))
 
@@ -59,7 +60,7 @@ void reset_sockets() {
     if (sockets[1] != -1)
         close(sockets[1]);
 
-    assert(socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) == 0);
+    expect(socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) == 0);
 }
 
 
@@ -169,9 +170,9 @@ mbsn_platform_conf* platform_conf_socket_client(mbsn_transport transport) {
 
 bool is_server_listen_thread_stopped() {
     bool stopped = false;
-    assert(pthread_mutex_lock(&server_stopped_m) == 0);
+    expect(pthread_mutex_lock(&server_stopped_m) == 0);
     stopped = server_stopped;
-    assert(pthread_mutex_unlock(&server_stopped_m) == 0);
+    expect(pthread_mutex_unlock(&server_stopped_m) == 0);
     return stopped;
 }
 
@@ -190,17 +191,17 @@ void* server_listen_thread() {
 
 void stop_client_and_server() {
     if (!is_server_listen_thread_stopped()) {
-        assert(pthread_mutex_lock(&server_stopped_m) == 0);
+        expect(pthread_mutex_lock(&server_stopped_m) == 0);
         server_stopped = true;
-        assert(pthread_mutex_unlock(&server_stopped_m) == 0);
-        assert(pthread_join(server_thread, NULL) == 0);
+        expect(pthread_mutex_unlock(&server_stopped_m) == 0);
+        expect(pthread_join(server_thread, NULL) == 0);
     }
 }
 
 
 void start_client_and_server(mbsn_transport transport, const mbsn_callbacks* server_callbacks) {
-    assert(pthread_mutex_destroy(&server_stopped_m) == 0);
-    assert(pthread_mutex_init(&server_stopped_m, NULL) == 0);
+    expect(pthread_mutex_destroy(&server_stopped_m) == 0);
+    expect(pthread_mutex_init(&server_stopped_m, NULL) == 0);
 
     reset_sockets();
 
@@ -217,8 +218,8 @@ void start_client_and_server(mbsn_transport transport, const mbsn_callbacks* ser
     mbsn_set_read_timeout(&CLIENT, 5000);
     mbsn_set_byte_timeout(&CLIENT, 100);
 
-    assert(pthread_mutex_lock(&server_stopped_m) == 0);
+    expect(pthread_mutex_lock(&server_stopped_m) == 0);
     server_stopped = false;
-    assert(pthread_mutex_unlock(&server_stopped_m) == 0);
-    assert(pthread_create(&server_thread, NULL, server_listen_thread, &SERVER) == 0);
+    expect(pthread_mutex_unlock(&server_stopped_m) == 0);
+    expect(pthread_create(&server_thread, NULL, server_listen_thread, &SERVER) == 0);
 }

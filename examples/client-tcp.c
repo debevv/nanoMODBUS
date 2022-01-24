@@ -37,7 +37,8 @@ int main(int argc, char* argv[]) {
     mbsn_error err = mbsn_client_create(&mbsn, &platform_conf);
     if (err != MBSN_ERROR_NONE) {
         fprintf(stderr, "Error creating modbus client\n");
-        return 1;
+        if (!mbsn_error_is_exception(err))
+            return 1;
     }
 
     // Set only the response timeout. Byte timeout will be handled by the TCP connection
@@ -50,7 +51,8 @@ int main(int argc, char* argv[]) {
     err = mbsn_write_multiple_coils(&mbsn, 64, 2, coils);
     if (err != MBSN_ERROR_NONE) {
         fprintf(stderr, "Error writing coils at address 64 - %s\n", mbsn_strerror(err));
-        return 1;
+        if (!mbsn_error_is_exception(err))
+            return 1;
     }
 
     // Read 3 coils from address 64
@@ -58,19 +60,22 @@ int main(int argc, char* argv[]) {
     err = mbsn_read_coils(&mbsn, 64, 3, coils);
     if (err != MBSN_ERROR_NONE) {
         fprintf(stderr, "Error reading coils at address 64 - %s\n", mbsn_strerror(err));
-        return 1;
+        if (!mbsn_error_is_exception(err))
+            return 1;
     }
-
-    printf("Coil at address 64 value: %d\n", mbsn_bitfield_read(coils, 0));
-    printf("Coil at address 65 value: %d\n", mbsn_bitfield_read(coils, 1));
-    printf("Coil at address 66 value: %d\n", mbsn_bitfield_read(coils, 2));
+    else {
+        printf("Coil at address 64 value: %d\n", mbsn_bitfield_read(coils, 0));
+        printf("Coil at address 65 value: %d\n", mbsn_bitfield_read(coils, 1));
+        printf("Coil at address 66 value: %d\n", mbsn_bitfield_read(coils, 2));
+    }
 
     // Write 2 holding registers at address 26
     uint16_t w_regs[2] = {123, 124};
     err = mbsn_write_multiple_registers(&mbsn, 26, 2, w_regs);
     if (err != MBSN_ERROR_NONE) {
         fprintf(stderr, "Error writing register at address 26 - %s", mbsn_strerror(err));
-        return 1;
+        if (!mbsn_error_is_exception(err))
+            return 1;
     }
 
     // Read 2 holding registers from address 26
@@ -78,11 +83,13 @@ int main(int argc, char* argv[]) {
     err = mbsn_read_holding_registers(&mbsn, 26, 2, r_regs);
     if (err != MBSN_ERROR_NONE) {
         fprintf(stderr, "Error reading 2 holding registers at address 26 - %s\n", mbsn_strerror(err));
-        return 1;
+        if (!mbsn_error_is_exception(err))
+            return 1;
     }
-
-    printf("Register at address 26: %d\n", r_regs[0]);
-    printf("Register at address 27: %d\n", r_regs[1]);
+    else {
+        printf("Register at address 26: %d\n", r_regs[0]);
+        printf("Register at address 27: %d\n", r_regs[1]);
+    }
 
     // Close the TCP connection
     disconnect(conn);

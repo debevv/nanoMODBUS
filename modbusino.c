@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 #ifdef MBSN_DEBUG
 #include <stdio.h>
 #define DEBUG(...) printf(__VA_ARGS__)
@@ -28,6 +29,7 @@
 #define put_1(m, b)                                                                                                    \
     (m)->msg.buf[(m)->msg.buf_idx] = (b);                                                                              \
     (m)->msg.buf_idx++
+#define discard_1(m) (m)->msg.buf_idx++
 
 #ifdef MBSN_BIG_ENDIAN
 #define get_2(m)                                                                                                       \
@@ -268,7 +270,7 @@ static mbsn_error recv_msg_header(mbsn_t* mbsn, bool* first_byte_received) {
             *first_byte_received = true;
 
         // Advance buf_idx
-        get_1(mbsn);
+        discard_1(mbsn);
 
         err = recv(mbsn, 7);
         if (err != MBSN_ERROR_NONE)
