@@ -89,12 +89,11 @@ Just copy `modbusino.c` and `modbusino.h` inside your application codebase.
 
 ## API reference
 
-API reference is available in the repository [GitHub Pages](https://debevv.github.io/MODBUSino/modbusino_8h.html)
-
+API reference is available in the repository's [GitHub Pages](https://debevv.github.io/MODBUSino/modbusino_8h.html).
 
 ## Platform functions
 
-MODBUSino requires the implementation of 3 platform functions, which are passed as function pointers when creating a
+MODBUSino requires the implementation of 3 platform-specific functions, which are passed as function pointers when creating a
 client/server instance.
 
 ### Transport read/write
@@ -104,9 +103,9 @@ int read_byte(uint8_t* b, int32_t, void* arg);
 int write_byte(uint8_t b, int32_t, void* arg);
 ```
 
-These are your platform-specific methods that read/write data to/from a serial port or a TCP connection.  
-Both methods should block until the requested byte is read/written.  
-If your implementation uses a read/write timeout, and the timeout expires, the methods should return 0.  
+These are your platform-specific functions that read/write data to/from a serial port or a TCP connection.  
+Both functions should block until the requested byte is read/written.  
+If your implementation uses a read/write timeout, and the timeout expires, the function should return 0.  
 Their return values should be:
 
 - `1` in case of success
@@ -123,15 +122,15 @@ This function should sleep for the specified amount of milliseconds.
 
 ### Platform functions argument
 
-Platform function can access to arbitrary user data through their `void* arg` argument. The argument is useful, for
+Platform functions can access arbitrary user data through their `void* arg` argument. The argument is useful, for
 example, to pass to read/write function the connection they should operate on.  
-Its initial value can be set on client/server instance creation and changed any time with `mbsn_set_platform_arg` API
-method.
+Its initial value can be set inside the `mbsn_platform_conf` struct when creating the client/server instance,
+and changed at any time via the `mbsn_set_platform_arg` API method.
 
 ## Platform endianness
 
 MODBUSino will attempt to detect the endianness of the platform at build time. If the automatic detection fails, you can
-set manually the endianness of the platform by defining either `MBSN_BIG_ENDIAN` or `MBSN_LITTLE_ENDIAN` in your build
+manually set the endianness of the platform by defining either `MBSN_BIG_ENDIAN` or `MBSN_LITTLE_ENDIAN` in your build
 flags.
 
 ## Tests and examples
