@@ -1,0 +1,5 @@
+PROJECT_NAME            = MODBUSino
+INPUT                   = modbusino.c modbusino.h
+OUTPUT_DIRECTORY        = doxygen
+OPTIMIZE_OUTPUT_FOR_C   = YES
+GENERATE_LATEX          = NO
