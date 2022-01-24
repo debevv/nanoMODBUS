@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['mbsn_5ferror_79',['mbsn_error',['../modbusino_8h.html#aeae909a6f4834839b16e39c692732dcb',1,'modbusino.h']]],
-  ['mbsn_5ftransport_80',['mbsn_transport',['../modbusino_8h.html#a32e4bd1f677071f95577a544106cf0be',1,'modbusino.h']]]
+  ['nmbs_5ferror_79',['nmbs_error',['../nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0',1,'nanomodbus.h']]],
+  ['nmbs_5ftransport_80',['nmbs_transport',['../nanomodbus_8h.html#ad4308b11d9bab11f45b94a1d4840f5fd',1,'nanomodbus.h']]]
 ];

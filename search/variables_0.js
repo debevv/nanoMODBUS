@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['arg_68',['arg',['../structmbsn__platform__conf.html#a8ba4f341c07106884b7c4507dae62ef7',1,'mbsn_platform_conf']]]
+  ['arg_68',['arg',['../structnmbs__platform__conf.html#abec793041ee3e19d14fede444f85aa06',1,'nmbs_platform_conf']]]
 ];

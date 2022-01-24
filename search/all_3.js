@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['sleep_42',['sleep',['../structmbsn__platform__conf.html#af89b9e9ed4306853b2f91854731581ff',1,'mbsn_platform_conf']]]
+  ['sleep_42',['sleep',['../structnmbs__platform__conf.html#a93c9d186c8464b89abcf28dedf6b2047',1,'nmbs_platform_conf']]]
 ];
