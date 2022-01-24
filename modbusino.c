@@ -5,6 +5,9 @@
 
 #ifdef MBSN_DEBUG
 #include <stdio.h>
+#define DEBUG(...) printf(__VA_ARGS__)
+#else
+#define DEBUG(...) (void) (0)
 #endif
 
 #if !defined(MBSN_BIG_ENDIAN) && !defined(MBSN_LITTLE_ENDIAN)
@@ -169,12 +172,6 @@ static mbsn_error recv(mbsn_t* mbsn, uint32_t count) {
         int ret = mbsn->platform.read_byte(mbsn->msg.buf + mbsn->msg.buf_idx + r, mbsn->byte_timeout_ms,
                                            mbsn->platform.arg);
         if (ret == 0) {
-#ifdef MBSN_DEBUG
-            if (mbsn->address_rtu == 0)
-                printf("c: to\n");
-            else
-                printf("s: to\n");
-#endif
             return MBSN_ERROR_TIMEOUT;
         }
         else if (ret != 1) {
@@ -183,13 +180,6 @@ static mbsn_error recv(mbsn_t* mbsn, uint32_t count) {
 
         r++;
     }
-
-#ifdef MBSN_DEBUG
-    if (mbsn->address_rtu == 0)
-        printf("c: recv %d\n", count);
-    else
-        printf("s: recv %d\n", count);
-#endif
 
     return MBSN_ERROR_NONE;
 }
@@ -213,13 +203,6 @@ static mbsn_error send(mbsn_t* mbsn) {
         }
     }
 
-#ifdef MBSN_DEBUG
-    if (mbsn->address_rtu == 0)
-        printf("c: sent %d\n", mbsn->msg.buf_idx - 1);
-    else
-        printf("s: sent %d\n", mbsn->msg.buf_idx - 1);
-#endif
-
     return MBSN_ERROR_NONE;
 }
 
@@ -237,6 +220,8 @@ static mbsn_error recv_msg_footer(mbsn_t* mbsn) {
         if (recv_crc != crc)
             return MBSN_ERROR_TRANSPORT;
     }
+
+    DEBUG("\n");
 
     return MBSN_ERROR_NONE;
 }
@@ -357,13 +342,17 @@ static mbsn_error recv_res_header(mbsn_t* mbsn) {
 
             if (exception < 1 || exception > 4)
                 return MBSN_ERROR_INVALID_RESPONSE;
-            else
+            else {
+                DEBUG("exception %d\n", exception);
                 return exception;
+            }
         }
         else {
             return MBSN_ERROR_INVALID_RESPONSE;
         }
     }
+
+    DEBUG("MBSN res <- fc %d\t", mbsn->msg.fc);
 
     return MBSN_ERROR_NONE;
 }
@@ -393,7 +382,22 @@ static mbsn_error send_msg_footer(mbsn_t* mbsn) {
     }
 
     mbsn_error err = send(mbsn);
+
+    DEBUG("\n");
+
     return err;
+}
+
+
+static void send_req_header(mbsn_t* mbsn, uint16_t data_length) {
+    send_msg_header(mbsn, data_length);
+    DEBUG("MBSN req -> fc %d\t", mbsn->msg.fc);
+}
+
+
+static void send_res_header(mbsn_t* mbsn, uint16_t data_length) {
+    send_msg_header(mbsn, data_length);
+    DEBUG("MBSN res -> fc %d\t", mbsn->msg.fc);
 }
 
 
@@ -401,6 +405,8 @@ static mbsn_error handle_exception(mbsn_t* mbsn, uint8_t exception) {
     mbsn->msg.fc += 0x80;
     send_msg_header(mbsn, 1);
     put_1(mbsn, exception);
+
+    DEBUG("MBSN res -> exception %d\n", exception);
 
     return send_msg_footer(mbsn);
 }
@@ -413,6 +419,8 @@ static mbsn_error handle_read_discrete(mbsn_t* mbsn, mbsn_error (*callback)(uint
 
     uint16_t address = get_2(mbsn);
     uint16_t quantity = get_2(mbsn);
+
+    DEBUG("a %d\tq %d", address, quantity);
 
     err = recv_msg_footer(mbsn);
     if (err != MBSN_ERROR_NONE)
@@ -437,12 +445,16 @@ static mbsn_error handle_read_discrete(mbsn_t* mbsn, mbsn_error (*callback)(uint
 
             if (!mbsn->msg.broadcast) {
                 uint8_t discrete_bytes = (quantity / 8) + 1;
-                send_msg_header(mbsn, discrete_bytes);
+                send_res_header(mbsn, discrete_bytes);
 
                 put_1(mbsn, discrete_bytes);
 
+                DEBUG("b %d\t", discrete_bytes);
+
+                DEBUG("coils ");
                 for (int i = 0; i < discrete_bytes; i++) {
                     put_1(mbsn, bf[i]);
+                    DEBUG("%d", bf[i]);
                 }
 
                 err = send_msg_footer(mbsn);
@@ -467,6 +479,8 @@ static mbsn_error handle_read_registers(mbsn_t* mbsn, mbsn_error (*callback)(uin
     uint16_t address = get_2(mbsn);
     uint16_t quantity = get_2(mbsn);
 
+    DEBUG("a %d\tq %d", address, quantity);
+
     err = recv_msg_footer(mbsn);
     if (err != MBSN_ERROR_NONE)
         return err;
@@ -490,12 +504,16 @@ static mbsn_error handle_read_registers(mbsn_t* mbsn, mbsn_error (*callback)(uin
 
             if (!mbsn->msg.broadcast) {
                 uint8_t regs_bytes = quantity * 2;
-                send_msg_header(mbsn, regs_bytes);
+                send_res_header(mbsn, regs_bytes);
 
                 put_1(mbsn, regs_bytes);
 
+                DEBUG("b %d\t", regs_bytes);
+
+                DEBUG("regs ");
                 for (int i = 0; i < quantity; i++) {
                     put_2(mbsn, regs[i]);
+                    DEBUG("%d", regs[i]);
                 }
 
                 err = send_msg_footer(mbsn);
@@ -540,6 +558,8 @@ static mbsn_error handle_write_single_coil(mbsn_t* mbsn) {
     uint16_t address = get_2(mbsn);
     uint16_t value = get_2(mbsn);
 
+    DEBUG("a %d\tvalue %d", address, value);
+
     err = recv_msg_footer(mbsn);
     if (err != MBSN_ERROR_NONE)
         return err;
@@ -558,9 +578,12 @@ static mbsn_error handle_write_single_coil(mbsn_t* mbsn) {
             }
 
             if (!mbsn->msg.broadcast) {
-                send_msg_header(mbsn, 4);
+                send_res_header(mbsn, 4);
+
                 put_2(mbsn, address);
                 put_2(mbsn, value);
+                DEBUG("a %d\tvalue %d", address, value);
+
                 err = send_msg_footer(mbsn);
                 if (err != MBSN_ERROR_NONE)
                     return err;
@@ -583,6 +606,8 @@ static mbsn_error handle_write_single_register(mbsn_t* mbsn) {
     uint16_t address = get_2(mbsn);
     uint16_t value = get_2(mbsn);
 
+    DEBUG("a %d\tvalue %d", address, value);
+
     err = recv_msg_footer(mbsn);
     if (err != MBSN_ERROR_NONE)
         return err;
@@ -598,9 +623,12 @@ static mbsn_error handle_write_single_register(mbsn_t* mbsn) {
             }
 
             if (!mbsn->msg.broadcast) {
-                send_msg_header(mbsn, 4);
+                send_res_header(mbsn, 4);
+
                 put_2(mbsn, address);
                 put_2(mbsn, value);
+                DEBUG("a %d\tvalue %d", address, value);
+
                 err = send_msg_footer(mbsn);
                 if (err != MBSN_ERROR_NONE)
                     return err;
@@ -624,6 +652,8 @@ static mbsn_error handle_write_multiple_coils(mbsn_t* mbsn) {
     uint16_t quantity = get_2(mbsn);
     uint8_t coils_bytes = get_1(mbsn);
 
+    DEBUG("a %d\tq %d\tb %d\tcoils ", address, quantity, coils_bytes);
+
     err = recv(mbsn, coils_bytes);
     if (err != MBSN_ERROR_NONE)
         return err;
@@ -631,6 +661,7 @@ static mbsn_error handle_write_multiple_coils(mbsn_t* mbsn) {
     mbsn_bitfield coils;
     for (int i = 0; i < coils_bytes; i++) {
         coils[i] = get_1(mbsn);
+        DEBUG("%d ", coils[i]);
     }
 
     err = recv_msg_footer(mbsn);
@@ -660,9 +691,12 @@ static mbsn_error handle_write_multiple_coils(mbsn_t* mbsn) {
             }
 
             if (!mbsn->msg.broadcast) {
-                send_msg_header(mbsn, 4);
+                send_res_header(mbsn, 4);
+
                 put_2(mbsn, address);
                 put_2(mbsn, quantity);
+                DEBUG("a %d\tq %d", address, quantity);
+
                 err = send_msg_footer(mbsn);
                 if (err != MBSN_ERROR_NONE)
                     return err;
@@ -686,6 +720,8 @@ static mbsn_error handle_write_multiple_registers(mbsn_t* mbsn) {
     uint16_t quantity = get_2(mbsn);
     uint8_t registers_bytes = get_1(mbsn);
 
+    DEBUG("a %d\tq %d\tb %d\tregs ", address, quantity, registers_bytes);
+
     err = recv(mbsn, registers_bytes);
     if (err != MBSN_ERROR_NONE)
         return err;
@@ -693,6 +729,7 @@ static mbsn_error handle_write_multiple_registers(mbsn_t* mbsn) {
     uint16_t registers[0x007B];
     for (int i = 0; i < registers_bytes / 2; i++) {
         registers[i] = get_2(mbsn);
+        DEBUG("%d ", registers[i]);
     }
 
     err = recv_msg_footer(mbsn);
@@ -722,9 +759,12 @@ static mbsn_error handle_write_multiple_registers(mbsn_t* mbsn) {
             }
 
             if (!mbsn->msg.broadcast) {
-                send_msg_header(mbsn, 4);
+                send_res_header(mbsn, 4);
+
                 put_2(mbsn, address);
                 put_2(mbsn, quantity);
+                DEBUG("a %d\tq %d", address, quantity);
+
                 err = send_msg_footer(mbsn);
                 if (err != MBSN_ERROR_NONE)
                     return err;
@@ -740,6 +780,8 @@ static mbsn_error handle_write_multiple_registers(mbsn_t* mbsn) {
 
 
 static mbsn_error handle_req_fc(mbsn_t* mbsn) {
+    DEBUG("fc %d\t", mbsn->msg.fc);
+
     mbsn_error err;
     switch (mbsn->msg.fc) {
         case 1:
@@ -794,6 +836,16 @@ mbsn_error mbsn_server_poll(mbsn_t* mbsn) {
             return err;
     }
 
+#ifdef MBSN_DEBUG
+    printf("MBSN req <- ");
+    if (mbsn->platform.transport == MBSN_TRANSPORT_RTU) {
+        if (mbsn->msg.broadcast)
+            printf("broadcast\t");
+
+        printf("client_id %d\t", mbsn->msg.unit_id);
+    }
+#endif
+
     err = handle_req_fc(mbsn);
     if (err != MBSN_ERROR_NONE) {
         if (!mbsn_error_is_exception(err))
@@ -812,10 +864,12 @@ static mbsn_error read_discrete(mbsn_t* mbsn, uint8_t fc, uint16_t address, uint
         return MBSN_ERROR_INVALID_ARGUMENT;
 
     msg_state_req(mbsn, fc);
-    send_msg_header(mbsn, 4);
+    send_req_header(mbsn, 4);
 
     put_2(mbsn, address);
     put_2(mbsn, quantity);
+
+    DEBUG("a %d\tq %d", address, quantity);
 
     mbsn_error err = send_msg_footer(mbsn);
     if (err != MBSN_ERROR_NONE)
@@ -830,13 +884,16 @@ static mbsn_error read_discrete(mbsn_t* mbsn, uint8_t fc, uint16_t address, uint
         return err;
 
     uint8_t coils_bytes = get_1(mbsn);
+    DEBUG("b %d\t", coils_bytes);
 
     err = recv(mbsn, coils_bytes);
     if (err != MBSN_ERROR_NONE)
         return err;
 
+    DEBUG("coils ");
     for (int i = 0; i < coils_bytes; i++) {
         values[i] = get_1(mbsn);
+        DEBUG("%d", values[i]);
     }
 
     err = recv_msg_footer(mbsn);
@@ -865,10 +922,12 @@ static mbsn_error read_registers(mbsn_t* mbsn, uint8_t fc, uint16_t address, uin
         return MBSN_ERROR_INVALID_ARGUMENT;
 
     msg_state_req(mbsn, fc);
-    send_msg_header(mbsn, 4);
+    send_req_header(mbsn, 4);
 
     put_2(mbsn, address);
     put_2(mbsn, quantity);
+
+    DEBUG("a %d\tq %d ", address, quantity);
 
     mbsn_error err = send_msg_footer(mbsn);
     if (err != MBSN_ERROR_NONE)
@@ -883,13 +942,16 @@ static mbsn_error read_registers(mbsn_t* mbsn, uint8_t fc, uint16_t address, uin
         return err;
 
     uint8_t registers_bytes = get_1(mbsn);
+    DEBUG("b %d\t", registers_bytes);
 
     err = recv(mbsn, registers_bytes);
     if (err != MBSN_ERROR_NONE)
         return err;
 
+    DEBUG("regs ");
     for (int i = 0; i < registers_bytes / 2; i++) {
         registers[i] = get_2(mbsn);
+        DEBUG("%d", registers[i]);
     }
 
     err = recv_msg_footer(mbsn);
@@ -915,12 +977,14 @@ mbsn_error mbsn_read_input_registers(mbsn_t* mbsn, uint16_t address, uint16_t qu
 
 mbsn_error mbsn_write_single_coil(mbsn_t* mbsn, uint16_t address, bool value) {
     msg_state_req(mbsn, 5);
-    send_msg_header(mbsn, 4);
+    send_req_header(mbsn, 4);
 
     uint16_t value_req = value ? 0xFF00 : 0;
 
     put_2(mbsn, address);
     put_2(mbsn, value_req);
+
+    DEBUG("a %d\tvalue %d ", address, value_req);
 
     mbsn_error err = send_msg_footer(mbsn);
     if (err != MBSN_ERROR_NONE)
@@ -937,6 +1001,8 @@ mbsn_error mbsn_write_single_coil(mbsn_t* mbsn, uint16_t address, bool value) {
 
         uint16_t address_res = get_2(mbsn);
         uint16_t value_res = get_2(mbsn);
+
+        DEBUG("a %d\tvalue %d", address, value_res);
 
         err = recv_msg_footer(mbsn);
         if (err != MBSN_ERROR_NONE)
@@ -955,10 +1021,12 @@ mbsn_error mbsn_write_single_coil(mbsn_t* mbsn, uint16_t address, bool value) {
 
 mbsn_error mbsn_write_single_register(mbsn_t* mbsn, uint16_t address, uint16_t value) {
     msg_state_req(mbsn, 6);
-    send_msg_header(mbsn, 4);
+    send_req_header(mbsn, 4);
 
     put_2(mbsn, address);
     put_2(mbsn, value);
+
+    DEBUG("a %d\tvalue %d", address, value);
 
     mbsn_error err = send_msg_footer(mbsn);
     if (err != MBSN_ERROR_NONE)
@@ -975,6 +1043,7 @@ mbsn_error mbsn_write_single_register(mbsn_t* mbsn, uint16_t address, uint16_t v
 
         uint16_t address_res = get_2(mbsn);
         uint16_t value_res = get_2(mbsn);
+        DEBUG("a %d\tvalue %d ", address, value_res);
 
         err = recv_msg_footer(mbsn);
         if (err != MBSN_ERROR_NONE)
@@ -1001,14 +1070,17 @@ mbsn_error mbsn_write_multiple_coils(mbsn_t* mbsn, uint16_t address, uint16_t qu
     uint8_t coils_bytes = (quantity / 8) + 1;
 
     msg_state_req(mbsn, 15);
-    send_msg_header(mbsn, 5 + coils_bytes);
+    send_req_header(mbsn, 5 + coils_bytes);
 
     put_2(mbsn, address);
     put_2(mbsn, quantity);
     put_1(mbsn, coils_bytes);
+    DEBUG("a %d\tq %d\tb %d\t", address, quantity, coils_bytes);
 
+    DEBUG("coils ");
     for (int i = 0; i < coils_bytes; i++) {
         put_1(mbsn, coils[i]);
+        DEBUG("%d ", coils[i]);
     }
 
     mbsn_error err = send_msg_footer(mbsn);
@@ -1026,6 +1098,7 @@ mbsn_error mbsn_write_multiple_coils(mbsn_t* mbsn, uint16_t address, uint16_t qu
 
         uint16_t address_res = get_2(mbsn);
         uint16_t quantity_res = get_2(mbsn);
+        DEBUG("a %d\tq %d", address_res, quantity_res);
 
         err = recv_msg_footer(mbsn);
         if (err != MBSN_ERROR_NONE)
@@ -1052,14 +1125,17 @@ mbsn_error mbsn_write_multiple_registers(mbsn_t* mbsn, uint16_t address, uint16_
     uint8_t registers_bytes = quantity * 2;
 
     msg_state_req(mbsn, 16);
-    send_msg_header(mbsn, 5 + registers_bytes);
+    send_req_header(mbsn, 5 + registers_bytes);
 
     put_2(mbsn, address);
     put_2(mbsn, quantity);
     put_1(mbsn, registers_bytes);
+    DEBUG("a %d\tq %d\tb %d\t", address, quantity, registers_bytes);
 
+    DEBUG("regs ");
     for (int i = 0; i < quantity; i++) {
         put_2(mbsn, registers[i]);
+        DEBUG("%d ", registers[i]);
     }
 
     mbsn_error err = send_msg_footer(mbsn);
@@ -1077,6 +1153,7 @@ mbsn_error mbsn_write_multiple_registers(mbsn_t* mbsn, uint16_t address, uint16_
 
         uint16_t address_res = get_2(mbsn);
         uint16_t quantity_res = get_2(mbsn);
+        DEBUG("a %d\tq %d", address_res, quantity_res);
 
         err = recv_msg_footer(mbsn);
         if (err != MBSN_ERROR_NONE)
@@ -1096,8 +1173,11 @@ mbsn_error mbsn_write_multiple_registers(mbsn_t* mbsn, uint16_t address, uint16_
 mbsn_error mbsn_send_raw_pdu(mbsn_t* mbsn, uint8_t fc, const void* data, uint32_t data_len) {
     msg_state_req(mbsn, fc);
     send_msg_header(mbsn, data_len);
+
+    DEBUG("raw ");
     for (uint32_t i = 0; i < data_len; i++) {
         put_1(mbsn, ((uint8_t*) (data))[i]);
+        DEBUG("%d ", ((uint8_t*) (data))[i]);
     }
 
     return send_msg_footer(mbsn);
