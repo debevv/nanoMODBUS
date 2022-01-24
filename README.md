@@ -4,12 +4,12 @@ MODBUSino is a small C library that implements the Modbus protocol. It is especi
 system like microcontrollers.  
 Its main features are:
 
-- Compact size: only ~1000 lines of code
+- Compact size, only ~1000 lines of code
 - No dynamic memory allocations
 - Transports:
     - RTU
     - TCP
-- Roles
+- Roles:
     - Client
     - Server
 - Function codes:
@@ -87,6 +87,11 @@ int main(int argc, char* argv[]) {
 
 Just copy `modbusino.c` and `modbusino.h` inside your application codebase.
 
+## API reference
+
+API reference is available in the repository [GitHub Pages](https://debevv.github.io/MODBUSino/modbusino_8h.html)
+
+
 ## Platform functions
 
 MODBUSino requires the implementation of 3 platform functions, which are passed as function pointers when creating a
@@ -95,8 +100,8 @@ client/server instance.
 ### Transport read/write
 
 ```C
-int read_byte(uint8_t* b, int32_t, void* arg)
-int write_byte(uint8_t b, int32_t, void* arg)
+int read_byte(uint8_t* b, int32_t, void* arg);
+int write_byte(uint8_t b, int32_t, void* arg);
 ```
 
 These are your platform-specific methods that read/write data to/from a serial port or a TCP connection.  
@@ -111,7 +116,7 @@ Their return values should be:
 ### Sleep
 
 ```C
-void sleep(uint32_t milliseconds, void* arg)
+void sleep(uint32_t milliseconds, void* arg);
 ```
 
 This function should sleep for the specified amount of milliseconds.
@@ -144,9 +149,3 @@ make
 - To reduce code size, you can define `MBSN_STRERROR_DISABLED` to disable the code that converts `mbsn_error`s to
   strings
 - Debug prints about received and sent messages can be enabled by defining `MBSN_DEBUG`
-
-## API reference
-
-API reference is available in the repository [wiki]()
-
-
