@@ -123,11 +123,13 @@ int nmbs_create(nmbs_t* nmbs, const nmbs_platform_conf* platform_conf) {
 }
 
 
+#ifndef NMBS_CLIENT_DISABLED
 nmbs_error nmbs_client_create(nmbs_t* nmbs, const nmbs_platform_conf* platform_conf) {
     return nmbs_create(nmbs, platform_conf);
 }
+#endif
 
-
+#ifndef NMBS_SERVER_DISABLED
 nmbs_error nmbs_server_create(nmbs_t* nmbs, uint8_t address_rtu, const nmbs_platform_conf* platform_conf,
                               const nmbs_callbacks* callbacks) {
     if (platform_conf->transport == NMBS_TRANSPORT_RTU && address_rtu == 0)
@@ -142,6 +144,7 @@ nmbs_error nmbs_server_create(nmbs_t* nmbs, uint8_t address_rtu, const nmbs_plat
 
     return NMBS_ERROR_NONE;
 }
+#endif
 
 
 void nmbs_set_read_timeout(nmbs_t* nmbs, int32_t timeout_ms) {
@@ -314,7 +317,7 @@ static nmbs_error recv_msg_header(nmbs_t* nmbs, bool* first_byte_received) {
     return NMBS_ERROR_NONE;
 }
 
-
+#ifndef NMBS_SERVER_DISABLED
 static nmbs_error recv_req_header(nmbs_t* nmbs, bool* first_byte_received) {
     nmbs_error err = recv_msg_header(nmbs, first_byte_received);
     if (err != NMBS_ERROR_NONE)
@@ -332,7 +335,7 @@ static nmbs_error recv_req_header(nmbs_t* nmbs, bool* first_byte_received) {
 
     return NMBS_ERROR_NONE;
 }
-
+#endif
 
 static nmbs_error recv_res_header(nmbs_t* nmbs) {
     uint16_t req_transaction_id = nmbs->msg.transaction_id;
@@ -409,19 +412,23 @@ static nmbs_error send_msg_footer(nmbs_t* nmbs) {
     return err;
 }
 
-
+#ifndef NMBS_CLIENT_DISABLED
 static void send_req_header(nmbs_t* nmbs, uint16_t data_length) {
     send_msg_header(nmbs, data_length);
     DEBUG("NMBS req -> fc %d\t", nmbs->msg.fc);
 }
+#endif
 
 
+#ifndef NMBS_SERVER_DISABLED
 static void send_res_header(nmbs_t* nmbs, uint16_t data_length) {
     send_msg_header(nmbs, data_length);
     DEBUG("NMBS res -> fc %d\t", nmbs->msg.fc);
 }
+#endif
 
 
+#ifndef NMBS_SERVER_DISABLED
 static nmbs_error handle_exception(nmbs_t* nmbs, uint8_t exception) {
     nmbs->msg.fc += 0x80;
     send_msg_header(nmbs, 1);
@@ -431,8 +438,10 @@ static nmbs_error handle_exception(nmbs_t* nmbs, uint8_t exception) {
 
     return send_msg_footer(nmbs);
 }
+#endif
 
 
+#ifndef NMBS_SERVER_DISABLED
 static nmbs_error handle_read_discrete(nmbs_t* nmbs, nmbs_error (*callback)(uint16_t, uint16_t, nmbs_bitfield)) {
     nmbs_error err = recv(nmbs, 4);
     if (err != NMBS_ERROR_NONE)
@@ -490,8 +499,10 @@ static nmbs_error handle_read_discrete(nmbs_t* nmbs, nmbs_error (*callback)(uint
 
     return NMBS_ERROR_NONE;
 }
+#endif
 
 
+#ifndef NMBS_SERVER_DISABLED
 static nmbs_error handle_read_registers(nmbs_t* nmbs, nmbs_error (*callback)(uint16_t, uint16_t, uint16_t*)) {
     nmbs_error err = recv(nmbs, 4);
     if (err != NMBS_ERROR_NONE)
@@ -549,28 +560,38 @@ static nmbs_error handle_read_registers(nmbs_t* nmbs, nmbs_error (*callback)(uin
 
     return NMBS_ERROR_NONE;
 }
+#endif
 
 
+#ifndef NMBS_SERVER_DISABLED
 static nmbs_error handle_read_coils(nmbs_t* nmbs) {
     return handle_read_discrete(nmbs, nmbs->callbacks.read_coils);
 }
+#endif
 
 
+#ifndef NMBS_SERVER_DISABLED
 static nmbs_error handle_read_discrete_inputs(nmbs_t* nmbs) {
     return handle_read_discrete(nmbs, nmbs->callbacks.read_discrete_inputs);
 }
+#endif
 
 
+#ifndef NMBS_SERVER_DISABLED
 static nmbs_error handle_read_holding_registers(nmbs_t* nmbs) {
     return handle_read_registers(nmbs, nmbs->callbacks.read_holding_registers);
 }
+#endif
 
 
+#ifndef NMBS_SERVER_DISABLED
 static nmbs_error handle_read_input_registers(nmbs_t* nmbs) {
     return handle_read_registers(nmbs, nmbs->callbacks.read_input_registers);
 }
+#endif
 
 
+#ifndef NMBS_SERVER_DISABLED
 static nmbs_error handle_write_single_coil(nmbs_t* nmbs) {
     nmbs_error err = recv(nmbs, 4);
     if (err != NMBS_ERROR_NONE)
@@ -617,8 +638,10 @@ static nmbs_error handle_write_single_coil(nmbs_t* nmbs) {
 
     return NMBS_ERROR_NONE;
 }
+#endif
 
 
+#ifndef NMBS_SERVER_DISABLED
 static nmbs_error handle_write_single_register(nmbs_t* nmbs) {
     nmbs_error err = recv(nmbs, 4);
     if (err != NMBS_ERROR_NONE)
@@ -662,8 +685,10 @@ static nmbs_error handle_write_single_register(nmbs_t* nmbs) {
 
     return NMBS_ERROR_NONE;
 }
+#endif
 
 
+#ifndef NMBS_SERVER_DISABLED
 static nmbs_error handle_write_multiple_coils(nmbs_t* nmbs) {
     nmbs_error err = recv(nmbs, 5);
     if (err != NMBS_ERROR_NONE)
@@ -730,8 +755,10 @@ static nmbs_error handle_write_multiple_coils(nmbs_t* nmbs) {
 
     return NMBS_ERROR_NONE;
 }
+#endif
 
 
+#ifndef NMBS_SERVER_DISABLED
 static nmbs_error handle_write_multiple_registers(nmbs_t* nmbs) {
     nmbs_error err = recv(nmbs, 5);
     if (err != NMBS_ERROR_NONE)
@@ -798,8 +825,10 @@ static nmbs_error handle_write_multiple_registers(nmbs_t* nmbs) {
 
     return NMBS_ERROR_NONE;
 }
+#endif
 
 
+#ifndef NMBS_SERVER_DISABLED
 static nmbs_error handle_req_fc(nmbs_t* nmbs) {
     DEBUG("fc %d\t", nmbs->msg.fc);
 
@@ -843,8 +872,10 @@ static nmbs_error handle_req_fc(nmbs_t* nmbs) {
 
     return err;
 }
+#endif
 
 
+#ifndef NMBS_SERVER_DISABLED
 nmbs_error nmbs_server_poll(nmbs_t* nmbs) {
     msg_state_reset(nmbs);
 
@@ -875,8 +906,10 @@ nmbs_error nmbs_server_poll(nmbs_t* nmbs) {
 
     return err;
 }
+#endif
 
 
+#ifndef NMBS_CLIENT_DISABLED
 static nmbs_error read_discrete(nmbs_t* nmbs, uint8_t fc, uint16_t address, uint16_t quantity, nmbs_bitfield values) {
     if (quantity < 1 || quantity > 2000)
         return NMBS_ERROR_INVALID_ARGUMENT;
@@ -923,18 +956,24 @@ static nmbs_error read_discrete(nmbs_t* nmbs, uint8_t fc, uint16_t address, uint
 
     return NMBS_ERROR_NONE;
 }
+#endif
 
 
+#ifndef NMBS_CLIENT_DISABLED
 nmbs_error nmbs_read_coils(nmbs_t* nmbs, uint16_t address, uint16_t quantity, nmbs_bitfield coils_out) {
     return read_discrete(nmbs, 1, address, quantity, coils_out);
 }
+#endif
 
 
+#ifndef NMBS_CLIENT_DISABLED
 nmbs_error nmbs_read_discrete_inputs(nmbs_t* nmbs, uint16_t address, uint16_t quantity, nmbs_bitfield inputs_out) {
     return read_discrete(nmbs, 2, address, quantity, inputs_out);
 }
+#endif
 
 
+#ifndef NMBS_CLIENT_DISABLED
 static nmbs_error read_registers(nmbs_t* nmbs, uint8_t fc, uint16_t address, uint16_t quantity, uint16_t* registers) {
     if (quantity < 1 || quantity > 125)
         return NMBS_ERROR_INVALID_ARGUMENT;
@@ -984,18 +1023,24 @@ static nmbs_error read_registers(nmbs_t* nmbs, uint8_t fc, uint16_t address, uin
 
     return NMBS_ERROR_NONE;
 }
+#endif
 
 
+#ifndef NMBS_CLIENT_DISABLED
 nmbs_error nmbs_read_holding_registers(nmbs_t* nmbs, uint16_t address, uint16_t quantity, uint16_t* registers_out) {
     return read_registers(nmbs, 3, address, quantity, registers_out);
 }
+#endif
 
 
+#ifndef NMBS_CLIENT_DISABLED
 nmbs_error nmbs_read_input_registers(nmbs_t* nmbs, uint16_t address, uint16_t quantity, uint16_t* registers_out) {
     return read_registers(nmbs, 4, address, quantity, registers_out);
 }
+#endif
 
 
+#ifndef NMBS_CLIENT_DISABLED
 nmbs_error nmbs_write_single_coil(nmbs_t* nmbs, uint16_t address, bool value) {
     msg_state_req(nmbs, 5);
     send_req_header(nmbs, 4);
@@ -1038,8 +1083,10 @@ nmbs_error nmbs_write_single_coil(nmbs_t* nmbs, uint16_t address, bool value) {
 
     return NMBS_ERROR_NONE;
 }
+#endif
 
 
+#ifndef NMBS_CLIENT_DISABLED
 nmbs_error nmbs_write_single_register(nmbs_t* nmbs, uint16_t address, uint16_t value) {
     msg_state_req(nmbs, 6);
     send_req_header(nmbs, 4);
@@ -1079,8 +1126,10 @@ nmbs_error nmbs_write_single_register(nmbs_t* nmbs, uint16_t address, uint16_t v
 
     return NMBS_ERROR_NONE;
 }
+#endif
 
 
+#ifndef NMBS_CLIENT_DISABLED
 nmbs_error nmbs_write_multiple_coils(nmbs_t* nmbs, uint16_t address, uint16_t quantity, const nmbs_bitfield coils) {
     if (quantity < 1 || quantity > 0x07B0)
         return NMBS_ERROR_INVALID_ARGUMENT;
@@ -1134,8 +1183,10 @@ nmbs_error nmbs_write_multiple_coils(nmbs_t* nmbs, uint16_t address, uint16_t qu
 
     return NMBS_ERROR_NONE;
 }
+#endif
 
 
+#ifndef NMBS_CLIENT_DISABLED
 nmbs_error nmbs_write_multiple_registers(nmbs_t* nmbs, uint16_t address, uint16_t quantity, const uint16_t* registers) {
     if (quantity < 1 || quantity > 0x007B)
         return NMBS_ERROR_INVALID_ARGUMENT;
@@ -1189,6 +1240,7 @@ nmbs_error nmbs_write_multiple_registers(nmbs_t* nmbs, uint16_t address, uint16_
 
     return NMBS_ERROR_NONE;
 }
+#endif
 
 
 nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const void* data, uint32_t data_len) {

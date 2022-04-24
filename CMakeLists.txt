@@ -8,9 +8,10 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
 
 include_directories(tests examples .)
 
-#add_definitions(-DNMBS_DEBUG)
-
 add_executable(nanomodbus_tests nanomodbus.c tests/nanomodbus_tests.c)
+add_executable(server_disabled nanomodbus.c tests/server_disabled.c)
+add_executable(client_disabled nanomodbus.c tests/client_disabled.c)
+
 add_executable(client-tcp nanomodbus.c examples/client-tcp.c)
 add_executable(server-tcp nanomodbus.c examples/server-tcp.c)
 

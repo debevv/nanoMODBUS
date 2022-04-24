@@ -4,7 +4,9 @@ nanoMODBUS is a small C library that implements the Modbus protocol. It is espec
 system like microcontrollers.  
 Its main features are:
 
-- Compact size, only ~1000 lines of code
+- Compact size
+  - Only ~1000 lines of code
+  - Client and server code can be disabled, if not needed
 - No dynamic memory allocations
 - Transports:
     - RTU
@@ -145,6 +147,8 @@ make
 
 ## Misc
 
-- To reduce code size, you can define `NMBS_STRERROR_DISABLED` to disable the code that converts `nmbs_error`s to
-  strings
+- To reduce code size, you can define the following `#define`s:
+  - `NMBS_CLIENT_DISABLED` to disable all client code
+  - `NMBS_SERVER_DISABLED` to disable all server code
+  - `NMBS_STRERROR_DISABLED` to disable the code that converts `nmbs_error`s to strings
 - Debug prints about received and sent messages can be enabled by defining `NMBS_DEBUG`

@@ -167,7 +167,7 @@ typedef struct nmbs_t {
  */
 static const uint8_t NMBS_BROADCAST_ADDRESS = 0;
 
-
+#ifndef NMBS_CLIENT_DISABLED
 /** Create a new Modbus client.
  * @param nmbs pointer to the nmbs_t instance where the client will be created.
  * @param platform_conf nmbs_platform_conf struct with platform configuration.
@@ -175,7 +175,9 @@ static const uint8_t NMBS_BROADCAST_ADDRESS = 0;
 * @return NMBS_ERROR_NONE if successful, NMBS_ERROR_INVALID_ARGUMENT otherwise.
  */
 nmbs_error nmbs_client_create(nmbs_t* nmbs, const nmbs_platform_conf* platform_conf);
+#endif
 
+#ifndef NMBS_SERVER_DISABLED
 /** Create a new Modbus server.
  * @param nmbs pointer to the nmbs_t instance where the client will be created.
  * @param address_rtu RTU address of this server. Can be 0 if transport is not RTU.
@@ -186,6 +188,7 @@ nmbs_error nmbs_client_create(nmbs_t* nmbs, const nmbs_platform_conf* platform_c
  */
 nmbs_error nmbs_server_create(nmbs_t* nmbs, uint8_t address_rtu, const nmbs_platform_conf* platform_conf,
                               const nmbs_callbacks* callbacks);
+#endif
 
 /** Set the request/response timeout.
  * If the target instance is a server, sets the timeout of the nmbs_server_poll() function.
@@ -213,12 +216,15 @@ void nmbs_set_byte_spacing(nmbs_t* nmbs, uint32_t spacing_ms);
  */
 void nmbs_set_platform_arg(nmbs_t* nmbs, void* arg);
 
+#ifndef NMBS_CLIENT_DISABLED
 /** Set the recipient server address of the next request on RTU transport.
  * @param nmbs pointer to the nmbs_t instance
  * @param address server address
  */
 void nmbs_set_destination_rtu_address(nmbs_t* nmbs, uint8_t address);
+#endif
 
+#ifndef NMBS_SERVER_DISABLED
 /** Handle incoming requests to the server.
  * This function should be called in a loop in order to serve any incoming request. Its maximum duration, in case of no
  * received request, is the value set with nmbs_set_read_timeout() (unless set to < 0).
@@ -227,7 +233,9 @@ void nmbs_set_destination_rtu_address(nmbs_t* nmbs, uint8_t address);
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
 nmbs_error nmbs_server_poll(nmbs_t* nmbs);
+#endif
 
+#ifndef NMBS_CLIENT_DISABLED
 /** Send a FC 01 (0x01) Read Coils request
  * @param nmbs pointer to the nmbs_t instance
  * @param address starting address
@@ -237,7 +245,9 @@ nmbs_error nmbs_server_poll(nmbs_t* nmbs);
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
 nmbs_error nmbs_read_coils(nmbs_t* nmbs, uint16_t address, uint16_t quantity, nmbs_bitfield coils_out);
+#endif
 
+#ifndef NMBS_CLIENT_DISABLED
 /** Send a FC 02 (0x02) Read Discrete Inputs request
  * @param nmbs pointer to the nmbs_t instance
  * @param address starting address
@@ -247,7 +257,9 @@ nmbs_error nmbs_read_coils(nmbs_t* nmbs, uint16_t address, uint16_t quantity, nm
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
 nmbs_error nmbs_read_discrete_inputs(nmbs_t* nmbs, uint16_t address, uint16_t quantity, nmbs_bitfield inputs_out);
+#endif
 
+#ifndef NMBS_CLIENT_DISABLED
 /** Send a FC 03 (0x03) Read Holding Registers request
  * @param nmbs pointer to the nmbs_t instance
  * @param address starting address
@@ -257,7 +269,9 @@ nmbs_error nmbs_read_discrete_inputs(nmbs_t* nmbs, uint16_t address, uint16_t qu
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
 nmbs_error nmbs_read_holding_registers(nmbs_t* nmbs, uint16_t address, uint16_t quantity, uint16_t* registers_out);
+#endif
 
+#ifndef NMBS_CLIENT_DISABLED
 /** Send a FC 04 (0x04) Read Input Registers request
  * @param nmbs pointer to the nmbs_t instance
  * @param address starting address
@@ -267,7 +281,9 @@ nmbs_error nmbs_read_holding_registers(nmbs_t* nmbs, uint16_t address, uint16_t 
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
 nmbs_error nmbs_read_input_registers(nmbs_t* nmbs, uint16_t address, uint16_t quantity, uint16_t* registers_out);
+#endif
 
+#ifndef NMBS_CLIENT_DISABLED
 /** Send a FC 05 (0x05) Write Single Coil request
  * @param nmbs pointer to the nmbs_t instance
  * @param address coil address
@@ -276,7 +292,9 @@ nmbs_error nmbs_read_input_registers(nmbs_t* nmbs, uint16_t address, uint16_t qu
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
 nmbs_error nmbs_write_single_coil(nmbs_t* nmbs, uint16_t address, bool value);
+#endif
 
+#ifndef NMBS_CLIENT_DISABLED
 /** Send a FC 06 (0x06) Write Single Register request
  * @param nmbs pointer to the nmbs_t instance
  * @param address register address
@@ -285,7 +303,9 @@ nmbs_error nmbs_write_single_coil(nmbs_t* nmbs, uint16_t address, bool value);
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
 nmbs_error nmbs_write_single_register(nmbs_t* nmbs, uint16_t address, uint16_t value);
+#endif
 
+#ifndef NMBS_CLIENT_DISABLED
 /** Send a FC 15 (0x0F) Write Multiple Coils
  * @param nmbs pointer to the nmbs_t instance
  * @param address starting address
@@ -295,7 +315,9 @@ nmbs_error nmbs_write_single_register(nmbs_t* nmbs, uint16_t address, uint16_t v
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
 nmbs_error nmbs_write_multiple_coils(nmbs_t* nmbs, uint16_t address, uint16_t quantity, const nmbs_bitfield coils);
+#endif
 
+#ifndef NMBS_CLIENT_DISABLED
 /** Send a FC 16 (0x10) Write Multiple Registers
  * @param nmbs pointer to the nmbs_t instance
  * @param address starting address
@@ -305,7 +327,9 @@ nmbs_error nmbs_write_multiple_coils(nmbs_t* nmbs, uint16_t address, uint16_t qu
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
 nmbs_error nmbs_write_multiple_registers(nmbs_t* nmbs, uint16_t address, uint16_t quantity, const uint16_t* registers);
+#endif
 
+#ifndef NMBS_CLIENT_DISABLED
 /** Send a raw Modbus PDU.
  * CRC on RTU will be calculated and sent by this function.
  * @param nmbs pointer to the nmbs_t instance
@@ -316,7 +340,9 @@ nmbs_error nmbs_write_multiple_registers(nmbs_t* nmbs, uint16_t address, uint16_
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
 nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const void* data, uint32_t data_len);
+#endif
 
+#ifndef NMBS_CLIENT_DISABLED
 /** Receive a raw response Modbus PDU.
  * @param nmbs pointer to the nmbs_t instance
  * @param data_out response data. It's up to the caller to convert this data to host byte order.
@@ -325,6 +351,7 @@ nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const void* data, uint32_
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
 nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, void* data_out, uint32_t data_out_len);
+#endif
 
 #ifndef NMBS_STRERROR_DISABLED
 /** Convert a nmbs_error to string
