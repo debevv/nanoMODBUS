@@ -475,7 +475,7 @@ static nmbs_error handle_read_discrete(nmbs_t* nmbs, nmbs_error (*callback)(uint
 
             if (!nmbs->msg.broadcast) {
                 uint8_t discrete_bytes = (quantity / 8) + 1;
-                send_res_header(nmbs, discrete_bytes);
+                send_res_header(nmbs, 1 + discrete_bytes);
 
                 put_1(nmbs, discrete_bytes);
 
@@ -536,7 +536,7 @@ static nmbs_error handle_read_registers(nmbs_t* nmbs, nmbs_error (*callback)(uin
 
             if (!nmbs->msg.broadcast) {
                 uint8_t regs_bytes = quantity * 2;
-                send_res_header(nmbs, regs_bytes);
+                send_res_header(nmbs, 1 + regs_bytes);
 
                 put_1(nmbs, regs_bytes);
 
