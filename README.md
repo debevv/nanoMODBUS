@@ -101,17 +101,19 @@ client/server instance.
 ### Transport read/write
 
 ```C
-int read_byte(uint8_t* b, int32_t, void* arg);
-int write_byte(uint8_t b, int32_t, void* arg);
+int read_byte(uint8_t* b, int32_t timeout_ms, void* arg);
+int write_byte(uint8_t b, int32_t timeout_ms, void* arg);
 ```
 
 These are your platform-specific functions that read/write data to/from a serial port or a TCP connection.  
-Both functions should block until the requested byte is read/written.  
-If your implementation uses a read/write timeout, and the timeout expires, the function should return 0.  
-Their return values should be:
+Both methods should block until either:
+- a byte is read/written
+- the timeout, with `timeout_ms >= 0`, expires
 
+A value `< 0` for `timeout_ms` means no timeout.  
+Their return values should be:
 - `1` in case of success
-- `0` if no data is available immediately or after an internal timeout expiration
+- `0` if no data is available immediately or after timeout expiration
 - `-1` in case of error
 
 ### Sleep

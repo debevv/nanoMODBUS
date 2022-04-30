@@ -106,11 +106,16 @@ typedef enum nmbs_transport {
  * Passed to nmbs_server_create() and nmbs_client_create().
  *
  * read_byte() and write_byte() are the platform-specific methods that read/write data to/from a serial port or a TCP connection.
- * Both methods should block until the requested byte is read/written.
- * If your implementation uses a read/write timeout, and the timeout expires, the methods should return 0.
+ *
+ * Both methods should block until either:
+ *  - a byte is read/written
+ *  - the timeout, with timeout_ms >= 0, expires
+ *
+ * A value < 0 for timeout_ms means no timeout.
+ *
  * Their return values should be:
  * - `1` in case of success
- * - `0` if no data is available immediately or after an internal timeout expiration
+ * - `0` if no data is available immediately or after timeout expiration
  * - `-1` in case of error
  *
  * sleep() is the platform-specific method to pause for a certain amount of milliseconds.
@@ -119,11 +124,11 @@ typedef enum nmbs_transport {
  * After the creation of an instance it can be changed with nmbs_set_platform_arg().
  */
 typedef struct nmbs_platform_conf {
-    nmbs_transport transport;                         /*!< Transport type */
-    int (*read_byte)(uint8_t* b, int32_t, void* arg); /*!< Byte read transport function pointer */
-    int (*write_byte)(uint8_t b, int32_t, void* arg); /*!< Byte write transport function pointer */
-    void (*sleep)(uint32_t milliseconds, void* arg);  /*!< Sleep function pointer */
-    void* arg;                                        /*!< User data, will be passed to functions above */
+    nmbs_transport transport;                                    /*!< Transport type */
+    int (*read_byte)(uint8_t* b, int32_t timeout_ms, void* arg); /*!< Byte read transport function pointer */
+    int (*write_byte)(uint8_t b, int32_t timeout_ms, void* arg); /*!< Byte write transport function pointer */
+    void (*sleep)(uint32_t milliseconds, void* arg);             /*!< Sleep function pointer */
+    void* arg;                                                   /*!< User data, will be passed to functions above */
 } nmbs_platform_conf;
 
 
