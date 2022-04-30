@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
+    <generated />
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" ENABLED="true" CONFIG_NAME="Debug" TOOLCHAIN_NAME="Default" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="a9f15076-92db-4cab-89d5-102942e402a9" name="Changes" comment="Better docs for platform functions" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectApplicationVersion">
+    <option name="ide" value="CLion" />
+    <option name="majorVersion" value="2021" />
+    <option name="minorVersion" value="3.2" />
+  </component>
+  <component name="ProjectId" id="24AEcqHxRr0VMgcvpxPRmKvKE6E" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="RunOnceActivity.cidr.known.project.marker" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="true" />
+    <property name="cf.advertisement.text.has.clang-format" value="true" />
+    <property name="cf.advertisement.text.overridden" value="true" />
+    <property name="cf.first.check.clang-format" value="false" />
+    <property name="cidr.known.project.marker" value="true" />
+    <property name="cmake.loaded.for.project" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/tests" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="settings.editor.selected.configurable" value="CMakeSettings" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/tests" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="a9f15076-92db-4cab-89d5-102942e402a9" name="Changes" comment="" />
+      <created>1643065021040</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1643065021040</updated>
+      <workItem from="1643065026367" duration="22000" />
+      <workItem from="1643065078131" duration="180000" />
+      <workItem from="1643065815051" duration="2284000" />
+      <workItem from="1643068817780" duration="127000" />
+      <workItem from="1643124723907" duration="1397000" />
+      <workItem from="1643308325803" duration="810000" />
+      <workItem from="1643467475218" duration="1986000" />
+      <workItem from="1643574399154" duration="622000" />
+      <workItem from="1643883410521" duration="614000" />
+      <workItem from="1644058412608" duration="704000" />
+      <workItem from="1650799072427" duration="6946000" />
+      <workItem from="1650903833713" duration="640000" />
+      <workItem from="1650923309378" duration="898000" />
+      <workItem from="1651316275121" duration="663000" />
+      <workItem from="1651318398831" duration="1272000" />
+    </task>
+    <task id="LOCAL-00001" summary="Fixes to README">
+      <created>1643065230741</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1643065230741</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Fixes to README">
+      <created>1643066335641</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1643066335641</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Project rename">
+      <created>1643067474610</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1643067474610</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Added license headers">
+      <created>1643124919621</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1643124919621</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Support to NMBS_CLIENT_DISABLED and NMBS_SERVER_DISABLED defines">
+      <created>1650801220516</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1650801220516</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Fixed wrong size field in MBAP header">
+      <created>1650924313883</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1650924313883</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Switch to MIT license">
+      <created>1651316616900</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1651316616900</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Better docs for platform functions">
+      <created>1651319533284</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1651319533284</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Fixes to README" />
+    <MESSAGE value="Project rename" />
+    <MESSAGE value="Added license headers" />
+    <MESSAGE value="Support to NMBS_CLIENT_DISABLED and NMBS_SERVER_DISABLED defines" />
+    <MESSAGE value="Fixed wrong size field in MBAP header" />
+    <MESSAGE value="Switch to MIT license" />
+    <MESSAGE value="Better docs for platform functions" />
+    <option name="LAST_COMMIT_MESSAGE" value="Better docs for platform functions" />
+  </component>
+</project>

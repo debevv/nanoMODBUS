@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['write_5fbyte_72',['write_byte',['../structnmbs__platform__conf.html#a4b37d0ff95d48e2e802fd8b5d3b509e1',1,'nmbs_platform_conf']]]
+  ['write_5fbyte_72',['write_byte',['../structnmbs__platform__conf.html#accf635ba0a857dacee80f9db20c986b8',1,'nmbs_platform_conf']]]
 ];
