@@ -44,6 +44,10 @@
 #include <stdint.h>
 #include <string.h>
 
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
 /**
  * nanoMODBUS errors.
  * Values <= 0 are library errors, > 0 are modbus exceptions.
@@ -375,5 +379,8 @@ nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, void* data_out, uint32_t 
 const char* nmbs_strerror(nmbs_error error);
 #endif
 
+#ifdef __cplusplus
+    } // extern "C"
+#endif
 
 #endif    //NANOMODBUS_H
