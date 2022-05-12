@@ -193,7 +193,7 @@ static uint16_t crc_calc(const uint8_t* data, uint32_t length) {
         }
     }
 
-    return crc;
+    return (uint16_t) (crc << 8) | (uint16_t) (crc >> 8);
 }
 
 
