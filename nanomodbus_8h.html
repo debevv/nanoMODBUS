@@ -126,17 +126,19 @@ Typedefs</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
 <tr class="memitem:a1cb1b1b4b26001764e36a1df4335f7f0"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a> { <br />
-&#160;&#160;<a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a3fc83fc7b819f1aff75aa2a6c8c0a34d">NMBS_ERROR_TRANSPORT</a> = -4
+&#160;&#160;<a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a40991993acd534c2848b9516a7931ac4">NMBS_ERROR_INVALID_TCP_MBAP</a> = -6
+, <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0ae179b232e51a9f3f69349d9cbf38b09c">NMBS_ERROR_CRC</a> = -5
+, <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a3fc83fc7b819f1aff75aa2a6c8c0a34d">NMBS_ERROR_TRANSPORT</a> = -4
 , <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a6d88681884c55f97bfd6b2e4f9c52ec5">NMBS_ERROR_TIMEOUT</a> = -3
-, <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a5dba2268665b5f2ea5c50ef92513c0fc">NMBS_ERROR_INVALID_RESPONSE</a> = -2
+, <br />
+&#160;&#160;<a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a5dba2268665b5f2ea5c50ef92513c0fc">NMBS_ERROR_INVALID_RESPONSE</a> = -2
 , <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a2f6672c3501f57f4cdb7c1c0207eaa17">NMBS_ERROR_INVALID_ARGUMENT</a> = -1
-, <br />
-&#160;&#160;<a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a237f769a847f812d352b398602df4da3">NMBS_ERROR_NONE</a> = 0
+, <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a237f769a847f812d352b398602df4da3">NMBS_ERROR_NONE</a> = 0
 , <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a857cefb6ce605215d219ac3a7a983905">NMBS_EXCEPTION_ILLEGAL_FUNCTION</a> = 1
-, <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a31705357988dc0820d0820d76be9fdd0">NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS</a> = 2
-, <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a6ba8c8a7039f53e2a770a490641ab47a">NMBS_EXCEPTION_ILLEGAL_DATA_VALUE</a> = 3
 , <br />
-&#160;&#160;<a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a959c4b38e339556145dfaddfcd64e23a">NMBS_EXCEPTION_SERVER_DEVICE_FAILURE</a> = 4
+&#160;&#160;<a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a31705357988dc0820d0820d76be9fdd0">NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS</a> = 2
+, <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a6ba8c8a7039f53e2a770a490641ab47a">NMBS_EXCEPTION_ILLEGAL_DATA_VALUE</a> = 3
+, <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a959c4b38e339556145dfaddfcd64e23a">NMBS_EXCEPTION_SERVER_DEVICE_FAILURE</a> = 4
 <br />
  }</td></tr>
 <tr class="separator:a1cb1b1b4b26001764e36a1df4335f7f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -407,7 +409,11 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>nanoMODBUS errors. Values &lt;= 0 are library errors, &gt; 0 are modbus exceptions. </p>
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a1cb1b1b4b26001764e36a1df4335f7f0a3fc83fc7b819f1aff75aa2a6c8c0a34d"></a>NMBS_ERROR_TRANSPORT&#160;</td><td class="fielddoc"><p>Transport error </p>
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a1cb1b1b4b26001764e36a1df4335f7f0a40991993acd534c2848b9516a7931ac4"></a>NMBS_ERROR_INVALID_TCP_MBAP&#160;</td><td class="fielddoc"><p>Received invalid TCP MBAP </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a1cb1b1b4b26001764e36a1df4335f7f0ae179b232e51a9f3f69349d9cbf38b09c"></a>NMBS_ERROR_CRC&#160;</td><td class="fielddoc"><p>Received invalid CRC </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a1cb1b1b4b26001764e36a1df4335f7f0a3fc83fc7b819f1aff75aa2a6c8c0a34d"></a>NMBS_ERROR_TRANSPORT&#160;</td><td class="fielddoc"><p>Transport error </p>
 </td></tr>
 <tr><td class="fieldname"><a id="a1cb1b1b4b26001764e36a1df4335f7f0a6d88681884c55f97bfd6b2e4f9c52ec5"></a>NMBS_ERROR_TIMEOUT&#160;</td><td class="fielddoc"><p>Read/write timeout occurred </p>
 </td></tr>
