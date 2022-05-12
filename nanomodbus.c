@@ -249,7 +249,7 @@ static nmbs_error recv_msg_footer(nmbs_t* nmbs) {
         uint16_t recv_crc = get_2(nmbs);
 
         if (recv_crc != crc)
-            return NMBS_ERROR_TRANSPORT;
+            return NMBS_ERROR_CRC;
     }
 
     DEBUG("\n");
@@ -315,10 +315,10 @@ static nmbs_error recv_msg_header(nmbs_t* nmbs, bool* first_byte_received) {
         nmbs->msg.fc = get_1(nmbs);
 
         if (protocol_id != 0)
-            return NMBS_ERROR_TRANSPORT;
+            return NMBS_ERROR_INVALID_TCP_MBAP;
 
         if (length > 255)
-            return NMBS_ERROR_TRANSPORT;
+            return NMBS_ERROR_INVALID_TCP_MBAP;
     }
 
     return NMBS_ERROR_NONE;
@@ -1288,6 +1288,12 @@ nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, void* data_out, uint32_t 
 #ifndef NMBS_STRERROR_DISABLED
 const char* nmbs_strerror(nmbs_error error) {
     switch (error) {
+        case NMBS_ERROR_INVALID_TCP_MBAP:
+            return "invalid TCP MBAP received";
+
+        case NMBS_ERROR_CRC:
+            return "invalid CRC received";
+
         case NMBS_ERROR_TRANSPORT:
             return "transport error";
 

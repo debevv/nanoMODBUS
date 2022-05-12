@@ -130,9 +130,8 @@ int main(int argc, char* argv[]) {
 
         err = nmbs_server_poll(&nmbs);
         if (err != NMBS_ERROR_NONE) {
-            fprintf(stderr, "Error polling modbus connection - %s\n", nmbs_strerror(err));
-            // In a more complete example, we should handle this error by closing the connection from our side
-            break;
+            fprintf(stderr, "Error on modbus connection - %s\n", nmbs_strerror(err));
+            // In a more complete example, we would handle this error by checking its nmbs_error value
         }
     }
 

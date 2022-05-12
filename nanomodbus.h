@@ -54,6 +54,8 @@
  */
 typedef enum nmbs_error {
     // Library errors
+    NMBS_ERROR_INVALID_TCP_MBAP = -6, /**< Received invalid TCP MBAP */
+    NMBS_ERROR_CRC = -5,              /**< Received invalid CRC */
     NMBS_ERROR_TRANSPORT = -4,        /**< Transport error */
     NMBS_ERROR_TIMEOUT = -3,          /**< Read/write timeout occurred */
     NMBS_ERROR_INVALID_RESPONSE = -2, /**< Received invalid response from server */
