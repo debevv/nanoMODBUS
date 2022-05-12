@@ -45,7 +45,7 @@
 #include <string.h>
 
 #ifdef __cplusplus
-    extern "C" {
+extern "C" {
 #endif
 
 /**
@@ -382,7 +382,7 @@ const char* nmbs_strerror(nmbs_error error);
 #endif
 
 #ifdef __cplusplus
-    } // extern "C"
+}    // extern "C"
 #endif
 
 #endif    //NANOMODBUS_H
