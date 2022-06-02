@@ -111,20 +111,17 @@ typedef enum nmbs_transport {
  * nanoMODBUS platform configuration struct.
  * Passed to nmbs_server_create() and nmbs_client_create().
  *
- * read_byte() and write_byte() are the platform-specific methods that read/write data to/from a serial port or a TCP connection.
+ * read() and write() are the platform-specific methods that read/write data to/from a serial port or a TCP connection.
  *
  * Both methods should block until either:
- *  - a byte is read/written
- *  - the timeout, with timeout_ms >= 0, expires
+ * - `count` bytes of data are read/written
+ * - the byte timeout, with `byte_timeout_ms >= 0`, expires
  *
- * A value < 0 for timeout_ms means no timeout.
+ * A value `< 0` for `byte_timeout_ms` means no timeout.
  *
- * Their return values should be:
- * - `1` in case of success
- * - `0` if no data is available immediately or after timeout expiration
- * - `-1` in case of error
- *
- * sleep() is the platform-specific method to pause for a certain amount of milliseconds.
+ * Their return value should be the number of bytes actually read/written, or `< 0` in case of error.
+ * A return value between `0` and `count - 1` will be treated as if a timeout occurred on the transport side. All other
+ * values will be treated as transport errors.
  *
  * These methods accept a pointer to arbitrary user-data, which is the arg member of this struct.
  * After the creation of an instance it can be changed with nmbs_set_platform_arg().
