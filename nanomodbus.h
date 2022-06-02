@@ -130,11 +130,12 @@ typedef enum nmbs_transport {
  * After the creation of an instance it can be changed with nmbs_set_platform_arg().
  */
 typedef struct nmbs_platform_conf {
-    nmbs_transport transport;                                    /*!< Transport type */
-    int (*read_byte)(uint8_t* b, int32_t timeout_ms, void* arg); /*!< Byte read transport function pointer */
-    int (*write_byte)(uint8_t b, int32_t timeout_ms, void* arg); /*!< Byte write transport function pointer */
-    void (*sleep)(uint32_t milliseconds, void* arg);             /*!< Sleep function pointer */
-    void* arg;                                                   /*!< User data, will be passed to functions above */
+    nmbs_transport transport; /*!< Transport type */
+    int32_t (*read)(uint8_t* buf, uint32_t count, int32_t byte_timeout_ms,
+                    void* arg); /*!< Bytes read transport function pointer */
+    int32_t (*write)(const uint8_t* buf, uint32_t count, int32_t byte_timeout_ms,
+                     void* arg); /*!< Bytes write transport function pointer */
+    void* arg;                   /*!< User data, will be passed to functions above */
 } nmbs_platform_conf;
 
 
@@ -172,7 +173,6 @@ typedef struct nmbs_t {
 
     int32_t byte_timeout_ms;
     int32_t read_timeout_ms;
-    uint32_t byte_spacing_ms;
 
     nmbs_platform_conf platform;
 
@@ -217,17 +217,11 @@ nmbs_error nmbs_server_create(nmbs_t* nmbs, uint8_t address_rtu, const nmbs_plat
  */
 void nmbs_set_read_timeout(nmbs_t* nmbs, int32_t timeout_ms);
 
-/** Set the timeout between the reception of two consecutive bytes.
+/** Set the timeout between the reception/transmission of two consecutive bytes.
  * @param nmbs pointer to the nmbs_t instance
  * @param timeout_ms timeout in milliseconds. If < 0, the timeout is disabled.
  */
 void nmbs_set_byte_timeout(nmbs_t* nmbs, int32_t timeout_ms);
-
-/** Set the spacing between two sent bytes. This value is ignored when transport is not RTU.
- * @param nmbs pointer to the nmbs_t instance
- * @param timeout_ms time spacing in milliseconds.
- */
-void nmbs_set_byte_spacing(nmbs_t* nmbs, uint32_t spacing_ms);
 
 /** Set the pointer to user data argument passed to platform functions.
  * @param nmbs pointer to the nmbs_t instance

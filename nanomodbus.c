@@ -113,7 +113,6 @@ int nmbs_create(nmbs_t* nmbs, const nmbs_platform_conf* platform_conf) {
 
     nmbs->byte_timeout_ms = -1;
     nmbs->read_timeout_ms = -1;
-    nmbs->byte_spacing_ms = 0;
 
     if (!platform_conf)
         return NMBS_ERROR_INVALID_ARGUMENT;
@@ -121,7 +120,7 @@ int nmbs_create(nmbs_t* nmbs, const nmbs_platform_conf* platform_conf) {
     if (platform_conf->transport != NMBS_TRANSPORT_RTU && platform_conf->transport != NMBS_TRANSPORT_TCP)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
-    if (!platform_conf->read_byte || !platform_conf->write_byte || !platform_conf->sleep)
+    if (!platform_conf->read || !platform_conf->write)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
     nmbs->platform = *platform_conf;
@@ -164,11 +163,6 @@ void nmbs_set_byte_timeout(nmbs_t* nmbs, int32_t timeout_ms) {
 }
 
 
-void nmbs_set_byte_spacing(nmbs_t* nmbs, uint32_t spacing_ms) {
-    nmbs->byte_spacing_ms = spacing_ms;
-}
-
-
 void nmbs_set_destination_rtu_address(nmbs_t* nmbs, uint8_t address) {
     nmbs->dest_address_rtu = address;
 }
@@ -198,43 +192,36 @@ static uint16_t crc_calc(const uint8_t* data, uint32_t length) {
 
 
 static nmbs_error recv(nmbs_t* nmbs, uint32_t count) {
-    uint32_t r = 0;
-    while (r != count) {
-        int ret = nmbs->platform.read_byte(nmbs->msg.buf + nmbs->msg.buf_idx + r, nmbs->byte_timeout_ms,
-                                           nmbs->platform.arg);
-        if (ret == 0) {
-            return NMBS_ERROR_TIMEOUT;
-        }
-        else if (ret != 1) {
-            return NMBS_ERROR_TRANSPORT;
-        }
+    int ret = nmbs->platform.read(nmbs->msg.buf + nmbs->msg.buf_idx, count, nmbs->byte_timeout_ms, nmbs->platform.arg);
 
-        r++;
+    if (ret == (int) count)
+        return NMBS_ERROR_NONE;
+
+    if (ret < (int) count) {
+        if (ret < 0)
+            return NMBS_ERROR_TRANSPORT;
+
+        return NMBS_ERROR_TIMEOUT;
     }
 
-    return NMBS_ERROR_NONE;
+    return NMBS_ERROR_TRANSPORT;
 }
 
 
-static nmbs_error send(nmbs_t* nmbs) {
-    uint32_t spacing_ms = 0;
-    if (nmbs->platform.transport == NMBS_TRANSPORT_RTU)
-        spacing_ms = nmbs->byte_spacing_ms;
+static nmbs_error send(nmbs_t* nmbs, uint32_t count) {
+    int ret = nmbs->platform.write(nmbs->msg.buf, count, nmbs->byte_timeout_ms, nmbs->platform.arg);
 
-    for (int i = 0; i < nmbs->msg.buf_idx; i++) {
-        if (spacing_ms != 0)
-            nmbs->platform.sleep(spacing_ms, nmbs->platform.arg);
+    if (ret == (int) count)
+        return NMBS_ERROR_NONE;
 
-        int ret = nmbs->platform.write_byte(nmbs->msg.buf[i], nmbs->read_timeout_ms, nmbs->platform.arg);
-        if (ret == 0) {
-            return NMBS_ERROR_TIMEOUT;
-        }
-        else if (ret != 1) {
+    if (ret < (int) count) {
+        if (ret < 0)
             return NMBS_ERROR_TRANSPORT;
-        }
+
+        return NMBS_ERROR_TIMEOUT;
     }
 
-    return NMBS_ERROR_NONE;
+    return NMBS_ERROR_TRANSPORT;
 }
 
 
@@ -412,7 +399,7 @@ static nmbs_error send_msg_footer(nmbs_t* nmbs) {
         put_2(nmbs, crc);
     }
 
-    nmbs_error err = send(nmbs);
+    nmbs_error err = send(nmbs, nmbs->msg.buf_idx);
 
     DEBUG("\n");
 
