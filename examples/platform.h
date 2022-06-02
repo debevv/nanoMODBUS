@@ -170,11 +170,11 @@ void close_server() {
 
 // Read/write/sleep platform functions
 
-int read_fd_linux(uint8_t* buf, uint32_t count, int32_t timeout_ms, void* arg) {
+int32_t read_fd_linux(uint8_t* buf, uint16_t count, int32_t timeout_ms, void* arg) {
     int fd = *(int*) arg;
 
-    int32_t total = 0;
-    while (total != (int32_t) count) {
+    uint16_t total = 0;
+    while (total != count) {
         fd_set rfds;
         FD_ZERO(&rfds);
         FD_SET(fd, &rfds);
@@ -200,7 +200,7 @@ int read_fd_linux(uint8_t* buf, uint32_t count, int32_t timeout_ms, void* arg) {
             else if (r < 0)
                 return -1;
             else {
-                total += (int32_t) r;
+                total += r;
             }
         }
         else
@@ -211,11 +211,11 @@ int read_fd_linux(uint8_t* buf, uint32_t count, int32_t timeout_ms, void* arg) {
 }
 
 
-int32_t write_fd_linux(const uint8_t* buf, uint32_t count, int32_t timeout_ms, void* arg) {
+int32_t write_fd_linux(const uint8_t* buf, uint16_t count, int32_t timeout_ms, void* arg) {
     int fd = *(int*) arg;
 
-    int32_t total = 0;
-    while (total != (int32_t) count) {
+    uint16_t total = 0;
+    while (total != count) {
         fd_set wfds;
         FD_ZERO(&wfds);
         FD_SET(fd, &wfds);

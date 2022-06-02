@@ -47,12 +47,6 @@ uint64_t now_ms() {
 }
 
 
-void platform_sleep(uint32_t milliseconds, void* arg) {
-    UNUSED_PARAM(arg);
-    usleep(milliseconds * 1000);
-}
-
-
 void reset_sockets() {
     if (sockets[0] != -1)
         close(sockets[0]);
@@ -64,9 +58,9 @@ void reset_sockets() {
 }
 
 
-int32_t read_fd(int fd, uint8_t* buf, uint32_t count, int32_t timeout_ms) {
-    int32_t total = 0;
-    while (total != (int32_t) count) {
+int32_t read_fd(int fd, uint8_t* buf, uint16_t count, int32_t timeout_ms) {
+    uint16_t total = 0;
+    while (total != count) {
         fd_set rfds;
         FD_ZERO(&rfds);
         FD_SET(fd, &rfds);
@@ -88,7 +82,7 @@ int32_t read_fd(int fd, uint8_t* buf, uint32_t count, int32_t timeout_ms) {
             if (r <= 0)
                 return -1;
             else {
-                total += (int32_t) r;
+                total += r;
             }
         }
         else
@@ -99,9 +93,9 @@ int32_t read_fd(int fd, uint8_t* buf, uint32_t count, int32_t timeout_ms) {
 }
 
 
-int write_fd(int fd, const uint8_t* buf, uint32_t count, int32_t timeout_ms) {
-    int32_t total = 0;
-    while (total != (int32_t) count) {
+int32_t write_fd(int fd, const uint8_t* buf, uint16_t count, int32_t timeout_ms) {
+    uint16_t total = 0;
+    while (total != count) {
         fd_set wfds;
         FD_ZERO(&wfds);
         FD_SET(fd, &wfds);
@@ -123,7 +117,7 @@ int write_fd(int fd, const uint8_t* buf, uint32_t count, int32_t timeout_ms) {
             if (w <= 0)
                 return -1;
             else {
-                total += (int32_t) w;
+                total += w;
             }
         }
         else
@@ -134,25 +128,25 @@ int write_fd(int fd, const uint8_t* buf, uint32_t count, int32_t timeout_ms) {
 }
 
 
-int read_socket_server(uint8_t* buf, uint32_t count, int32_t timeout_ms, void* arg) {
+int32_t read_socket_server(uint8_t* buf, uint16_t count, int32_t timeout_ms, void* arg) {
     UNUSED_PARAM(arg);
     return read_fd(sockets[0], buf, count, timeout_ms);
 }
 
 
-int write_socket_server(const uint8_t* buf, uint32_t count, int32_t timeout_ms, void* arg) {
+int32_t write_socket_server(const uint8_t* buf, uint16_t count, int32_t timeout_ms, void* arg) {
     UNUSED_PARAM(arg);
     return write_fd(sockets[0], buf, count, timeout_ms);
 }
 
 
-int read_socket_client(uint8_t* buf, uint32_t count, int32_t timeout_ms, void* arg) {
+int32_t read_socket_client(uint8_t* buf, uint16_t count, int32_t timeout_ms, void* arg) {
     UNUSED_PARAM(arg);
     return read_fd(sockets[1], buf, count, timeout_ms);
 }
 
 
-int write_socket_client(const uint8_t* buf, uint32_t count, int32_t timeout_ms, void* arg) {
+int32_t write_socket_client(const uint8_t* buf, uint16_t count, int32_t timeout_ms, void* arg) {
     UNUSED_PARAM(arg);
     return write_fd(sockets[1], buf, count, timeout_ms);
 }

@@ -131,9 +131,9 @@ typedef enum nmbs_transport {
  */
 typedef struct nmbs_platform_conf {
     nmbs_transport transport; /*!< Transport type */
-    int32_t (*read)(uint8_t* buf, uint32_t count, int32_t byte_timeout_ms,
+    int32_t (*read)(uint8_t* buf, uint16_t count, int32_t byte_timeout_ms,
                     void* arg); /*!< Bytes read transport function pointer */
-    int32_t (*write)(const uint8_t* buf, uint32_t count, int32_t byte_timeout_ms,
+    int32_t (*write)(const uint8_t* buf, uint16_t count, int32_t byte_timeout_ms,
                      void* arg); /*!< Bytes write transport function pointer */
     void* arg;                   /*!< User data, will be passed to functions above */
 } nmbs_platform_conf;
@@ -352,7 +352,7 @@ nmbs_error nmbs_write_multiple_registers(nmbs_t* nmbs, uint16_t address, uint16_
  *
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
-nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const void* data, uint32_t data_len);
+nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const void* data, uint16_t data_len);
 #endif
 
 #ifndef NMBS_CLIENT_DISABLED
@@ -363,7 +363,7 @@ nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const void* data, uint32_
  *
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
-nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, void* data_out, uint32_t data_out_len);
+nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, void* data_out, uint16_t data_out_len);
 #endif
 
 #ifndef NMBS_STRERROR_DISABLED

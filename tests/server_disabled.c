@@ -5,7 +5,7 @@
 #define UNUSED_PARAM(x) ((x) = (x))
 
 
-int read_empty(uint8_t* b, uint32_t count, int32_t timeout, void* arg) {
+int32_t read_empty(uint8_t* b, uint16_t count, int32_t timeout, void* arg) {
     UNUSED_PARAM(b);
     UNUSED_PARAM(count);
     UNUSED_PARAM(timeout);
@@ -14,7 +14,7 @@ int read_empty(uint8_t* b, uint32_t count, int32_t timeout, void* arg) {
 }
 
 
-int write_empty(const uint8_t* b, uint32_t count, int32_t timeout, void* arg) {
+int32_t write_empty(const uint8_t* b, uint16_t count, int32_t timeout, void* arg) {
     UNUSED_PARAM(b);
     UNUSED_PARAM(count);
     UNUSED_PARAM(timeout);

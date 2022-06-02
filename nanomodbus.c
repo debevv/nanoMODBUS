@@ -191,13 +191,14 @@ static uint16_t crc_calc(const uint8_t* data, uint32_t length) {
 }
 
 
-static nmbs_error recv(nmbs_t* nmbs, uint32_t count) {
-    int ret = nmbs->platform.read(nmbs->msg.buf + nmbs->msg.buf_idx, count, nmbs->byte_timeout_ms, nmbs->platform.arg);
+static nmbs_error recv(nmbs_t* nmbs, uint16_t count) {
+    int32_t ret =
+            nmbs->platform.read(nmbs->msg.buf + nmbs->msg.buf_idx, count, nmbs->byte_timeout_ms, nmbs->platform.arg);
 
-    if (ret == (int) count)
+    if (ret == count)
         return NMBS_ERROR_NONE;
 
-    if (ret < (int) count) {
+    if (ret < count) {
         if (ret < 0)
             return NMBS_ERROR_TRANSPORT;
 
@@ -208,13 +209,13 @@ static nmbs_error recv(nmbs_t* nmbs, uint32_t count) {
 }
 
 
-static nmbs_error send(nmbs_t* nmbs, uint32_t count) {
-    int ret = nmbs->platform.write(nmbs->msg.buf, count, nmbs->byte_timeout_ms, nmbs->platform.arg);
+static nmbs_error send(nmbs_t* nmbs, uint16_t count) {
+    int32_t ret = nmbs->platform.write(nmbs->msg.buf, count, nmbs->byte_timeout_ms, nmbs->platform.arg);
 
-    if (ret == (int) count)
+    if (ret == count)
         return NMBS_ERROR_NONE;
 
-    if (ret < (int) count) {
+    if (ret < count) {
         if (ret < 0)
             return NMBS_ERROR_TRANSPORT;
 
@@ -1237,12 +1238,12 @@ nmbs_error nmbs_write_multiple_registers(nmbs_t* nmbs, uint16_t address, uint16_
 #endif
 
 
-nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const void* data, uint32_t data_len) {
+nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const void* data, uint16_t data_len) {
     msg_state_req(nmbs, fc);
     send_msg_header(nmbs, data_len);
 
     DEBUG("raw ");
-    for (uint32_t i = 0; i < data_len; i++) {
+    for (uint16_t i = 0; i < data_len; i++) {
         put_1(nmbs, ((uint8_t*) (data))[i]);
         DEBUG("%d ", ((uint8_t*) (data))[i]);
     }
@@ -1251,7 +1252,7 @@ nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const void* data, uint32_
 }
 
 
-nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, void* data_out, uint32_t data_out_len) {
+nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, void* data_out, uint16_t data_out_len) {
     nmbs_error err = recv_res_header(nmbs);
     if (err != NMBS_ERROR_NONE)
         return err;
@@ -1260,7 +1261,7 @@ nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, void* data_out, uint32_t 
     if (err != NMBS_ERROR_NONE)
         return err;
 
-    for (uint32_t i = 0; i < data_out_len; i++) {
+    for (uint16_t i = 0; i < data_out_len; i++) {
         ((uint8_t*) (data_out))[i] = get_1(nmbs);
     }
 
