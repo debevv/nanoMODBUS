@@ -1,7 +1,3 @@
-#include "nanomodbus.h"
-#include "platform.h"
-#include <stdio.h>
-
 /*
  * This example application connects via TCP to a modbus server at the specified address and port, and sends some
  * modbus requests to it.
@@ -9,8 +5,13 @@
  * Since the platform for this example is linux, the platform arg is used to pass (to the linux TCP read/write
  * functions) a pointer to the file descriptor of our TCP connection
  *
- * The platform functions are for Linux systems.
  */
+
+#include <stdio.h>
+
+#include "nanomodbus.h"
+#include "platform.h"
+
 
 int main(int argc, char* argv[]) {
     if (argc < 3) {
@@ -27,9 +28,8 @@ int main(int argc, char* argv[]) {
 
     nmbs_platform_conf platform_conf;
     platform_conf.transport = NMBS_TRANSPORT_TCP;
-    platform_conf.read_byte = read_byte_fd_linux;
-    platform_conf.write_byte = write_byte_fd_linux;
-    platform_conf.sleep = sleep_linux;
+    platform_conf.read = read_fd_linux;
+    platform_conf.write = write_fd_linux;
     platform_conf.arg = conn;    // Passing our TCP connection handle to the read/write functions
 
     // Create the modbus client

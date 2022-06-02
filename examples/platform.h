@@ -1,86 +1,20 @@
-#include "nanomodbus.h"
-#include <arpa/inet.h>
 #include <errno.h>
-#include <netdb.h>
-#include <netinet/in.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
-
-// Read/write/sleep platform functions
-
-int read_byte_fd_linux(uint8_t* b, int32_t timeout_ms, void* arg) {
-    int fd = *(int*) arg;
-
-    fd_set rfds;
-    FD_ZERO(&rfds);
-    FD_SET(fd, &rfds);
-
-    struct timeval* tv_p = NULL;
-    struct timeval tv;
-    if (timeout_ms >= 0) {
-        tv_p = &tv;
-        tv.tv_sec = timeout_ms / 1000;
-        tv.tv_usec = (timeout_ms % 1000) * 1000;
-    }
-
-    int ret = select(fd + 1, &rfds, NULL, NULL, tv_p);
-    if (ret == 0) {
-        return 0;
-    }
-    else if (ret == 1) {
-        ssize_t r = read(fd, b, 1);
-        if (r != 1)
-            return -1;
-        else {
-            return 1;
-        }
-    }
-    else
-        return -1;
-}
+#include "nanomodbus.h"
 
 
-int write_byte_fd_linux(uint8_t b, int32_t timeout_ms, void* arg) {
-    int fd = *(int*) arg;
-
-    fd_set wfds;
-    FD_ZERO(&wfds);
-    FD_SET(fd, &wfds);
-
-    struct timeval* tv_p = NULL;
-    struct timeval tv;
-    if (timeout_ms >= 0) {
-        tv_p = &tv;
-        tv.tv_sec = timeout_ms / 1000;
-        tv.tv_usec = (timeout_ms % 1000) * 1000;
-    }
-
-    int ret = select(fd + 1, NULL, &wfds, NULL, tv_p);
-    if (ret == 0) {
-        return 0;
-    }
-    else if (ret == 1) {
-        ssize_t r = write(fd, &b, 1);
-        if (r != 1)
-            return -1;
-        else {
-            return 1;
-        }
-    }
-    else
-        return -1;
-}
-
-
-void sleep_linux(uint32_t milliseconds, void* arg) {
-    usleep(milliseconds * 1000);
-}
+#define UNUSED_PARAM(x) ((x) = (x))
 
 
 // Connection management
@@ -125,6 +59,7 @@ int client_read_fd = -1;
 fd_set client_connections;
 
 void close_server_on_exit(int sig) {
+    UNUSED_PARAM(sig);
     if (server_fd != -1)
         close(server_fd);
 }
@@ -208,7 +143,7 @@ void* server_poll() {
                     }
 
                     FD_SET(client, &client_connections);
-                    printf("Accepted connection from %s\n", inet_ntoa(client_addr.sin_addr));
+                    printf("Accepted connection %d from %s\n", client, inet_ntoa(client_addr.sin_addr));
                 }
                 else {
                     client_read_fd = i;
@@ -223,9 +158,95 @@ void* server_poll() {
 void disconnect(void* conn) {
     int fd = *(int*) conn;
     close(fd);
+    printf("Closed connection %d\n", fd);
 }
 
 
 void close_server() {
     close(server_fd);
+    printf("Server closed\n");
+}
+
+
+// Read/write/sleep platform functions
+
+int read_fd_linux(uint8_t* buf, uint32_t count, int32_t timeout_ms, void* arg) {
+    int fd = *(int*) arg;
+
+    int32_t total = 0;
+    while (total != (int32_t) count) {
+        fd_set rfds;
+        FD_ZERO(&rfds);
+        FD_SET(fd, &rfds);
+
+        struct timeval* tv_p = NULL;
+        struct timeval tv;
+        if (timeout_ms >= 0) {
+            tv_p = &tv;
+            tv.tv_sec = timeout_ms / 1000;
+            tv.tv_usec = (timeout_ms % 1000) * 1000;
+        }
+
+        int ret = select(fd + 1, &rfds, NULL, NULL, tv_p);
+        if (ret == 0) {
+            return total;
+        }
+        else if (ret == 1) {
+            ssize_t r = read(fd, buf + total, 1);
+            if (r == 0) {
+                disconnect(arg);
+                return -1;
+            }
+            else if (r < 0)
+                return -1;
+            else {
+                total += (int32_t) r;
+            }
+        }
+        else
+            return -1;
+    }
+
+    return total;
+}
+
+
+int32_t write_fd_linux(const uint8_t* buf, uint32_t count, int32_t timeout_ms, void* arg) {
+    int fd = *(int*) arg;
+
+    int32_t total = 0;
+    while (total != (int32_t) count) {
+        fd_set wfds;
+        FD_ZERO(&wfds);
+        FD_SET(fd, &wfds);
+
+        struct timeval* tv_p = NULL;
+        struct timeval tv;
+        if (timeout_ms >= 0) {
+            tv_p = &tv;
+            tv.tv_sec = timeout_ms / 1000;
+            tv.tv_usec = (timeout_ms % 1000) * 1000;
+        }
+
+        int ret = select(fd + 1, NULL, &wfds, NULL, tv_p);
+        if (ret == 0) {
+            return 0;
+        }
+        else if (ret == 1) {
+            ssize_t w = write(fd, buf + total, count);
+            if (w == 0) {
+                disconnect(arg);
+                return -1;
+            }
+            else if (w <= 0)
+                return -1;
+            else {
+                total += (int32_t) w;
+            }
+        }
+        else
+            return -1;
+    }
+
+    return total;
 }

@@ -1,7 +1,3 @@
-#include "nanomodbus.h"
-#include "platform.h"
-#include <stdio.h>
-
 /*
  * This example application sets up a TCP server at the specified address and port, and polls from modbus requests
  * from more than one modbus client (more specifically from maximum 1024 clients, since it uses select())
@@ -12,11 +8,15 @@
  * FC 15 (0x0F) Write Multiple Coils
  * FC 16 (0x10) Write Multiple registers
  *
-* Since the platform for this example is linux, the platform arg is used to pass (to the linux TCP read/write
-* functions) a pointer to the file descriptor of the current read client connection
+ * Since the platform for this example is linux, the platform arg is used to pass (to the linux TCP read/write
+ * functions) a pointer to the file descriptor of the current read client connection
  *
- * The platform functions are for Linux systems.
  */
+
+#include <stdio.h>
+
+#include "nanomodbus.h"
+#include "platform.h"
 
 
 // The data model of this sever will support coils addresses 0 to 100 and registers addresses from 0 to 32
@@ -93,9 +93,8 @@ int main(int argc, char* argv[]) {
 
     nmbs_platform_conf platform_conf = {0};
     platform_conf.transport = NMBS_TRANSPORT_TCP;
-    platform_conf.read_byte = read_byte_fd_linux;
-    platform_conf.write_byte = write_byte_fd_linux;
-    platform_conf.sleep = sleep_linux;
+    platform_conf.read = read_fd_linux;
+    platform_conf.write = write_fd_linux;
     platform_conf.arg = NULL;    // We will set the arg (socket fd) later
 
     // These functions are defined in server.h
@@ -130,7 +129,7 @@ int main(int argc, char* argv[]) {
 
         err = nmbs_server_poll(&nmbs);
         if (err != NMBS_ERROR_NONE) {
-            fprintf(stderr, "Error on modbus connection - %s\n", nmbs_strerror(err));
+            printf("Error on modbus connection - %s\n", nmbs_strerror(err));
             // In a more complete example, we would handle this error by checking its nmbs_error value
         }
     }
