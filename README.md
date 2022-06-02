@@ -1,12 +1,12 @@
 # nanoMODBUS - A compact MODBUS RTU/TCP C library for microcontrollers
 
 nanoMODBUS is a small C library that implements the Modbus protocol. It is especially useful in resource-constrained
-system like microcontrollers.  
+systems like microcontrollers.  
 Its main features are:
 
 - Compact size
-  - Only ~1000 lines of code
-  - Client and server code can be disabled, if not needed
+    - Only ~1000 lines of code
+    - Client and server code can be disabled, if not needed
 - No dynamic memory allocations
 - Transports:
     - RTU
@@ -31,9 +31,10 @@ Its main features are:
 ## At a glance
 
 ```C
+#include <stdio.h>
+
 #include "nanomodbus.h"
 #include "my_platform_stuff.h"
-#include <stdio.h>
 
 int main(int argc, char* argv[]) {
     // Set up the TCP connection
@@ -43,12 +44,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // my_transport_read_byte, my_transport_write_byte and my_sleep are implemented by the user 
+    // my_transport_read() and my_transport_write() are implemented by the user 
     nmbs_platform_conf platform_conf;
     platform_conf.transport = NMBS_TRANSPORT_TCP;
-    platform_conf.read_byte = my_transport_read_byte;
-    platform_conf.write_byte = my_transport_write_byte;
-    platform_conf.sleep = my_sleep_linux;
+    platform_conf.read = my_transport_read;
+    platform_conf.write = my_transport_write;
     platform_conf.arg = conn;    // Passing our TCP connection handle to the read/write functions
 
     // Create the modbus client
@@ -95,47 +95,40 @@ API reference is available in the repository's [GitHub Pages](https://debevv.git
 
 ## Platform functions
 
-nanoMODBUS requires the implementation of 3 platform-specific functions, which are passed as function pointers when creating a
-client/server instance.
+nanoMODBUS requires the implementation of 2 platform-specific functions, which are passed as function pointers when
+creating a client/server instance.
 
 ### Transport read/write
 
 ```C
-int read_byte(uint8_t* b, int32_t timeout_ms, void* arg);
-int write_byte(uint8_t b, int32_t timeout_ms, void* arg);
+int32_t read(uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg);
+int32_t write(const uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg);
 ```
 
-These are your platform-specific functions that read/write data to/from a serial port or a TCP connection.  
-Both methods should block until either:
-- a byte is read/written
-- the timeout, with `timeout_ms >= 0`, expires
+These are your platform-specific functions that read/write data to/from a serial port or a TCP connection. Both methods
+should block until either:
 
-A value `< 0` for `timeout_ms` means no timeout.  
-Their return values should be:
-- `1` in case of success
-- `0` if no data is available immediately or after timeout expiration
-- `-1` in case of error
+- `count` bytes of data are read/written
+- the byte timeout, with `byte_timeout_ms >= 0`, expires
 
-### Sleep
+A value `< 0` for `byte_timeout_ms` means no timeout.
 
-```C
-void sleep(uint32_t milliseconds, void* arg);
-```
-
-This function should sleep for the specified amount of milliseconds.
+Their return value should be the number of bytes actually read/written, or `< 0` in case of error.  
+A return value between `0` and `count - 1` will be treated as if a timeout occurred on the transport side. All other
+values will be treated as transport errors.
 
 ### Platform functions argument
 
 Platform functions can access arbitrary user data through their `void* arg` argument. The argument is useful, for
 example, to pass to read/write function the connection they should operate on.  
-Its initial value can be set inside the `nmbs_platform_conf` struct when creating the client/server instance,
-and changed at any time via the `nmbs_set_platform_arg` API method.
+Its initial value can be set inside the `nmbs_platform_conf` struct when creating the client/server instance, and
+changed at any time via the `nmbs_set_platform_arg` API method.
 
 ## Platform endianness
 
-nanoMODBUS will attempt to detect the endianness of the platform at build time. If the automatic detection fails, you can
-manually set the endianness of the platform by defining either `NMBS_BIG_ENDIAN` or `NMBS_LITTLE_ENDIAN` in your build
-flags.
+nanoMODBUS will attempt to detect the endianness of the platform at build time. If the automatic detection fails, you
+can manually set the endianness of the platform by defining either `NMBS_BIG_ENDIAN` or `NMBS_LITTLE_ENDIAN` in your
+build flags.
 
 ## Tests and examples
 
@@ -150,7 +143,7 @@ make
 ## Misc
 
 - To reduce code size, you can define the following `#define`s:
-  - `NMBS_CLIENT_DISABLED` to disable all client code
-  - `NMBS_SERVER_DISABLED` to disable all server code
-  - `NMBS_STRERROR_DISABLED` to disable the code that converts `nmbs_error`s to strings
+    - `NMBS_CLIENT_DISABLED` to disable all client code
+    - `NMBS_SERVER_DISABLED` to disable all server code
+    - `NMBS_STRERROR_DISABLED` to disable the code that converts `nmbs_error`s to strings
 - Debug prints about received and sent messages can be enabled by defining `NMBS_DEBUG`
