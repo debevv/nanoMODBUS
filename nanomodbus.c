@@ -455,7 +455,7 @@ static nmbs_error handle_read_discrete(nmbs_t* nmbs, nmbs_error (*callback)(uint
         if (quantity < 1 || quantity > 2000)
             return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
-        if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
+        if ((uint32_t) address + (uint32_t) quantity > ((uint32_t) 0xFFFF) + 1)
             return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
         if (callback) {
@@ -516,7 +516,7 @@ static nmbs_error handle_read_registers(nmbs_t* nmbs, nmbs_error (*callback)(uin
         if (quantity < 1 || quantity > 125)
             return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
-        if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
+        if ((uint32_t) address + (uint32_t) quantity > ((uint32_t) 0xFFFF) + 1)
             return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
         if (callback) {
@@ -713,7 +713,7 @@ static nmbs_error handle_write_multiple_coils(nmbs_t* nmbs) {
         if (quantity < 1 || quantity > 0x07B0)
             return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
-        if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
+        if ((uint32_t) address + (uint32_t) quantity > ((uint32_t) 0xFFFF) + 1)
             return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
         if (coils_bytes == 0)
@@ -783,7 +783,7 @@ static nmbs_error handle_write_multiple_registers(nmbs_t* nmbs) {
         if (quantity < 1 || quantity > 0x007B)
             return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
-        if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
+        if ((uint32_t) address + (uint32_t) quantity > ((uint32_t) 0xFFFF) + 1)
             return handle_exception(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
         if (registers_bytes == 0)
@@ -909,7 +909,7 @@ static nmbs_error read_discrete(nmbs_t* nmbs, uint8_t fc, uint16_t address, uint
     if (quantity < 1 || quantity > 2000)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
-    if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
+    if ((uint32_t) address + (uint32_t) quantity > ((uint32_t) 0xFFFF) + 1)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
     msg_state_req(nmbs, fc);
@@ -973,7 +973,7 @@ static nmbs_error read_registers(nmbs_t* nmbs, uint8_t fc, uint16_t address, uin
     if (quantity < 1 || quantity > 125)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
-    if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
+    if ((uint32_t) address + (uint32_t) quantity > ((uint32_t) 0xFFFF) + 1)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
     msg_state_req(nmbs, fc);
@@ -1129,7 +1129,7 @@ nmbs_error nmbs_write_multiple_coils(nmbs_t* nmbs, uint16_t address, uint16_t qu
     if (quantity < 1 || quantity > 0x07B0)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
-    if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
+    if ((uint32_t) address + (uint32_t) quantity > ((uint32_t) 0xFFFF) + 1)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
     uint8_t coils_bytes = (quantity / 8) + 1;
@@ -1186,7 +1186,7 @@ nmbs_error nmbs_write_multiple_registers(nmbs_t* nmbs, uint16_t address, uint16_
     if (quantity < 1 || quantity > 0x007B)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
-    if ((uint32_t) address + (uint32_t) quantity > 0xFFFF + 1)
+    if ((uint32_t) address + (uint32_t) quantity > ((uint32_t) 0xFFFF) + 1)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
     uint8_t registers_bytes = quantity * 2;
