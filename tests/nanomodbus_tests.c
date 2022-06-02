@@ -5,16 +5,18 @@
 #include <string.h>
 
 
-int read_byte_empty(uint8_t* b, int32_t timeout, void* arg) {
+int read_empty(uint8_t* b, uint32_t count, int32_t timeout, void* arg) {
     UNUSED_PARAM(b);
+    UNUSED_PARAM(count);
     UNUSED_PARAM(timeout);
     UNUSED_PARAM(arg);
     return 0;
 }
 
 
-int write_byte_empty(uint8_t b, int32_t timeout, void* arg) {
+int write_empty(const uint8_t* b, uint32_t count, int32_t timeout, void* arg) {
     UNUSED_PARAM(b);
+    UNUSED_PARAM(count);
     UNUSED_PARAM(timeout);
     UNUSED_PARAM(arg);
     return 0;
@@ -25,10 +27,12 @@ void test_server_create(nmbs_transport transport) {
     nmbs_t nmbs;
     nmbs_error err;
 
-    nmbs_platform_conf platform_conf_empty = {.transport = transport,
-                                              .read_byte = read_byte_empty,
-                                              .write_byte = write_byte_empty,
-                                              .sleep = platform_sleep};
+    nmbs_platform_conf platform_conf_empty = {
+            .transport = transport,
+            .read = read_empty,
+            .write = write_empty,
+    };
+
 
     nmbs_callbacks callbacks_empty;
 
@@ -57,37 +61,38 @@ void test_server_create(nmbs_transport transport) {
 
     reset(nmbs);
     p = platform_conf_empty;
-    p.read_byte = NULL;
+    p.read = NULL;
     err = nmbs_server_create(&nmbs, 0, &p, &callbacks_empty);
     expect(err == NMBS_ERROR_INVALID_ARGUMENT);
 
     reset(nmbs);
     p = platform_conf_empty;
-    p.write_byte = NULL;
+    p.write = NULL;
     err = nmbs_server_create(&nmbs, 0, &p, &callbacks_empty);
     expect(err == NMBS_ERROR_INVALID_ARGUMENT);
 }
 
 
-int read_byte_timeout(uint8_t* b, int32_t timeout, void* arg) {
-    UNUSED_PARAM(b);
+int read_timeout(uint8_t* buf, uint32_t count, int32_t timeout, void* arg) {
+    UNUSED_PARAM(buf);
+    UNUSED_PARAM(count);
     UNUSED_PARAM(arg);
     usleep(timeout * 1000);
     return 0;
 }
 
-
-int read_byte_timeout_third(uint8_t* b, int32_t timeout, void* arg) {
+// Timeouts on the second read
+int read_timeout_second(uint8_t* buf, uint32_t count, int32_t timeout, void* arg) {
+    UNUSED_PARAM(count);
     UNUSED_PARAM(arg);
 
     static int stage = 0;
     switch (stage) {
         case 0:
-        case 1:
-            *b = 1;
+            *buf = 1;
             stage++;
-            return 1;
-        case 2:
+            return (int) count;
+        case 1:
             expect(timeout > 0);
             usleep(timeout * 1000 + 100 * 1000);
             stage = 0;
@@ -100,7 +105,7 @@ int read_byte_timeout_third(uint8_t* b, int32_t timeout, void* arg) {
 
 
 void test_server_receive_base(nmbs_transport transport) {
-    nmbs_t server, client;
+    nmbs_t server;
     nmbs_error err;
     nmbs_platform_conf platform_conf;
     nmbs_callbacks callbacks_empty;
@@ -109,9 +114,8 @@ void test_server_receive_base(nmbs_transport transport) {
     should("honor read_timeout and return normally");
     reset(server);
     platform_conf.transport = transport;
-    platform_conf.read_byte = read_byte_timeout;
-    platform_conf.write_byte = write_byte_empty;
-    platform_conf.sleep = platform_sleep;
+    platform_conf.read = read_timeout;
+    platform_conf.write = write_empty;
 
     const int32_t read_timeout_ms = 250;
 
@@ -136,8 +140,8 @@ void test_server_receive_base(nmbs_transport transport) {
     should("honor byte_timeout and return NMBS_ERROR_TIMEOUT");
     reset(server);
     platform_conf.transport = transport;
-    platform_conf.read_byte = read_byte_timeout_third;
-    platform_conf.write_byte = write_byte_empty;
+    platform_conf.read = read_timeout_second;
+    platform_conf.write = write_empty;
 
     const int32_t byte_timeout_ms = 250;
 
@@ -149,26 +153,6 @@ void test_server_receive_base(nmbs_transport transport) {
 
     err = nmbs_server_poll(&server);
     expect(err == NMBS_ERROR_TIMEOUT);
-
-
-    should("honor byte spacing on RTU");
-    if (transport == NMBS_TRANSPORT_RTU) {
-        reset(client);
-        platform_conf.transport = transport;
-        platform_conf.read_byte = read_byte_socket_client;
-        platform_conf.write_byte = write_byte_socket_client;
-
-        reset_sockets();
-
-        check(nmbs_client_create(&client, &platform_conf));
-
-        nmbs_set_byte_spacing(&client, 200);
-
-        uint64_t start = now_ms();
-        check(nmbs_send_raw_pdu(&client, 1, (uint16_t[]){htons(1), htons(1)}, 4));
-        uint64_t diff = now_ms() - start;
-        expect(diff >= 200 * 8);
-    }
 }
 
 

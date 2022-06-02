@@ -64,96 +64,105 @@ void reset_sockets() {
 }
 
 
-int read_byte_fd(int fd, uint8_t* b, int32_t timeout_ms) {
-    fd_set rfds;
-    FD_ZERO(&rfds);
-    FD_SET(fd, &rfds);
+int32_t read_fd(int fd, uint8_t* buf, uint32_t count, int32_t timeout_ms) {
+    int32_t total = 0;
+    while (total != (int32_t) count) {
+        fd_set rfds;
+        FD_ZERO(&rfds);
+        FD_SET(fd, &rfds);
 
-    struct timeval* tv_p = NULL;
-    struct timeval tv;
-    if (timeout_ms >= 0) {
-        tv_p = &tv;
-        tv.tv_sec = timeout_ms / 1000;
-        tv.tv_usec = (timeout_ms % 1000) * 1000;
-    }
-
-    int ret = select(fd + 1, &rfds, NULL, NULL, tv_p);
-    if (ret == 0) {
-        return 0;
-    }
-    else if (ret == 1) {
-        ssize_t r = read(fd, b, 1);
-        if (r != 1)
-            return -1;
-        else {
-            return 1;
+        struct timeval* tv_p = NULL;
+        struct timeval tv;
+        if (timeout_ms >= 0) {
+            tv_p = &tv;
+            tv.tv_sec = timeout_ms / 1000;
+            tv.tv_usec = (timeout_ms % 1000) * 1000;
         }
-    }
-    else
-        return -1;
-}
 
-
-int write_byte_fd(int fd, uint8_t b, int32_t timeout_ms) {
-    fd_set wfds;
-    FD_ZERO(&wfds);
-    FD_SET(fd, &wfds);
-
-    struct timeval* tv_p = NULL;
-    struct timeval tv;
-    if (timeout_ms >= 0) {
-        tv_p = &tv;
-        tv.tv_sec = timeout_ms / 1000;
-        tv.tv_usec = (timeout_ms % 1000) * 1000;
-    }
-
-    int ret = select(fd + 1, NULL, &wfds, NULL, tv_p);
-    if (ret == 0) {
-        return 0;
-    }
-    else if (ret == 1) {
-        ssize_t r = write(fd, &b, 1);
-        if (r != 1)
-            return -1;
-        else {
-            return 1;
+        int ret = select(fd + 1, &rfds, NULL, NULL, tv_p);
+        if (ret == 0) {
+            return total;
         }
+        else if (ret == 1) {
+            ssize_t r = read(fd, buf + total, 1);
+            if (r <= 0)
+                return -1;
+            else {
+                total += (int32_t) r;
+            }
+        }
+        else
+            return -1;
     }
-    else
-        return -1;
+
+    return total;
 }
 
 
-int read_byte_socket_server(uint8_t* b, int32_t timeout_ms, void* arg) {
-    UNUSED_PARAM(arg);
-    return read_byte_fd(sockets[0], b, timeout_ms);
+int write_fd(int fd, const uint8_t* buf, uint32_t count, int32_t timeout_ms) {
+    int32_t total = 0;
+    while (total != (int32_t) count) {
+        fd_set wfds;
+        FD_ZERO(&wfds);
+        FD_SET(fd, &wfds);
+
+        struct timeval* tv_p = NULL;
+        struct timeval tv;
+        if (timeout_ms >= 0) {
+            tv_p = &tv;
+            tv.tv_sec = timeout_ms / 1000;
+            tv.tv_usec = (timeout_ms % 1000) * 1000;
+        }
+
+        int ret = select(fd + 1, NULL, &wfds, NULL, tv_p);
+        if (ret == 0) {
+            return 0;
+        }
+        else if (ret == 1) {
+            ssize_t w = write(fd, buf + total, count);
+            if (w <= 0)
+                return -1;
+            else {
+                total += (int32_t) w;
+            }
+        }
+        else
+            return -1;
+    }
+
+    return total;
 }
 
 
-int write_byte_socket_server(uint8_t b, int32_t timeout_ms, void* arg) {
+int read_socket_server(uint8_t* buf, uint32_t count, int32_t timeout_ms, void* arg) {
     UNUSED_PARAM(arg);
-    return write_byte_fd(sockets[0], b, timeout_ms);
+    return read_fd(sockets[0], buf, count, timeout_ms);
 }
 
 
-int read_byte_socket_client(uint8_t* b, int32_t timeout_ms, void* arg) {
+int write_socket_server(const uint8_t* buf, uint32_t count, int32_t timeout_ms, void* arg) {
     UNUSED_PARAM(arg);
-    return read_byte_fd(sockets[1], b, timeout_ms);
+    return write_fd(sockets[0], buf, count, timeout_ms);
 }
 
 
-int write_byte_socket_client(uint8_t b, int32_t timeout_ms, void* arg) {
+int read_socket_client(uint8_t* buf, uint32_t count, int32_t timeout_ms, void* arg) {
     UNUSED_PARAM(arg);
-    return write_byte_fd(sockets[1], b, timeout_ms);
+    return read_fd(sockets[1], buf, count, timeout_ms);
+}
+
+
+int write_socket_client(const uint8_t* buf, uint32_t count, int32_t timeout_ms, void* arg) {
+    UNUSED_PARAM(arg);
+    return write_fd(sockets[1], buf, count, timeout_ms);
 }
 
 
 nmbs_platform_conf nmbs_platform_conf_server;
 nmbs_platform_conf* platform_conf_socket_server(nmbs_transport transport) {
     nmbs_platform_conf_server.transport = transport;
-    nmbs_platform_conf_server.read_byte = read_byte_socket_server;
-    nmbs_platform_conf_server.write_byte = write_byte_socket_server;
-    nmbs_platform_conf_server.sleep = platform_sleep;
+    nmbs_platform_conf_server.read = read_socket_server;
+    nmbs_platform_conf_server.write = write_socket_server;
     return &nmbs_platform_conf_server;
 }
 
@@ -161,9 +170,8 @@ nmbs_platform_conf* platform_conf_socket_server(nmbs_transport transport) {
 nmbs_platform_conf nmbs_platform_conf_client;
 nmbs_platform_conf* platform_conf_socket_client(nmbs_transport transport) {
     nmbs_platform_conf_client.transport = transport;
-    nmbs_platform_conf_client.read_byte = read_byte_socket_client;
-    nmbs_platform_conf_client.write_byte = write_byte_socket_client;
-    nmbs_platform_conf_client.sleep = platform_sleep;
+    nmbs_platform_conf_client.read = read_socket_client;
+    nmbs_platform_conf_client.write = write_socket_client;
     return &nmbs_platform_conf_client;
 }
 
