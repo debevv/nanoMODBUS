@@ -2,8 +2,8 @@
  * This example application connects via TCP to a modbus server at the specified address and port, and sends some
  * modbus requests to it.
  *
- * Since the platform for this example is linux, the platform arg is used to pass (to the linux TCP read/write
- * functions) a pointer to the file descriptor of our TCP connection
+ * Since the platform for this example is linux, the platform arg is used to pass (to the linux file descriptor
+ * read/write functions) a pointer to the file descriptor of our TCP connection
  *
  */
 

@@ -2,14 +2,14 @@
  * This example application sets up a TCP server at the specified address and port, and polls from modbus requests
  * from more than one modbus client (more specifically from maximum 1024 clients, since it uses select())
  *
- * This example server supports the following function codes:
+ * This server supports the following function codes:
  * FC 01 (0x01) Read Coils
  * FC 03 (0x03) Read Holding Registers
  * FC 15 (0x0F) Write Multiple Coils
  * FC 16 (0x10) Write Multiple registers
  *
- * Since the platform for this example is linux, the platform arg is used to pass (to the linux TCP read/write
- * functions) a pointer to the file descriptor of the current read client connection
+ * Since the platform for this example is linux, the platform arg is used to pass (to the linux file descriptor
+ * read/write functions) a pointer to the file descriptor of the current read client connection
  *
  */
 
