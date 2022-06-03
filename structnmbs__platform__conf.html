@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>My Project: nmbs_platform_conf Struct Reference</title>
+<title>nanoMODBUS: nmbs_platform_conf Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -21,7 +21,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">My Project
+   <div id="projectname">nanoMODBUS
    </div>
   </td>
  </tr>
@@ -62,8 +62,7 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="structnmbs__platform__conf-members.html">List of all members</a>  </div>
+<a href="#pub-attribs">Data Fields</a>  </div>
   <div class="headertitle">
 <div class="title">nmbs_platform_conf Struct Reference</div>  </div>
 </div><!--header-->
@@ -72,7 +71,7 @@ $(function() {
 <p><code>#include &lt;<a class="el" href="nanomodbus_8h_source.html">nanomodbus.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
+Data Fields</h2></td></tr>
 <tr class="memitem:ac00f49dfda553972d54f8f54a2499e8b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#ad4308b11d9bab11f45b94a1d4840f5fd">nmbs_transport</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structnmbs__platform__conf.html#ac00f49dfda553972d54f8f54a2499e8b">transport</a></td></tr>
 <tr class="separator:ac00f49dfda553972d54f8f54a2499e8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a374e2ee742c43e5c97159af2876e8d02"><td class="memItemLeft" align="right" valign="top">int32_t(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structnmbs__platform__conf.html#a374e2ee742c43e5c97159af2876e8d02">read</a> )(uint8_t *buf, uint16_t count, int32_t byte_timeout_ms, void *<a class="el" href="structnmbs__platform__conf.html#abec793041ee3e19d14fede444f85aa06">arg</a>)</td></tr>
@@ -92,7 +91,7 @@ Public Attributes</h2></td></tr>
 <p>A value <code>&lt; 0</code> for <code>byte_timeout_ms</code> means no timeout.</p>
 <p>Their return value should be the number of bytes actually read/written, or <code>&lt; 0</code> in case of error. A return value between <code>0</code> and <code>count - 1</code> will be treated as if a timeout occurred on the transport side. All other values will be treated as transport errors.</p>
 <p>These methods accept a pointer to arbitrary user-data, which is the arg member of this struct. After the creation of an instance it can be changed with <a class="el" href="nanomodbus_8h.html#acc234d6d6823f49eb962628d4f4750fc">nmbs_set_platform_arg()</a>. </p>
-</div><h2 class="groupheader">Member Data Documentation</h2>
+</div><h2 class="groupheader">Field Documentation</h2>
 <a id="abec793041ee3e19d14fede444f85aa06"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#abec793041ee3e19d14fede444f85aa06">&#9670;&nbsp;</a></span>arg</h2>
 

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['nanomodbus_20_2d_20a_20compact_20modbus_20rtu_2ftcp_20c_20library_20for_20microcontrollers_1',['nanoMODBUS - A compact MODBUS RTU/TCP C library for microcontrollers',['../index.html',1,'(Global Namespace)'],['../md_README.html',1,'(Global Namespace)']]],
+  ['nanomodbus_20_2d_20a_20compact_20modbus_20rtu_2ftcp_20c_20library_20for_20microcontrollers_1',['nanoMODBUS - A compact MODBUS RTU/TCP C library for microcontrollers',['../index.html',1,'']]],
   ['nanomodbus_2eh_2',['nanomodbus.h',['../nanomodbus_8h.html',1,'']]],
   ['nmbs_5fbitfield_3',['nmbs_bitfield',['../nanomodbus_8h.html#a20e71e909a11b2b19b9046080ff3017d',1,'nanomodbus.h']]],
   ['nmbs_5fbitfield_5fread_4',['nmbs_bitfield_read',['../nanomodbus_8h.html#a850091de1f63fbeb095aa3ba18944cf5',1,'nanomodbus.h']]],
@@ -8,7 +8,7 @@ var searchData=
   ['nmbs_5fbitfield_5fwrite_6',['nmbs_bitfield_write',['../nanomodbus_8h.html#ac4e3c601b21c048c678680a9b63becfe',1,'nanomodbus.h']]],
   ['nmbs_5fcallbacks_7',['nmbs_callbacks',['../structnmbs__callbacks.html',1,'nmbs_callbacks'],['../nanomodbus_8h.html#a348ea58b0ccf1a7c160d0d332e378e02',1,'nmbs_callbacks():&#160;nanomodbus.h']]],
   ['nmbs_5fclient_5fcreate_8',['nmbs_client_create',['../nanomodbus_8h.html#a3b807cdc252c36eea090af9bc5006fc9',1,'nanomodbus.c']]],
-  ['nmbs_5ferror_9',['nmbs_error',['../nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0',1,'nmbs_error():&#160;nanomodbus.h'],['../nanomodbus_8h.html#a9aecd22d877f63a8ecccead980197c22',1,'nmbs_error():&#160;nanomodbus.h']]],
+  ['nmbs_5ferror_9',['nmbs_error',['../nanomodbus_8h.html#a9aecd22d877f63a8ecccead980197c22',1,'nmbs_error():&#160;nanomodbus.h'],['../nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0',1,'nmbs_error():&#160;nanomodbus.h']]],
   ['nmbs_5ferror_5fcrc_10',['NMBS_ERROR_CRC',['../nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0ae179b232e51a9f3f69349d9cbf38b09c',1,'nanomodbus.h']]],
   ['nmbs_5ferror_5finvalid_5fargument_11',['NMBS_ERROR_INVALID_ARGUMENT',['../nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a2f6672c3501f57f4cdb7c1c0207eaa17',1,'nanomodbus.h']]],
   ['nmbs_5ferror_5finvalid_5fresponse_12',['NMBS_ERROR_INVALID_RESPONSE',['../nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a5dba2268665b5f2ea5c50ef92513c0fc',1,'nanomodbus.h']]],
