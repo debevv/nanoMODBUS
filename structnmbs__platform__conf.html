@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>nanoMODBUS: nmbs_platform_conf Struct Reference</title>
+<title>My Project: nmbs_platform_conf Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -21,7 +21,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">nanoMODBUS
+   <div id="projectname">My Project
    </div>
   </td>
  </tr>
@@ -62,7 +62,8 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#pub-attribs">Data Fields</a>  </div>
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="structnmbs__platform__conf-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">nmbs_platform_conf Struct Reference</div>  </div>
 </div><!--header-->
@@ -71,34 +72,27 @@ $(function() {
 <p><code>#include &lt;<a class="el" href="nanomodbus_8h_source.html">nanomodbus.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
-Data Fields</h2></td></tr>
+Public Attributes</h2></td></tr>
 <tr class="memitem:ac00f49dfda553972d54f8f54a2499e8b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#ad4308b11d9bab11f45b94a1d4840f5fd">nmbs_transport</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structnmbs__platform__conf.html#ac00f49dfda553972d54f8f54a2499e8b">transport</a></td></tr>
 <tr class="separator:ac00f49dfda553972d54f8f54a2499e8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa142e8e941392a21075aeb5da390c322"><td class="memItemLeft" align="right" valign="top">int(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structnmbs__platform__conf.html#aa142e8e941392a21075aeb5da390c322">read_byte</a> )(uint8_t *b, int32_t timeout_ms, void *<a class="el" href="structnmbs__platform__conf.html#abec793041ee3e19d14fede444f85aa06">arg</a>)</td></tr>
-<tr class="separator:aa142e8e941392a21075aeb5da390c322"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:accf635ba0a857dacee80f9db20c986b8"><td class="memItemLeft" align="right" valign="top">int(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structnmbs__platform__conf.html#accf635ba0a857dacee80f9db20c986b8">write_byte</a> )(uint8_t b, int32_t timeout_ms, void *<a class="el" href="structnmbs__platform__conf.html#abec793041ee3e19d14fede444f85aa06">arg</a>)</td></tr>
-<tr class="separator:accf635ba0a857dacee80f9db20c986b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a93c9d186c8464b89abcf28dedf6b2047"><td class="memItemLeft" align="right" valign="top">void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structnmbs__platform__conf.html#a93c9d186c8464b89abcf28dedf6b2047">sleep</a> )(uint32_t milliseconds, void *<a class="el" href="structnmbs__platform__conf.html#abec793041ee3e19d14fede444f85aa06">arg</a>)</td></tr>
-<tr class="separator:a93c9d186c8464b89abcf28dedf6b2047"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a374e2ee742c43e5c97159af2876e8d02"><td class="memItemLeft" align="right" valign="top">int32_t(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structnmbs__platform__conf.html#a374e2ee742c43e5c97159af2876e8d02">read</a> )(uint8_t *buf, uint16_t count, int32_t byte_timeout_ms, void *<a class="el" href="structnmbs__platform__conf.html#abec793041ee3e19d14fede444f85aa06">arg</a>)</td></tr>
+<tr class="separator:a374e2ee742c43e5c97159af2876e8d02"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af83e58b5dcc0c84ea861fd9e78cadcaf"><td class="memItemLeft" align="right" valign="top">int32_t(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structnmbs__platform__conf.html#af83e58b5dcc0c84ea861fd9e78cadcaf">write</a> )(const uint8_t *buf, uint16_t count, int32_t byte_timeout_ms, void *<a class="el" href="structnmbs__platform__conf.html#abec793041ee3e19d14fede444f85aa06">arg</a>)</td></tr>
+<tr class="separator:af83e58b5dcc0c84ea861fd9e78cadcaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abec793041ee3e19d14fede444f85aa06"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structnmbs__platform__conf.html#abec793041ee3e19d14fede444f85aa06">arg</a></td></tr>
 <tr class="separator:abec793041ee3e19d14fede444f85aa06"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>nanoMODBUS platform configuration struct. Passed to <a class="el" href="nanomodbus_8h.html#ab3b4efe8cd44b0fa21229005df4ac9dd">nmbs_server_create()</a> and <a class="el" href="nanomodbus_8h.html#a3b807cdc252c36eea090af9bc5006fc9">nmbs_client_create()</a>.</p>
-<p><a class="el" href="structnmbs__platform__conf.html#aa142e8e941392a21075aeb5da390c322">read_byte()</a> and <a class="el" href="structnmbs__platform__conf.html#accf635ba0a857dacee80f9db20c986b8">write_byte()</a> are the platform-specific methods that read/write data to/from a serial port or a TCP connection.</p>
+<p><a class="el" href="structnmbs__platform__conf.html#a374e2ee742c43e5c97159af2876e8d02">read()</a> and <a class="el" href="structnmbs__platform__conf.html#af83e58b5dcc0c84ea861fd9e78cadcaf">write()</a> are the platform-specific methods that read/write data to/from a serial port or a TCP connection.</p>
 <p>Both methods should block until either:</p><ul>
-<li>a byte is read/written</li>
-<li>the timeout, with timeout_ms &gt;= 0, expires</li>
+<li><code>count</code> bytes of data are read/written</li>
+<li>the byte timeout, with <code>byte_timeout_ms &gt;= 0</code>, expires</li>
 </ul>
-<p>A value &lt; 0 for timeout_ms means no timeout.</p>
-<p>Their return values should be:</p><ul>
-<li><code>1</code> in case of success</li>
-<li><code>0</code> if no data is available immediately or after timeout expiration</li>
-<li><code>-1</code> in case of error</li>
-</ul>
-<p><a class="el" href="structnmbs__platform__conf.html#a93c9d186c8464b89abcf28dedf6b2047">sleep()</a> is the platform-specific method to pause for a certain amount of milliseconds.</p>
+<p>A value <code>&lt; 0</code> for <code>byte_timeout_ms</code> means no timeout.</p>
+<p>Their return value should be the number of bytes actually read/written, or <code>&lt; 0</code> in case of error. A return value between <code>0</code> and <code>count - 1</code> will be treated as if a timeout occurred on the transport side. All other values will be treated as transport errors.</p>
 <p>These methods accept a pointer to arbitrary user-data, which is the arg member of this struct. After the creation of an instance it can be changed with <a class="el" href="nanomodbus_8h.html#acc234d6d6823f49eb962628d4f4750fc">nmbs_set_platform_arg()</a>. </p>
-</div><h2 class="groupheader">Field Documentation</h2>
+</div><h2 class="groupheader">Member Data Documentation</h2>
 <a id="abec793041ee3e19d14fede444f85aa06"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#abec793041ee3e19d14fede444f85aa06">&#9670;&nbsp;</a></span>arg</h2>
 
@@ -114,33 +108,18 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a id="aa142e8e941392a21075aeb5da390c322"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa142e8e941392a21075aeb5da390c322">&#9670;&nbsp;</a></span>read_byte</h2>
+<a id="a374e2ee742c43e5c97159af2876e8d02"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a374e2ee742c43e5c97159af2876e8d02">&#9670;&nbsp;</a></span>read</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int(* nmbs_platform_conf::read_byte) (uint8_t *b, int32_t timeout_ms, void *<a class="el" href="structnmbs__platform__conf.html#abec793041ee3e19d14fede444f85aa06">arg</a>)</td>
+          <td class="memname">int32_t(* nmbs_platform_conf::read) (uint8_t *buf, uint16_t count, int32_t byte_timeout_ms, void *<a class="el" href="structnmbs__platform__conf.html#abec793041ee3e19d14fede444f85aa06">arg</a>)</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Byte read transport function pointer </p>
-
-</div>
-</div>
-<a id="a93c9d186c8464b89abcf28dedf6b2047"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a93c9d186c8464b89abcf28dedf6b2047">&#9670;&nbsp;</a></span>sleep</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void(* nmbs_platform_conf::sleep) (uint32_t milliseconds, void *<a class="el" href="structnmbs__platform__conf.html#abec793041ee3e19d14fede444f85aa06">arg</a>)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Sleep function pointer </p>
+<p>Bytes read transport function pointer </p>
 
 </div>
 </div>
@@ -159,18 +138,18 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a id="accf635ba0a857dacee80f9db20c986b8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#accf635ba0a857dacee80f9db20c986b8">&#9670;&nbsp;</a></span>write_byte</h2>
+<a id="af83e58b5dcc0c84ea861fd9e78cadcaf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af83e58b5dcc0c84ea861fd9e78cadcaf">&#9670;&nbsp;</a></span>write</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int(* nmbs_platform_conf::write_byte) (uint8_t b, int32_t timeout_ms, void *<a class="el" href="structnmbs__platform__conf.html#abec793041ee3e19d14fede444f85aa06">arg</a>)</td>
+          <td class="memname">int32_t(* nmbs_platform_conf::write) (const uint8_t *buf, uint16_t count, int32_t byte_timeout_ms, void *<a class="el" href="structnmbs__platform__conf.html#abec793041ee3e19d14fede444f85aa06">arg</a>)</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Byte write transport function pointer </p>
+<p>Bytes write transport function pointer </p>
 
 </div>
 </div>

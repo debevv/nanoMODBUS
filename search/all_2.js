@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['read_5fbyte_43',['read_byte',['../structnmbs__platform__conf.html#aa142e8e941392a21075aeb5da390c322',1,'nmbs_platform_conf']]]
+  ['read_42',['read',['../structnmbs__platform__conf.html#a374e2ee742c43e5c97159af2876e8d02',1,'nmbs_platform_conf']]]
 ];
