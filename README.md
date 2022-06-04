@@ -95,8 +95,8 @@ API reference is available in the repository's [GitHub Pages](https://debevv.git
 
 ## Platform functions
 
-nanoMODBUS requires the implementation of 2 platform-specific functions, which are passed as function pointers when
-creating a client/server instance.
+nanoMODBUS requires the implementation of 2 platform-specific functions, defined as function pointers when creating a
+client/server instance.
 
 ### Transport read/write
 
@@ -105,8 +105,8 @@ int32_t read(uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg);
 int32_t write(const uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg);
 ```
 
-These are your platform-specific functions that read/write data to/from a serial port or a TCP connection. Both methods
-should block until either:
+These are your platform-specific functions that read/write data to/from a serial port or a TCP connection.  
+Both methods should block until either:
 
 - `count` bytes of data are read/written
 - the byte timeout, with `byte_timeout_ms >= 0`, expires
@@ -120,9 +120,9 @@ values will be treated as transport errors.
 ### Platform functions argument
 
 Platform functions can access arbitrary user data through their `void* arg` argument. The argument is useful, for
-example, to pass to read/write function the connection they should operate on.  
-Its initial value can be set inside the `nmbs_platform_conf` struct when creating the client/server instance, and
-changed at any time via the `nmbs_set_platform_arg` API method.
+example, to pass the connection a function should operate on.    
+Its initial value can be set inside the `nmbs_platform_conf` struct when creating the `nmbs_t` instance, and changed at
+any time via the `nmbs_set_platform_arg` API method.
 
 ## Platform endianness
 
@@ -139,6 +139,8 @@ mkdir build && cd build
 cmake ..
 make
 ```
+
+Please refer to `examples/arduino/README.md` for more info about building and running Arduino examples.
 
 ## Misc
 
