@@ -1,5 +1,5 @@
 /*
-   This example application sets up an RTU server and polls from modbus requests
+   This example application sets up an RTU server and handles modbus requests
 
    This server supports the following function codes:
    FC 01 (0x01) Read Coils
@@ -35,12 +35,9 @@ int32_t write_serial(const uint8_t* buf, uint16_t count, int32_t byte_timeout_ms
 
 
 void onError() {
-  // Make the LED blink on error
+  // Set the led ON on error
   while (true) {
     digitalWrite(LED_BUILTIN, HIGH);
-    delay(1000);
-    digitalWrite(LED_BUILTIN, LOW);
-    delay(1000);
   }
 }
 
@@ -98,7 +95,6 @@ nmbs_error handle_write_multiple_registers(uint16_t address, uint16_t quantity, 
 
 void setup() {
   pinMode (LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);
 
   Serial.begin(9600);
   while (!Serial);
@@ -112,7 +108,6 @@ void loop() {
   platform_conf.write = write_serial;
   platform_conf.arg = NULL;
 
-  // These functions are defined in server.h
   nmbs_callbacks callbacks = {0};
   callbacks.read_coils = handle_read_coils;
   callbacks.write_multiple_coils = handle_write_multiple_coils;
@@ -129,16 +124,18 @@ void loop() {
   nmbs_set_read_timeout(&nmbs, 1000);
   nmbs_set_byte_timeout(&nmbs, 100);
 
+  bool led = false;
+
   while (true) {
     err = nmbs_server_poll(&nmbs);
     // This will probably never happen, since we don't return < 0 in our platform funcs
     if (err == NMBS_ERROR_TRANSPORT)
       break;
+
+    digitalWrite(LED_BUILTIN, led);
+    led = !led;
   }
 
-  // Turn off the led at the end
-  digitalWrite(LED_BUILTIN, LOW);
-
-  // No need to destroy the nmbs instance, bye bye
+  // No need to destroy the nmbs instance, terminate the program
   exit(0);
 }

@@ -33,7 +33,7 @@ void onError() {
 
 void setup() {
   pinMode (LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);
+  digitalWrite(LED_BUILTIN, LOW);
 
   Serial.begin(9600);
   while (!Serial);
@@ -82,9 +82,9 @@ void loop() {
   if (err != NMBS_ERROR_NONE)
     onError();
 
-  // Turn off the led on success
-  digitalWrite(LED_BUILTIN, LOW);
+  // On success, keep the led on
+  digitalWrite(LED_BUILTIN, HIGH);
 
-  // No need to destroy the nmbs instance, bye bye
+  // No need to destroy the nmbs instance, terminate the program
   exit(0);
 }
