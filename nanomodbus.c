@@ -228,6 +228,8 @@ static nmbs_error send(nmbs_t* nmbs, uint16_t count) {
 
 
 static nmbs_error recv_msg_footer(nmbs_t* nmbs) {
+    DEBUG("\n");
+
     if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
         uint16_t crc = crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx);
 
@@ -241,7 +243,6 @@ static nmbs_error recv_msg_footer(nmbs_t* nmbs) {
             return NMBS_ERROR_CRC;
     }
 
-    DEBUG("\n");
 
     return NMBS_ERROR_NONE;
 }
@@ -396,6 +397,8 @@ static void send_msg_header(nmbs_t* nmbs, uint16_t data_length) {
 
 
 static nmbs_error send_msg_footer(nmbs_t* nmbs) {
+    DEBUG("\n");
+
     if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
         uint16_t crc = crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx);
         put_2(nmbs, crc);
@@ -403,7 +406,6 @@ static nmbs_error send_msg_footer(nmbs_t* nmbs) {
 
     nmbs_error err = send(nmbs, nmbs->msg.buf_idx);
 
-    DEBUG("\n");
 
     return err;
 }
