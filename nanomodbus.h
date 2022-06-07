@@ -185,6 +185,7 @@ static const uint8_t NMBS_BROADCAST_ADDRESS = 0;
 
 #ifndef NMBS_CLIENT_DISABLED
 /** Create a new Modbus client.
+ * The platform configuration struct is copied by value and may be discarded afterwards.
  * @param nmbs pointer to the nmbs_t instance where the client will be created.
  * @param platform_conf nmbs_platform_conf struct with platform configuration.
  *
@@ -195,6 +196,7 @@ nmbs_error nmbs_client_create(nmbs_t* nmbs, const nmbs_platform_conf* platform_c
 
 #ifndef NMBS_SERVER_DISABLED
 /** Create a new Modbus server.
+ * The platform configuration and callback structs are copied by value and may be discarded afterwards.
  * @param nmbs pointer to the nmbs_t instance where the client will be created.
  * @param address_rtu RTU address of this server. Can be 0 if transport is not RTU.
  * @param platform_conf nmbs_platform_conf struct with platform configuration.
