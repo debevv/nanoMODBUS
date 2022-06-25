@@ -226,6 +226,12 @@ void nmbs_set_byte_timeout(nmbs_t* nmbs, int32_t timeout_ms);
  */
 void nmbs_set_platform_arg(nmbs_t* nmbs, void* arg);
 
+/** Calculate the Modbus CRC of some data.
+ * @param data Data
+ * @param length Length of the data
+ */
+uint16_t nmbs_crc_calc(const uint8_t* data, uint32_t length);
+
 #ifndef NMBS_CLIENT_DISABLED
 /** Set the recipient server address of the next request on RTU transport.
  * @param nmbs pointer to the nmbs_t instance
