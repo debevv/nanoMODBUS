@@ -175,7 +175,7 @@ void nmbs_set_platform_arg(nmbs_t* nmbs, void* arg) {
 }
 
 
-static uint16_t crc_calc(const uint8_t* data, uint32_t length) {
+uint16_t nmbs_crc_calc(const uint8_t* data, uint32_t length) {
     uint16_t crc = 0xFFFF;
     for (uint32_t i = 0; i < length; i++) {
         crc ^= (uint16_t) data[i];
@@ -232,7 +232,7 @@ static nmbs_error recv_msg_footer(nmbs_t* nmbs) {
     DEBUG("\n");
 
     if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
-        uint16_t crc = crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx);
+        uint16_t crc = nmbs_crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx);
 
         nmbs_error err = recv(nmbs, 2);
         if (err != NMBS_ERROR_NONE)
@@ -402,7 +402,7 @@ static nmbs_error send_msg(nmbs_t* nmbs) {
     DEBUG("\n");
 
     if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
-        uint16_t crc = crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx);
+        uint16_t crc = nmbs_crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx);
         put_2(nmbs, crc);
     }
 
