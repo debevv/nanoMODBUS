@@ -347,7 +347,7 @@ static nmbs_error recv_res_header(nmbs_t* nmbs) {
 
     if (nmbs->platform.transport == NMBS_TRANSPORT_TCP) {
         if (nmbs->msg.transaction_id != req_transaction_id)
-            return NMBS_ERROR_INVALID_RESPONSE;
+            return NMBS_ERROR_INVALID_TCP_MBAP;
     }
 
     if (nmbs->msg.unit_id != req_unit_id)
