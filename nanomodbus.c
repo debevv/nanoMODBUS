@@ -338,6 +338,7 @@ static nmbs_error recv_req_header(nmbs_t* nmbs, bool* first_byte_received) {
 
 static nmbs_error recv_res_header(nmbs_t* nmbs) {
     uint16_t req_transaction_id = nmbs->msg.transaction_id;
+    uint8_t req_unit_id = nmbs->msg.unit_id;
     uint8_t req_fc = nmbs->msg.fc;
 
     nmbs_error err = recv_msg_header(nmbs, NULL);
@@ -349,8 +350,8 @@ static nmbs_error recv_res_header(nmbs_t* nmbs) {
             return NMBS_ERROR_INVALID_RESPONSE;
     }
 
-    if (nmbs->msg.ignored)
-        return NMBS_ERROR_INVALID_RESPONSE;
+    if (nmbs->msg.unit_id != req_unit_id)
+        return NMBS_ERROR_INVALID_UNIT_ID;
 
     if (nmbs->msg.fc != req_fc) {
         if (nmbs->msg.fc - 0x80 == req_fc) {
