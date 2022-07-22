@@ -49,6 +49,22 @@ extern "C" {
 #endif
 
 /**
+ * If NMBS_SERVER_DISABLED is set, disable all the server callbacks too.
+ */
+
+#ifdef NMBS_SERVER_DISABLED
+    #define NMBS_SERVER_READ_COILS_DISABLED 1
+    #define NMBS_SERVER_READ_COILS_DISABLED 1
+    #define NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED 1
+    #define NMBS_SERVER_READ_HOLDING_REGISTERS_DISABLED 1
+    #define NMBS_SERVER_READ_INPUT_REGISTERS_DISABLED 1
+    #define NMBS_SERVER_WRITE_SINGLE_COIL_DISABLED 1
+    #define NMBS_SERVER_WRITE_SINGLE_REGISTER_DISABLED 1
+    #define NMBS_SERVER_WRITE_MULTIPLE_COILS_DISABLED 1
+    #define NMBS_SERVER_WRITE_MULTIPLE_REGISTERS_DISABLED 1
+#endif
+
+/**
  * nanoMODBUS errors.
  * Values <= 0 are library errors, > 0 are modbus exceptions.
  */
@@ -141,14 +157,38 @@ typedef struct nmbs_platform_conf {
  * Modbus server request callbacks. Passed to nmbs_server_create().
  */
 typedef struct nmbs_callbacks {
+#ifndef NMBS_SERVER_READ_COILS_DISABLED
     nmbs_error (*read_coils)(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out);
+#endif
+
+#ifndef NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED
     nmbs_error (*read_discrete_inputs)(uint16_t address, uint16_t quantity, nmbs_bitfield inputs_out);
+#endif
+
+#ifndef NMBS_SERVER_READ_HOLDING_REGISTERS_DISABLED
     nmbs_error (*read_holding_registers)(uint16_t address, uint16_t quantity, uint16_t* registers_out);
+#endif
+
+#ifndef NMBS_SERVER_READ_INPUT_REGISTERS_DISABLED
     nmbs_error (*read_input_registers)(uint16_t address, uint16_t quantity, uint16_t* registers_out);
+#endif
+
+#ifndef NMBS_SERVER_WRITE_SINGLE_COIL_DISABLED
     nmbs_error (*write_single_coil)(uint16_t address, bool value);
+#endif
+
+#ifndef NMBS_SERVER_WRITE_SINGLE_REGISTER_DISABLED
     nmbs_error (*write_single_register)(uint16_t address, uint16_t value);
+#endif
+
+#ifndef NMBS_SERVER_WRITE_MULTIPLE_COILS_DISABLED
     nmbs_error (*write_multiple_coils)(uint16_t address, uint16_t quantity, const nmbs_bitfield coils);
+#endif
+
+#ifndef NMBS_SERVER_WRITE_MULTIPLE_REGISTERS_DISABLED
     nmbs_error (*write_multiple_registers)(uint16_t address, uint16_t quantity, const uint16_t* registers);
+#endif
+
 } nmbs_callbacks;
 
 
@@ -246,7 +286,7 @@ void nmbs_set_destination_rtu_address(nmbs_t* nmbs, uint8_t address);
 nmbs_error nmbs_server_poll(nmbs_t* nmbs);
 #endif
 
-#ifndef NMBS_CLIENT_DISABLED
+#ifndef NMBS_SERVER_READ_COILS_DISABLED
 /** Send a FC 01 (0x01) Read Coils request
  * @param nmbs pointer to the nmbs_t instance
  * @param address starting address
@@ -258,7 +298,7 @@ nmbs_error nmbs_server_poll(nmbs_t* nmbs);
 nmbs_error nmbs_read_coils(nmbs_t* nmbs, uint16_t address, uint16_t quantity, nmbs_bitfield coils_out);
 #endif
 
-#ifndef NMBS_CLIENT_DISABLED
+#ifndef NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED
 /** Send a FC 02 (0x02) Read Discrete Inputs request
  * @param nmbs pointer to the nmbs_t instance
  * @param address starting address
@@ -270,7 +310,7 @@ nmbs_error nmbs_read_coils(nmbs_t* nmbs, uint16_t address, uint16_t quantity, nm
 nmbs_error nmbs_read_discrete_inputs(nmbs_t* nmbs, uint16_t address, uint16_t quantity, nmbs_bitfield inputs_out);
 #endif
 
-#ifndef NMBS_CLIENT_DISABLED
+#ifndef NMBS_SERVER_READ_HOLDING_REGISTERS_DISABLED
 /** Send a FC 03 (0x03) Read Holding Registers request
  * @param nmbs pointer to the nmbs_t instance
  * @param address starting address
@@ -282,7 +322,7 @@ nmbs_error nmbs_read_discrete_inputs(nmbs_t* nmbs, uint16_t address, uint16_t qu
 nmbs_error nmbs_read_holding_registers(nmbs_t* nmbs, uint16_t address, uint16_t quantity, uint16_t* registers_out);
 #endif
 
-#ifndef NMBS_CLIENT_DISABLED
+#ifndef NMBS_SERVER_READ_INPUT_REGISTERS_DISABLED
 /** Send a FC 04 (0x04) Read Input Registers request
  * @param nmbs pointer to the nmbs_t instance
  * @param address starting address
@@ -294,7 +334,7 @@ nmbs_error nmbs_read_holding_registers(nmbs_t* nmbs, uint16_t address, uint16_t 
 nmbs_error nmbs_read_input_registers(nmbs_t* nmbs, uint16_t address, uint16_t quantity, uint16_t* registers_out);
 #endif
 
-#ifndef NMBS_CLIENT_DISABLED
+#ifndef NMBS_SERVER_WRITE_SINGLE_COIL_DISABLED
 /** Send a FC 05 (0x05) Write Single Coil request
  * @param nmbs pointer to the nmbs_t instance
  * @param address coil address
@@ -305,7 +345,7 @@ nmbs_error nmbs_read_input_registers(nmbs_t* nmbs, uint16_t address, uint16_t qu
 nmbs_error nmbs_write_single_coil(nmbs_t* nmbs, uint16_t address, bool value);
 #endif
 
-#ifndef NMBS_CLIENT_DISABLED
+#ifndef NMBS_SERVER_WRITE_SINGLE_REGISTER_DISABLED
 /** Send a FC 06 (0x06) Write Single Register request
  * @param nmbs pointer to the nmbs_t instance
  * @param address register address
@@ -316,7 +356,7 @@ nmbs_error nmbs_write_single_coil(nmbs_t* nmbs, uint16_t address, bool value);
 nmbs_error nmbs_write_single_register(nmbs_t* nmbs, uint16_t address, uint16_t value);
 #endif
 
-#ifndef NMBS_CLIENT_DISABLED
+#ifndef NMBS_SERVER_WRITE_MULTIPLE_COILS_DISABLED
 /** Send a FC 15 (0x0F) Write Multiple Coils
  * @param nmbs pointer to the nmbs_t instance
  * @param address starting address
@@ -328,7 +368,7 @@ nmbs_error nmbs_write_single_register(nmbs_t* nmbs, uint16_t address, uint16_t v
 nmbs_error nmbs_write_multiple_coils(nmbs_t* nmbs, uint16_t address, uint16_t quantity, const nmbs_bitfield coils);
 #endif
 
-#ifndef NMBS_CLIENT_DISABLED
+#ifndef NMBS_SERVER_WRITE_MULTIPLE_REGISTERS_DISABLED
 /** Send a FC 16 (0x10) Write Multiple Registers
  * @param nmbs pointer to the nmbs_t instance
  * @param address starting address
