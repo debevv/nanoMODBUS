@@ -147,5 +147,15 @@ Please refer to `examples/arduino/README.md` for more info about building and ru
 - To reduce code size, you can define the following `#define`s:
     - `NMBS_CLIENT_DISABLED` to disable all client code
     - `NMBS_SERVER_DISABLED` to disable all server code
+    - To disable individual server callbacks, define the following:
+        - `NMBS_SERVER_READ_COILS_DISABLED`
+        - `NMBS_SERVER_READ_COILS_DISABLED`
+        - `NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED`
+        - `NMBS_SERVER_READ_HOLDING_REGISTERS_DISABLED`
+        - `NMBS_SERVER_READ_INPUT_REGISTERS_DISABLED`
+        - `NMBS_SERVER_WRITE_SINGLE_COIL_DISABLED`
+        - `NMBS_SERVER_WRITE_SINGLE_REGISTER_DISABLED`
+        - `NMBS_SERVER_WRITE_MULTIPLE_COILS_DISABLED`
+        - `NMBS_SERVER_WRITE_MULTIPLE_REGISTERS_DISABLED`
     - `NMBS_STRERROR_DISABLED` to disable the code that converts `nmbs_error`s to strings
 - Debug prints about received and sent messages can be enabled by defining `NMBS_DEBUG`
