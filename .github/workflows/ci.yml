@@ -13,3 +13,10 @@ jobs:
           cmake ..
           make
           ./nanomodbus_tests
+      - name: Compile Arduino examples
+        run: |
+          pushd build
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+          popd
+          export PATH="build/bin:$PATH"
+          ./examples/arduino/compile-examples.sh
