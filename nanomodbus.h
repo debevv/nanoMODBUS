@@ -139,16 +139,19 @@ typedef struct nmbs_platform_conf {
 
 /**
  * Modbus server request callbacks. Passed to nmbs_server_create().
+ *
+ * These methods accept a pointer to arbitrary user-data, which is the arg member of the nmbs_platform_conf that was passed
+ * to nmbs_server_create together with this struct.
  */
 typedef struct nmbs_callbacks {
-    nmbs_error (*read_coils)(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out);
-    nmbs_error (*read_discrete_inputs)(uint16_t address, uint16_t quantity, nmbs_bitfield inputs_out);
-    nmbs_error (*read_holding_registers)(uint16_t address, uint16_t quantity, uint16_t* registers_out);
-    nmbs_error (*read_input_registers)(uint16_t address, uint16_t quantity, uint16_t* registers_out);
-    nmbs_error (*write_single_coil)(uint16_t address, bool value);
-    nmbs_error (*write_single_register)(uint16_t address, uint16_t value);
-    nmbs_error (*write_multiple_coils)(uint16_t address, uint16_t quantity, const nmbs_bitfield coils);
-    nmbs_error (*write_multiple_registers)(uint16_t address, uint16_t quantity, const uint16_t* registers);
+    nmbs_error (*read_coils)(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, void *arg);
+    nmbs_error (*read_discrete_inputs)(uint16_t address, uint16_t quantity, nmbs_bitfield inputs_out, void *arg);
+    nmbs_error (*read_holding_registers)(uint16_t address, uint16_t quantity, uint16_t* registers_out, void *arg);
+    nmbs_error (*read_input_registers)(uint16_t address, uint16_t quantity, uint16_t* registers_out, void *arg);
+    nmbs_error (*write_single_coil)(uint16_t address, bool value, void *arg);
+    nmbs_error (*write_single_register)(uint16_t address, uint16_t value, void *arg);
+    nmbs_error (*write_multiple_coils)(uint16_t address, uint16_t quantity, const nmbs_bitfield coils, void *arg);
+    nmbs_error (*write_multiple_registers)(uint16_t address, uint16_t quantity, const uint16_t* registers, void *arg);
 } nmbs_callbacks;
 
 

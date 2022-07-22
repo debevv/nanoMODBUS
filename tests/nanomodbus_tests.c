@@ -156,7 +156,9 @@ void test_server_receive_base(nmbs_transport transport) {
 }
 
 
-nmbs_error read_discrete(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out) {
+nmbs_error read_discrete(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, void *arg) {
+    UNUSED_PARAM(arg);
+
     if (address == 1)
         return -1;
 
@@ -323,7 +325,9 @@ void test_fc2(nmbs_transport transport) {
 }
 
 
-nmbs_error read_registers(uint16_t address, uint16_t quantity, uint16_t* registers_out) {
+nmbs_error read_registers(uint16_t address, uint16_t quantity, uint16_t* registers_out, void *arg) {
+    UNUSED_PARAM(arg);
+
     if (address == 1)
         return -1;
 
@@ -453,7 +457,9 @@ void test_fc4(nmbs_transport transport) {
 }
 
 
-nmbs_error write_coil(uint16_t address, bool value) {
+nmbs_error write_coil(uint16_t address, bool value, void *arg) {
+    UNUSED_PARAM(arg);
+
     if (address == 1)
         return -1;
 
@@ -518,7 +524,9 @@ void test_fc5(nmbs_transport transport) {
 }
 
 
-nmbs_error write_register(uint16_t address, uint16_t value) {
+nmbs_error write_register(uint16_t address, uint16_t value, void *arg) {
+    UNUSED_PARAM(arg);
+
     if (address == 1)
         return -1;
 
@@ -576,7 +584,9 @@ void test_fc6(nmbs_transport transport) {
 }
 
 
-nmbs_error write_coils(uint16_t address, uint16_t quantity, const nmbs_bitfield coils) {
+nmbs_error write_coils(uint16_t address, uint16_t quantity, const nmbs_bitfield coils, void *arg) {
+    UNUSED_PARAM(arg);
+
     if (address == 1)
         return -1;
 
@@ -690,7 +700,9 @@ void test_fc15(nmbs_transport transport) {
 }
 
 
-nmbs_error write_registers(uint16_t address, uint16_t quantity, const uint16_t* registers) {
+nmbs_error write_registers(uint16_t address, uint16_t quantity, const uint16_t* registers, void *arg) {
+    UNUSED_PARAM(arg);
+
     if (address == 1)
         return -1;
 

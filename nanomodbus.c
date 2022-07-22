@@ -443,7 +443,7 @@ static nmbs_error send_exception_msg(nmbs_t* nmbs, uint8_t exception) {
 
 
 #ifndef NMBS_SERVER_DISABLED
-static nmbs_error handle_read_discrete(nmbs_t* nmbs, nmbs_error (*callback)(uint16_t, uint16_t, nmbs_bitfield)) {
+static nmbs_error handle_read_discrete(nmbs_t* nmbs, nmbs_error (*callback)(uint16_t, uint16_t, nmbs_bitfield, void*)) {
     nmbs_error err = recv(nmbs, 4);
     if (err != NMBS_ERROR_NONE)
         return err;
@@ -466,7 +466,7 @@ static nmbs_error handle_read_discrete(nmbs_t* nmbs, nmbs_error (*callback)(uint
 
         if (callback) {
             nmbs_bitfield bf = {0};
-            err = callback(address, quantity, bf);
+            err = callback(address, quantity, bf, nmbs->platform.arg);
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
@@ -504,7 +504,7 @@ static nmbs_error handle_read_discrete(nmbs_t* nmbs, nmbs_error (*callback)(uint
 
 
 #ifndef NMBS_SERVER_DISABLED
-static nmbs_error handle_read_registers(nmbs_t* nmbs, nmbs_error (*callback)(uint16_t, uint16_t, uint16_t*)) {
+static nmbs_error handle_read_registers(nmbs_t* nmbs, nmbs_error (*callback)(uint16_t, uint16_t, uint16_t*, void*)) {
     nmbs_error err = recv(nmbs, 4);
     if (err != NMBS_ERROR_NONE)
         return err;
@@ -527,7 +527,7 @@ static nmbs_error handle_read_registers(nmbs_t* nmbs, nmbs_error (*callback)(uin
 
         if (callback) {
             uint16_t regs[125] = {0};
-            err = callback(address, quantity, regs);
+            err = callback(address, quantity, regs, nmbs->platform.arg);
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
@@ -612,7 +612,7 @@ static nmbs_error handle_write_single_coil(nmbs_t* nmbs) {
             if (value != 0 && value != 0xFF00)
                 return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
-            err = nmbs->callbacks.write_single_coil(address, value == 0 ? false : true);
+            err = nmbs->callbacks.write_single_coil(address, value == 0 ? false : true, nmbs->platform.arg);
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
@@ -659,7 +659,7 @@ static nmbs_error handle_write_single_register(nmbs_t* nmbs) {
 
     if (!nmbs->msg.ignored) {
         if (nmbs->callbacks.write_single_register) {
-            err = nmbs->callbacks.write_single_register(address, value);
+            err = nmbs->callbacks.write_single_register(address, value, nmbs->platform.arg);
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
@@ -729,7 +729,7 @@ static nmbs_error handle_write_multiple_coils(nmbs_t* nmbs) {
             return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
         if (nmbs->callbacks.write_multiple_coils) {
-            err = nmbs->callbacks.write_multiple_coils(address, quantity, coils);
+            err = nmbs->callbacks.write_multiple_coils(address, quantity, coils, nmbs->platform.arg);
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
@@ -799,7 +799,7 @@ static nmbs_error handle_write_multiple_registers(nmbs_t* nmbs) {
             return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
         if (nmbs->callbacks.write_multiple_registers) {
-            err = nmbs->callbacks.write_multiple_registers(address, quantity, registers);
+            err = nmbs->callbacks.write_multiple_registers(address, quantity, registers, nmbs->platform.arg);
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
