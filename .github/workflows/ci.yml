@@ -1,0 +1,15 @@
+name: ci
+on: [push]
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v2
+      - name: build
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make
+          ./nanomodbus_tests
