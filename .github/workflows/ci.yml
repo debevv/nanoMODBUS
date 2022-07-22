@@ -1,0 +1,22 @@
+name: ci
+on: [push]
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v2
+      - name: build
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make
+          ./nanomodbus_tests
+      - name: Compile Arduino examples
+        run: |
+          pushd build
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+          popd
+          export PATH="build/bin:$PATH"
+          ./examples/arduino/compile-examples.sh
