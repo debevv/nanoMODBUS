@@ -78,6 +78,12 @@ $(function() {
 Include dependency graph for nanomodbus.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="nanomodbus_8h__incl.png" border="0" usemap="#ananomodbus_8h" alt=""/></div>
+<map name="ananomodbus_8h" id="ananomodbus_8h">
+<area shape="rect" title=" " alt="" coords="89,5,207,32"/>
+<area shape="rect" title=" " alt="" coords="5,80,88,107"/>
+<area shape="rect" title=" " alt="" coords="113,80,183,107"/>
+<area shape="rect" title=" " alt="" coords="207,80,278,107"/>
+</map>
 </div>
 </div>
 <p><a href="nanomodbus_8h_source.html">Go to the source code of this file.</a></p>
@@ -313,7 +319,8 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Modbus server request callbacks. Passed to <a class="el" href="nanomodbus_8h.html#ab3b4efe8cd44b0fa21229005df4ac9dd">nmbs_server_create()</a>. </p>
+<p>Modbus server request callbacks. Passed to <a class="el" href="nanomodbus_8h.html#ab3b4efe8cd44b0fa21229005df4ac9dd">nmbs_server_create()</a>.</p>
+<p>These methods accept a pointer to arbitrary user-data, which is the arg member of the <a class="el" href="structnmbs__platform__conf.html">nmbs_platform_conf</a> that was passed to nmbs_server_create together with this struct. </p>
 
 </div>
 </div>
@@ -328,7 +335,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>nanoMODBUS errors. Values &lt;= 0 are library errors, &gt; 0 are modbus exceptions. </p>
+<p>If NMBS_SERVER_DISABLED is set, disable all the server callbacks too. nanoMODBUS errors. Values &lt;= 0 are library errors, &gt; 0 are modbus exceptions. </p>
 
 </div>
 </div>
@@ -397,7 +404,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>nanoMODBUS errors. Values &lt;= 0 are library errors, &gt; 0 are modbus exceptions. </p>
+<p>If NMBS_SERVER_DISABLED is set, disable all the server callbacks too. nanoMODBUS errors. Values &lt;= 0 are library errors, &gt; 0 are modbus exceptions. </p>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a1cb1b1b4b26001764e36a1df4335f7f0a1f267ca874a2d43f38575b0db5fd987d"></a>NMBS_ERROR_INVALID_UNIT_ID&#160;</td><td class="fielddoc"><p>Received invalid unit ID in response from server </p>
 </td></tr>
