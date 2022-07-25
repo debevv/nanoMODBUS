@@ -1,5 +1,3 @@
-#define NMBS_SERVER_DISABLED
-
 #include "nanomodbus.h"
 
 #define UNUSED_PARAM(x) ((x) = (x))

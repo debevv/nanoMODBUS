@@ -1,5 +1,3 @@
-#define NMBS_CLIENT_DISABLED
-
 #include "nanomodbus.h"
 
 #define UNUSED_PARAM(x) ((x) = (x))
@@ -32,7 +30,7 @@ int main() {
             .write = write_empty,
     };
 
-    nmbs_callbacks callbacks_empty;
+    nmbs_callbacks callbacks_empty = {0};
 
     nmbs_error err = nmbs_server_create(&nmbs, 1, &platform_conf_empty, &callbacks_empty);
     if (err != 0)
