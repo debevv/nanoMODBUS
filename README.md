@@ -119,8 +119,8 @@ values will be treated as transport errors.
 
 ### Platform functions argument
 
-Platform functions can access arbitrary user data through their `void* arg` argument. The argument is useful, for
-example, to pass the connection a function should operate on.    
+Platform functions and server callbacks can access arbitrary user data through their `void* arg` argument. The argument
+is useful, for example, to pass the connection a function should operate on.    
 Its initial value can be set inside the `nmbs_platform_conf` struct when creating the `nmbs_t` instance, and changed at
 any time via the `nmbs_set_platform_arg` API method.
 

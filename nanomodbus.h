@@ -53,15 +53,14 @@ extern "C" {
  */
 
 #ifdef NMBS_SERVER_DISABLED
-    #define NMBS_SERVER_READ_COILS_DISABLED 1
-    #define NMBS_SERVER_READ_COILS_DISABLED 1
-    #define NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED 1
-    #define NMBS_SERVER_READ_HOLDING_REGISTERS_DISABLED 1
-    #define NMBS_SERVER_READ_INPUT_REGISTERS_DISABLED 1
-    #define NMBS_SERVER_WRITE_SINGLE_COIL_DISABLED 1
-    #define NMBS_SERVER_WRITE_SINGLE_REGISTER_DISABLED 1
-    #define NMBS_SERVER_WRITE_MULTIPLE_COILS_DISABLED 1
-    #define NMBS_SERVER_WRITE_MULTIPLE_REGISTERS_DISABLED 1
+#define NMBS_SERVER_READ_COILS_DISABLED
+#define NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED
+#define NMBS_SERVER_READ_HOLDING_REGISTERS_DISABLED
+#define NMBS_SERVER_READ_INPUT_REGISTERS_DISABLED
+#define NMBS_SERVER_WRITE_SINGLE_COIL_DISABLED
+#define NMBS_SERVER_WRITE_SINGLE_REGISTER_DISABLED
+#define NMBS_SERVER_WRITE_MULTIPLE_COILS_DISABLED
+#define NMBS_SERVER_WRITE_MULTIPLE_REGISTERS_DISABLED
 #endif
 
 /**
@@ -161,37 +160,38 @@ typedef struct nmbs_platform_conf {
  */
 typedef struct nmbs_callbacks {
 #ifndef NMBS_SERVER_READ_COILS_DISABLED
-    nmbs_error (*read_coils)(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, void *arg);
+    nmbs_error (*read_coils)(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, void* arg);
 #endif
 
 #ifndef NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED
-    nmbs_error (*read_discrete_inputs)(uint16_t address, uint16_t quantity, nmbs_bitfield inputs_out, void *arg);
+    nmbs_error (*read_discrete_inputs)(uint16_t address, uint16_t quantity, nmbs_bitfield inputs_out, void* arg);
 #endif
 
 #ifndef NMBS_SERVER_READ_HOLDING_REGISTERS_DISABLED
-    nmbs_error (*read_holding_registers)(uint16_t address, uint16_t quantity, uint16_t* registers_out, void *arg);
+    nmbs_error (*read_holding_registers)(uint16_t address, uint16_t quantity, uint16_t* registers_out, void* arg);
 #endif
 
 #ifndef NMBS_SERVER_READ_INPUT_REGISTERS_DISABLED
-    nmbs_error (*read_input_registers)(uint16_t address, uint16_t quantity, uint16_t* registers_out, void *arg);
+    nmbs_error (*read_input_registers)(uint16_t address, uint16_t quantity, uint16_t* registers_out, void* arg);
 #endif
 
 #ifndef NMBS_SERVER_WRITE_SINGLE_COIL_DISABLED
-    nmbs_error (*write_single_coil)(uint16_t address, bool value, void *arg);
+    nmbs_error (*write_single_coil)(uint16_t address, bool value, void* arg);
 #endif
 
 #ifndef NMBS_SERVER_WRITE_SINGLE_REGISTER_DISABLED
-    nmbs_error (*write_single_register)(uint16_t address, uint16_t value, void *arg);
+    nmbs_error (*write_single_register)(uint16_t address, uint16_t value, void* arg);
 #endif
 
 #ifndef NMBS_SERVER_WRITE_MULTIPLE_COILS_DISABLED
-    nmbs_error (*write_multiple_coils)(uint16_t address, uint16_t quantity, const nmbs_bitfield coils, void *arg);
+    nmbs_error (*write_multiple_coils)(uint16_t address, uint16_t quantity, const nmbs_bitfield coils, void* arg);
 #endif
 
 #ifndef NMBS_SERVER_WRITE_MULTIPLE_REGISTERS_DISABLED
-    nmbs_error (*write_multiple_registers)(uint16_t address, uint16_t quantity, const uint16_t* registers, void *arg);
+    nmbs_error (*write_multiple_registers)(uint16_t address, uint16_t quantity, const uint16_t* registers, void* arg);
 #endif
 
+    char _nonempty;    // Struct may become empty, which is undefined behavior
 } nmbs_callbacks;
 
 

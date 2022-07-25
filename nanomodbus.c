@@ -255,8 +255,7 @@ static nmbs_error recv_msg_header(nmbs_t* nmbs, bool* first_byte_received) {
 
     msg_state_reset(nmbs);
 
-    if (first_byte_received)
-        *first_byte_received = false;
+    *first_byte_received = false;
 
     if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
         nmbs_error err = recv(nmbs, 1);
@@ -266,8 +265,7 @@ static nmbs_error recv_msg_header(nmbs_t* nmbs, bool* first_byte_received) {
         if (err != NMBS_ERROR_NONE)
             return err;
 
-        if (first_byte_received)
-            *first_byte_received = true;
+        *first_byte_received = true;
 
         nmbs->msg.unit_id = get_1(nmbs);
 
@@ -285,8 +283,7 @@ static nmbs_error recv_msg_header(nmbs_t* nmbs, bool* first_byte_received) {
         if (err != NMBS_ERROR_NONE)
             return err;
 
-        if (first_byte_received)
-            *first_byte_received = true;
+        *first_byte_received = true;
 
         // Advance buf_idx
         discard_1(nmbs);
@@ -341,7 +338,8 @@ static nmbs_error recv_res_header(nmbs_t* nmbs) {
     uint8_t req_unit_id = nmbs->msg.unit_id;
     uint8_t req_fc = nmbs->msg.fc;
 
-    nmbs_error err = recv_msg_header(nmbs, NULL);
+    bool first_byte_received;
+    nmbs_error err = recv_msg_header(nmbs, &first_byte_received);
     if (err != NMBS_ERROR_NONE)
         return err;
 
@@ -503,7 +501,7 @@ static nmbs_error handle_read_discrete(nmbs_t* nmbs, nmbs_error (*callback)(uint
 #endif
 
 
-#if !defined(NMBS_SERVER_READ_HOLDING_REGISTERS_DISABLED) || !defined(NMBS_SERVER_READ_INPUTS_REGISTERS_DISABLED)
+#if !defined(NMBS_SERVER_READ_HOLDING_REGISTERS_DISABLED) || !defined(NMBS_SERVER_READ_INPUT_REGISTERS_DISABLED)
 static nmbs_error handle_read_registers(nmbs_t* nmbs, nmbs_error (*callback)(uint16_t, uint16_t, uint16_t*, void*)) {
     nmbs_error err = recv(nmbs, 4);
     if (err != NMBS_ERROR_NONE)
