@@ -840,6 +840,7 @@ static nmbs_error handle_req_fc(nmbs_t* nmbs) {
             err = handle_read_coils(nmbs);
             break;
 #endif
+
 #ifndef NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED
         case 2:
             err = handle_read_discrete_inputs(nmbs);

@@ -149,7 +149,6 @@ Please refer to `examples/arduino/README.md` for more info about building and ru
     - `NMBS_SERVER_DISABLED` to disable all server code
     - To disable individual server callbacks, define the following:
         - `NMBS_SERVER_READ_COILS_DISABLED`
-        - `NMBS_SERVER_READ_COILS_DISABLED`
         - `NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED`
         - `NMBS_SERVER_READ_HOLDING_REGISTERS_DISABLED`
         - `NMBS_SERVER_READ_INPUT_REGISTERS_DISABLED`
