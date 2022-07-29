@@ -50,29 +50,48 @@
 #endif
 #endif
 
-#define get_1(m)                                                                                                       \
-    (m)->msg.buf[(m)->msg.buf_idx];                                                                                    \
-    (m)->msg.buf_idx++
-#define put_1(m, b)                                                                                                    \
-    (m)->msg.buf[(m)->msg.buf_idx] = (b);                                                                              \
-    (m)->msg.buf_idx++
-#define discard_1(m) (m)->msg.buf_idx++
+static uint8_t get_1(nmbs_t *m) {
+    uint8_t result = m->msg.buf[m->msg.buf_idx];
+    m->msg.buf_idx++;
+    return result;
+}
+
+static void put_1(nmbs_t *m, uint8_t b) {
+    m->msg.buf[(m)->msg.buf_idx] = b;
+    m->msg.buf_idx++;
+}
+
+static void discard_1(nmbs_t *m) {
+    m->msg.buf_idx++;
+}
 
 #ifdef NMBS_BIG_ENDIAN
-#define get_2(m)                                                                                                       \
-    (*(uint16_t*) ((m)->msg.buf + (m)->msg.buf_idx));                                                                  \
-    (m)->msg.buf_idx += 2
-#define put_2(m, w)                                                                                                    \
-    (*(uint16_t*) ((m)->msg.buf + (m)->msg.buf_idx)) = (w);                                                            \
-    (m)->msg.buf_idx += 2
+
+static uint16_t get_2(nmbs_t *m) {
+    uint16_t result = (*(uint16_t*) (m->msg.buf + m->msg.buf_idx));
+    m->msg.buf_idx += 2;
+    return result;
+}
+
+static void put_2(nmbs_t *m, uint16_t w) {
+    (*(uint16_t*) (m->msg.buf + m->msg.buf_idx)) = w;
+    m->msg.buf_idx += 2;
+}
+
 #else
-#define get_2(m)                                                                                                       \
-    ((uint16_t) ((m)->msg.buf[(m)->msg.buf_idx + 1])) | (((uint16_t) (m)->msg.buf[(m)->msg.buf_idx] << 8));            \
-    (m)->msg.buf_idx += 2
-#define put_2(m, w)                                                                                                    \
-    (m)->msg.buf[(m)->msg.buf_idx] = ((uint8_t) ((((uint16_t) (w)) & 0xFF00) >> 8));                                   \
-    (m)->msg.buf[(m)->msg.buf_idx + 1] = ((uint8_t) (((uint16_t) (w)) & 0x00FF));                                      \
-    (m)->msg.buf_idx += 2
+
+static uint16_t get_2(nmbs_t *m) {
+    uint16_t result = ((uint16_t) (m->msg.buf[m->msg.buf_idx + 1])) | (((uint16_t) m->msg.buf[m->msg.buf_idx] << 8));
+    m->msg.buf_idx += 2;
+    return result;
+}
+
+static void put_2(nmbs_t *m, uint16_t w) {
+    m->msg.buf[m->msg.buf_idx] = ((uint8_t) ((((uint16_t) (w)) & 0xFF00) >> 8));
+    m->msg.buf[m->msg.buf_idx + 1] = ((uint8_t) (((uint16_t) (w)) & 0x00FF));
+    m->msg.buf_idx += 2;
+}
+
 #endif
 
 
