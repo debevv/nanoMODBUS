@@ -1283,8 +1283,8 @@ nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const void* data, uint16_
 
     DEBUG("raw ");
     for (uint16_t i = 0; i < data_len; i++) {
-        put_1(nmbs, ((uint8_t*) (data))[i]);
-        DEBUG("%d ", ((uint8_t*) (data))[i]);
+        put_1(nmbs, ((const uint8_t*) (data))[i]);
+        DEBUG("%d ", ((const uint8_t*) (data))[i]);
     }
 
     return send_msg(nmbs);
@@ -1315,6 +1315,9 @@ nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, void* data_out, uint16_t 
 #ifndef NMBS_STRERROR_DISABLED
 const char* nmbs_strerror(nmbs_error error) {
     switch (error) {
+        case NMBS_ERROR_INVALID_UNIT_ID:
+            return "invalid unit ID received";
+
         case NMBS_ERROR_INVALID_TCP_MBAP:
             return "invalid TCP MBAP received";
 
