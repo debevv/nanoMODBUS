@@ -3,8 +3,8 @@
 #define UNUSED_PARAM(x) ((x) = (x))
 
 
-int32_t read_empty(uint8_t* b, uint16_t count, int32_t timeout, void* arg) {
-    UNUSED_PARAM(b);
+int32_t read_empty(uint8_t* data, uint16_t count, int32_t timeout, void* arg) {
+    UNUSED_PARAM(data);
     UNUSED_PARAM(count);
     UNUSED_PARAM(timeout);
     UNUSED_PARAM(arg);
@@ -12,8 +12,8 @@ int32_t read_empty(uint8_t* b, uint16_t count, int32_t timeout, void* arg) {
 }
 
 
-int32_t write_empty(const uint8_t* b, uint16_t count, int32_t timeout, void* arg) {
-    UNUSED_PARAM(b);
+int32_t write_empty(const uint8_t* data, uint16_t count, int32_t timeout, void* arg) {
+    UNUSED_PARAM(data);
     UNUSED_PARAM(count);
     UNUSED_PARAM(timeout);
     UNUSED_PARAM(arg);
@@ -21,7 +21,10 @@ int32_t write_empty(const uint8_t* b, uint16_t count, int32_t timeout, void* arg
 }
 
 
-int main() {
+int main(int argc, char* argv[]) {
+    UNUSED_PARAM(argc);
+    UNUSED_PARAM(argv);
+
     nmbs_t nmbs;
 
     nmbs_platform_conf platform_conf_empty = {

@@ -1,12 +1,11 @@
 #include "nanomodbus_tests.h"
-#include "nanomodbus.h"
 #include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
 
 
-int32_t read_empty(uint8_t* b, uint16_t count, int32_t timeout, void* arg) {
-    UNUSED_PARAM(b);
+int32_t read_empty(uint8_t* data, uint16_t count, int32_t timeout, void* arg) {
+    UNUSED_PARAM(data);
     UNUSED_PARAM(count);
     UNUSED_PARAM(timeout);
     UNUSED_PARAM(arg);
@@ -14,8 +13,8 @@ int32_t read_empty(uint8_t* b, uint16_t count, int32_t timeout, void* arg) {
 }
 
 
-int32_t write_empty(const uint8_t* b, uint16_t count, int32_t timeout, void* arg) {
-    UNUSED_PARAM(b);
+int32_t write_empty(const uint8_t* data, uint16_t count, int32_t timeout, void* arg) {
+    UNUSED_PARAM(data);
     UNUSED_PARAM(count);
     UNUSED_PARAM(timeout);
     UNUSED_PARAM(arg);
@@ -54,21 +53,21 @@ void test_server_create(nmbs_transport transport) {
         expect(err == NMBS_ERROR_NONE);
 
     reset(nmbs);
-    nmbs_platform_conf p = platform_conf_empty;
-    p.transport = 3;
-    err = nmbs_server_create(&nmbs, 0, &p, &callbacks_empty);
+    nmbs_platform_conf conf = platform_conf_empty;
+    conf.transport = 3;
+    err = nmbs_server_create(&nmbs, 0, &conf, &callbacks_empty);
     expect(err == NMBS_ERROR_INVALID_ARGUMENT);
 
     reset(nmbs);
-    p = platform_conf_empty;
-    p.read = NULL;
-    err = nmbs_server_create(&nmbs, 0, &p, &callbacks_empty);
+    conf = platform_conf_empty;
+    conf.read = NULL;
+    err = nmbs_server_create(&nmbs, 0, &conf, &callbacks_empty);
     expect(err == NMBS_ERROR_INVALID_ARGUMENT);
 
     reset(nmbs);
-    p = platform_conf_empty;
-    p.write = NULL;
-    err = nmbs_server_create(&nmbs, 0, &p, &callbacks_empty);
+    conf = platform_conf_empty;
+    conf.write = NULL;
+    err = nmbs_server_create(&nmbs, 0, &conf, &callbacks_empty);
     expect(err == NMBS_ERROR_INVALID_ARGUMENT);
 }
 
@@ -826,7 +825,10 @@ void for_transports(void (*test_fn)(nmbs_transport), const char* should_str) {
     }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    UNUSED_PARAM(argc);
+    UNUSED_PARAM(argv);
+
     for_transports(test_server_create, "create a modbus server");
 
     for_transports(test_server_receive_base, "receive no messages without failing");

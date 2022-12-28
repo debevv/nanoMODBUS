@@ -1,0 +1,16 @@
+---
+Checks: >
+  modernize-*,
+  performance-*,
+  readability-*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -readability-braces-around-statements,
+  -readability-magic-numbers,
+  -readability-function-cognitive-complexity,
+  -readability-identifier-length
+...
+
+WarningsAsErrors: '*'
+HeaderFilterRegex: ''
+FormatStyle: none

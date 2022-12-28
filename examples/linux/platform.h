@@ -23,7 +23,8 @@ int client_connection = -1;
 
 void* connect_tcp(const char* address, const char* port) {
     struct addrinfo ainfo = {0};
-    struct addrinfo *results, *rp;
+    struct addrinfo *results;
+    struct addrinfo *rp;
     int fd;
 
     ainfo.ai_family = AF_INET;
@@ -40,8 +41,8 @@ void* connect_tcp(const char* address, const char* port) {
         ret = connect(fd, rp->ai_addr, rp->ai_addrlen);
         if (ret == 0)
             break;
-        else
-            close(fd);
+
+        close(fd);
     }
 
     freeaddrinfo(results);
@@ -67,7 +68,8 @@ void close_server_on_exit(int sig) {
 
 int create_tcp_server(const char* address, const char* port) {
     struct addrinfo ainfo = {0};
-    struct addrinfo *results, *rp;
+    struct addrinfo *results;
+    struct addrinfo *rp;
     int fd = -1;
 
     ainfo.ai_family = AF_INET;
@@ -117,7 +119,7 @@ int create_tcp_server(const char* address, const char* port) {
 }
 
 
-void* server_poll() {
+void* server_poll(void) {
     fd_set read_fd_set;
     FD_ZERO(&read_fd_set);
 
@@ -162,7 +164,7 @@ void disconnect(void* conn) {
 }
 
 
-void close_server() {
+void close_server(void) {
     close(server_fd);
     printf("Server closed\n");
 }
@@ -184,24 +186,25 @@ int32_t read_fd_linux(uint8_t* buf, uint16_t count, int32_t timeout_ms, void* ar
         if (timeout_ms >= 0) {
             tv_p = &tv;
             tv.tv_sec = timeout_ms / 1000;
-            tv.tv_usec = (timeout_ms % 1000) * 1000;
+            tv.tv_usec = (int64_t) (timeout_ms % 1000) * 1000;
         }
 
         int ret = select(fd + 1, &rfds, NULL, NULL, tv_p);
         if (ret == 0) {
             return total;
         }
-        else if (ret == 1) {
+
+        if (ret == 1) {
             ssize_t r = read(fd, buf + total, 1);
             if (r == 0) {
                 disconnect(arg);
                 return -1;
             }
-            else if (r < 0)
+
+            if (r < 0)
                 return -1;
-            else {
-                total += r;
-            }
+
+            total += r;
         }
         else
             return -1;
@@ -225,24 +228,25 @@ int32_t write_fd_linux(const uint8_t* buf, uint16_t count, int32_t timeout_ms, v
         if (timeout_ms >= 0) {
             tv_p = &tv;
             tv.tv_sec = timeout_ms / 1000;
-            tv.tv_usec = (timeout_ms % 1000) * 1000;
+            tv.tv_usec = (int64_t) (timeout_ms % 1000) * 1000;
         }
 
         int ret = select(fd + 1, NULL, &wfds, NULL, tv_p);
         if (ret == 0) {
             return 0;
         }
-        else if (ret == 1) {
+
+        if (ret == 1) {
             ssize_t w = write(fd, buf + total, count);
             if (w == 0) {
                 disconnect(arg);
                 return -1;
             }
-            else if (w <= 0)
+
+            if (w <= 0)
                 return -1;
-            else {
-                total += (int32_t) w;
-            }
+
+            total += (int32_t) w;
         }
         else
             return -1;

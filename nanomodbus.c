@@ -50,19 +50,19 @@
 #endif
 #endif
 
-static uint8_t get_1(nmbs_t *m) {
-    uint8_t result = m->msg.buf[m->msg.buf_idx];
-    m->msg.buf_idx++;
+static uint8_t get_1(nmbs_t *nmbs) {
+    uint8_t result = nmbs->msg.buf[nmbs->msg.buf_idx];
+    nmbs->msg.buf_idx++;
     return result;
 }
 
-static void put_1(nmbs_t *m, uint8_t b) {
-    m->msg.buf[(m)->msg.buf_idx] = b;
-    m->msg.buf_idx++;
+static void put_1(nmbs_t *nmbs, uint8_t data) {
+    nmbs->msg.buf[nmbs->msg.buf_idx] = data;
+    nmbs->msg.buf_idx++;
 }
 
-static void discard_1(nmbs_t *m) {
-    m->msg.buf_idx++;
+static void discard_1(nmbs_t *nmbs) {
+    nmbs->msg.buf_idx++;
 }
 
 #ifdef NMBS_BIG_ENDIAN
@@ -80,16 +80,16 @@ static void put_2(nmbs_t *m, uint16_t w) {
 
 #else
 
-static uint16_t get_2(nmbs_t *m) {
-    uint16_t result = ((uint16_t) (m->msg.buf[m->msg.buf_idx + 1])) | (((uint16_t) m->msg.buf[m->msg.buf_idx] << 8));
-    m->msg.buf_idx += 2;
+static uint16_t get_2(nmbs_t *nmbs) {
+    uint16_t result = ((uint16_t) (nmbs->msg.buf[nmbs->msg.buf_idx + 1])) | (((uint16_t) nmbs->msg.buf[nmbs->msg.buf_idx] << 8));
+    nmbs->msg.buf_idx += 2;
     return result;
 }
 
-static void put_2(nmbs_t *m, uint16_t w) {
-    m->msg.buf[m->msg.buf_idx] = ((uint8_t) ((((uint16_t) (w)) & 0xFF00) >> 8));
-    m->msg.buf[m->msg.buf_idx + 1] = ((uint8_t) (((uint16_t) (w)) & 0x00FF));
-    m->msg.buf_idx += 2;
+static void put_2(nmbs_t *nmbs, uint16_t data) {
+    nmbs->msg.buf[nmbs->msg.buf_idx] = ((uint8_t) ((((uint16_t) (data)) & 0xFF00) >> 8));
+    nmbs->msg.buf[nmbs->msg.buf_idx + 1] = ((uint8_t) (((uint16_t) (data)) & 0x00FF));
+    nmbs->msg.buf_idx += 2;
 }
 
 #endif
@@ -383,14 +383,12 @@ static nmbs_error recv_res_header(nmbs_t* nmbs) {
 
             if (exception < 1 || exception > 4)
                 return NMBS_ERROR_INVALID_RESPONSE;
-            else {
-                DEBUG("exception %d\n", exception);
-                return exception;
-            }
+
+            DEBUG("exception %d\n", exception);
+            return exception;
         }
-        else {
-            return NMBS_ERROR_INVALID_RESPONSE;
-        }
+
+        return NMBS_ERROR_INVALID_RESPONSE;
     }
 
     DEBUG("NMBS res <- fc %d\t", nmbs->msg.fc);
@@ -482,13 +480,13 @@ static nmbs_error handle_read_discrete(nmbs_t* nmbs, nmbs_error (*callback)(uint
             return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
         if (callback) {
-            nmbs_bitfield bf = {0};
-            err = callback(address, quantity, bf, nmbs->platform.arg);
+            nmbs_bitfield bitfield = {0};
+            err = callback(address, quantity, bitfield, nmbs->platform.arg);
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
-                else
-                    return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
             }
 
             if (!nmbs->msg.broadcast) {
@@ -501,8 +499,8 @@ static nmbs_error handle_read_discrete(nmbs_t* nmbs, nmbs_error (*callback)(uint
 
                 DEBUG("coils ");
                 for (int i = 0; i < discrete_bytes; i++) {
-                    put_1(nmbs, bf[i]);
-                    DEBUG("%d", bf[i]);
+                    put_1(nmbs, bitfield[i]);
+                    DEBUG("%d", bitfield[i]);
                 }
 
                 err = send_msg(nmbs);
@@ -548,8 +546,8 @@ static nmbs_error handle_read_registers(nmbs_t* nmbs, nmbs_error (*callback)(uin
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
-                else
-                    return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
             }
 
             if (!nmbs->msg.broadcast) {
@@ -633,8 +631,8 @@ static nmbs_error handle_write_single_coil(nmbs_t* nmbs) {
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
-                else
-                    return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
             }
 
             if (!nmbs->msg.broadcast) {
@@ -680,8 +678,8 @@ static nmbs_error handle_write_single_register(nmbs_t* nmbs) {
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
-                else
-                    return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
             }
 
             if (!nmbs->msg.broadcast) {
@@ -750,8 +748,8 @@ static nmbs_error handle_write_multiple_coils(nmbs_t* nmbs) {
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
-                else
-                    return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
             }
 
             if (!nmbs->msg.broadcast) {
@@ -820,8 +818,8 @@ static nmbs_error handle_write_multiple_registers(nmbs_t* nmbs) {
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
-                else
-                    return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
             }
 
             if (!nmbs->msg.broadcast) {
@@ -918,8 +916,8 @@ nmbs_error nmbs_server_poll(nmbs_t* nmbs) {
     if (err != NMBS_ERROR_NONE) {
         if (!first_byte_received && err == NMBS_ERROR_TIMEOUT)
             return NMBS_ERROR_NONE;
-        else
-            return err;
+
+        return err;
     }
 
 #ifdef NMBS_DEBUG
