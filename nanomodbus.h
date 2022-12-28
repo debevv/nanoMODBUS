@@ -393,7 +393,7 @@ nmbs_error nmbs_write_multiple_registers(nmbs_t* nmbs, uint16_t address, uint16_
  *
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
-nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const void* data, uint16_t data_len);
+nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const uint8_t* data, uint16_t data_len);
 #endif
 
 #ifndef NMBS_CLIENT_DISABLED
@@ -404,7 +404,7 @@ nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const void* data, uint16_
  *
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
-nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, void* data_out, uint16_t data_out_len);
+nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, uint8_t* data_out, uint16_t data_out_len);
 #endif
 
 /** Calculate the Modbus CRC of some data.

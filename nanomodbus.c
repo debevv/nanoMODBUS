@@ -1277,21 +1277,21 @@ nmbs_error nmbs_write_multiple_registers(nmbs_t* nmbs, uint16_t address, uint16_
 #endif
 
 
-nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const void* data, uint16_t data_len) {
+nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const uint8_t* data, uint16_t data_len) {
     msg_state_req(nmbs, fc);
     put_msg_header(nmbs, data_len);
 
     DEBUG("raw ");
     for (uint16_t i = 0; i < data_len; i++) {
-        put_1(nmbs, ((const uint8_t*) (data))[i]);
-        DEBUG("%d ", ((const uint8_t*) (data))[i]);
+        put_1(nmbs, data[i]);
+        DEBUG("%d ", data[i]);
     }
 
     return send_msg(nmbs);
 }
 
 
-nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, void* data_out, uint16_t data_out_len) {
+nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, uint8_t* data_out, uint16_t data_out_len) {
     nmbs_error err = recv_res_header(nmbs);
     if (err != NMBS_ERROR_NONE)
         return err;
@@ -1301,7 +1301,7 @@ nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, void* data_out, uint16_t 
         return err;
 
     for (uint16_t i = 0; i < data_out_len; i++) {
-        ((uint8_t*) (data_out))[i] = get_1(nmbs);
+        data_out[i] = get_1(nmbs);
     }
 
     err = recv_msg_footer(nmbs);

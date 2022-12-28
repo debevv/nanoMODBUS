@@ -215,15 +215,15 @@ void test_fc1(nmbs_transport transport) {
     expect(nmbs_read_coils(&CLIENT, 65530, 7, NULL) == NMBS_ERROR_INVALID_ARGUMENT);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE from server when calling with quantity 0");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(1), htons(0)}, 4));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(1), htons(0)}, 4));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE from server when calling with quantity > 2000");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(1), htons(2001)}, 4));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(1), htons(2001)}, 4));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS from server when calling with address + quantity > 0xFFFF + 1");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(65530), htons(7)}, 4));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(65530), htons(7)}, 4));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
     should("return NMBS_EXCEPTION_SERVER_DEVICE_FAILURE when server handler returns any non-exception error");
@@ -282,15 +282,15 @@ void test_fc2(nmbs_transport transport) {
     expect(nmbs_read_discrete_inputs(&CLIENT, 65530, 7, NULL) == NMBS_ERROR_INVALID_ARGUMENT);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE from server when calling with quantity 0");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(1), htons(0)}, 4));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(1), htons(0)}, 4));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE from server when calling with quantity > 2000");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(1), htons(2001)}, 4));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(1), htons(2001)}, 4));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS from server when calling with address + quantity > 0xFFFF + 1");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(65530), htons(7)}, 4));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(65530), htons(7)}, 4));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
     should("return NMBS_EXCEPTION_SERVER_DEVICE_FAILURE when server handler returns any non-exception error");
@@ -371,15 +371,15 @@ void test_fc3(nmbs_transport transport) {
     expect(nmbs_read_holding_registers(&CLIENT, 0xFFFF, 2, NULL) == NMBS_ERROR_INVALID_ARGUMENT);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE from server when calling with quantity 0");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(1), htons(0)}, 4));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(1), htons(0)}, 4));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE from server when calling with quantity > 2000");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(1), htons(2001)}, 4));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(1), htons(2001)}, 4));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS from server when calling with address + quantity > 0xFFFF + 1");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(0xFFFF), htons(2)}, 4));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(0xFFFF), htons(2)}, 4));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
     should("return NMBS_EXCEPTION_SERVER_DEVICE_FAILURE when server handler returns any non-exception error");
@@ -426,15 +426,15 @@ void test_fc4(nmbs_transport transport) {
     expect(nmbs_read_input_registers(&CLIENT, 0xFFFF, 2, NULL) == NMBS_ERROR_INVALID_ARGUMENT);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE from server when calling with quantity 0");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(1), htons(0)}, 4));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(1), htons(0)}, 4));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE from server when calling with quantity > 2000");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(1), htons(2001)}, 4));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(1), htons(2001)}, 4));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS from server when calling with address + quantity > 0xFFFF + 1");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(0xFFFF), htons(2)}, 4));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(0xFFFF), htons(2)}, 4));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
     should("return NMBS_EXCEPTION_SERVER_DEVICE_FAILURE when server handler returns any non-exception error");
@@ -494,10 +494,10 @@ void test_fc5(nmbs_transport transport) {
     start_client_and_server(transport, &(nmbs_callbacks){.write_single_coil = write_coil});
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE when calling with value !0x0000 or 0xFF000");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(6), htons(0x0001)}, 4));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(6), htons(0x0001)}, 4));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(6), htons(0xFFFF)}, 4));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(6), htons(0xFFFF)}, 4));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
     should("return NMBS_EXCEPTION_SERVER_DEVICE_FAILURE when server handler returns any non-exception error");
@@ -514,7 +514,7 @@ void test_fc5(nmbs_transport transport) {
     check(nmbs_write_single_coil(&CLIENT, 5, false));
 
     should("echo request's address and value");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(4), htons(0xFF00)}, 4));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(4), htons(0xFF00)}, 4));
     check(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 4));
 
     expect(((uint16_t*) raw_res)[0] == ntohs(4));
@@ -574,7 +574,7 @@ void test_fc6(nmbs_transport transport) {
     check(nmbs_write_single_register(&CLIENT, 5, false));
 
     should("echo request's address and value");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(4), htons(0x123)}, 4));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(4), htons(0x123)}, 4));
     check(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 4));
 
     expect(((uint16_t*) raw_res)[0] == ntohs(4));
@@ -653,15 +653,15 @@ void test_fc15(nmbs_transport transport) {
     expect(nmbs_write_multiple_coils(&CLIENT, 0xFFFF, 2, bf) == NMBS_ERROR_INVALID_ARGUMENT);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE from server when calling with quantity 0");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(1), htons(0), htons(0x0100)}, 6));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(1), htons(0), htons(0x0100)}, 6));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE from server when calling with quantity > 2000");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(1), htons(2000), htons(0x0100)}, 6));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(1), htons(2000), htons(0x0100)}, 6));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS from server when calling with address + quantity > 0xFFFF + 1");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(0xFFFF), htons(2), htons(0x0100)}, 6));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(0xFFFF), htons(2), htons(0x0100)}, 6));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
     /*
@@ -690,7 +690,7 @@ void test_fc15(nmbs_transport transport) {
     check(nmbs_write_multiple_coils(&CLIENT, 5, 27, bf));
 
     should("echo request's address and value");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(7), htons(1), htons(0x0100)}, 6));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(7), htons(1), htons(0x0100)}, 6));
     check(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 4));
 
     expect(((uint16_t*) raw_res)[0] == ntohs(7));
@@ -769,15 +769,15 @@ void test_fc16(nmbs_transport transport) {
     expect(nmbs_write_multiple_registers(&CLIENT, 0xFFFF, 2, registers) == NMBS_ERROR_INVALID_ARGUMENT);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE from server when calling with quantity 0");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(1), htons(0), htons(0x0200), htons(0)}, 7));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(1), htons(0), htons(0x0200), htons(0)}, 7));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE from server when calling with quantity > 2000");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(1), htons(2000), htons(0x0200), htons(0)}, 7));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(1), htons(2000), htons(0x0200), htons(0)}, 7));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS from server when calling with address + quantity > 0xFFFF + 1");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(0xFFFF), htons(2), htons(0x0200), htons(0)}, 7));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(0xFFFF), htons(2), htons(0x0200), htons(0)}, 7));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
     /*
@@ -806,7 +806,7 @@ void test_fc16(nmbs_transport transport) {
     check(nmbs_write_multiple_registers(&CLIENT, 6, 27, registers));
 
     should("echo request's address and value");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint16_t[]){htons(7), htons(1), htons(0x0200), htons(0)}, 7));
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(7), htons(1), htons(0x0200), htons(0)}, 7));
     check(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 4));
 
     expect(((uint16_t*) raw_res)[0] == ntohs(7));
