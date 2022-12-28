@@ -23,8 +23,8 @@ int client_connection = -1;
 
 void* connect_tcp(const char* address, const char* port) {
     struct addrinfo ainfo = {0};
-    struct addrinfo *results;
-    struct addrinfo *rp;
+    struct addrinfo* results;
+    struct addrinfo* rp;
     int fd;
 
     ainfo.ai_family = AF_INET;
@@ -68,8 +68,8 @@ void close_server_on_exit(int sig) {
 
 int create_tcp_server(const char* address, const char* port) {
     struct addrinfo ainfo = {0};
-    struct addrinfo *results;
-    struct addrinfo *rp;
+    struct addrinfo* results;
+    struct addrinfo* rp;
     int fd = -1;
 
     ainfo.ai_family = AF_INET;

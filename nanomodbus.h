@@ -252,7 +252,8 @@ nmbs_error nmbs_server_create(nmbs_t* nmbs, uint8_t address_rtu, const nmbs_plat
 
 /** Set the request/response timeout.
  * If the target instance is a server, sets the timeout of the nmbs_server_poll() function.
- * If the target instance is a client, sets the response timeout after sending a request. In case of timeout, the called method will return NMBS_ERROR_TIMEOUT.
+ * If the target instance is a client, sets the response timeout after sending a request. In case of timeout,
+ * the called method will return NMBS_ERROR_TIMEOUT.
  * @param nmbs pointer to the nmbs_t instance
  * @param timeout_ms timeout in milliseconds. If < 0, the timeout is disabled.
  */
