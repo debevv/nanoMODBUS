@@ -180,10 +180,10 @@ Functions</h2></td></tr>
 <tr class="separator:aa9b955faaaa7c18746ee1d195e07c5d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2790c21b28f52822d3b32788f6ee5517"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a2790c21b28f52822d3b32788f6ee5517">nmbs_write_multiple_registers</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, uint16_t address, uint16_t quantity, const uint16_t *registers)</td></tr>
 <tr class="separator:a2790c21b28f52822d3b32788f6ee5517"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a65fa965f4e509384b8ea1ea79882160c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a65fa965f4e509384b8ea1ea79882160c">nmbs_send_raw_pdu</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, uint8_t fc, const void *data, uint16_t data_len)</td></tr>
-<tr class="separator:a65fa965f4e509384b8ea1ea79882160c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af52eeceed6b4948588ad9a2ab489db88"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#af52eeceed6b4948588ad9a2ab489db88">nmbs_receive_raw_pdu_response</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, void *data_out, uint16_t data_out_len)</td></tr>
-<tr class="separator:af52eeceed6b4948588ad9a2ab489db88"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a323a7e21723b7257951fb30e58f17bec"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a323a7e21723b7257951fb30e58f17bec">nmbs_send_raw_pdu</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, uint8_t fc, const uint8_t *data, uint16_t data_len)</td></tr>
+<tr class="separator:a323a7e21723b7257951fb30e58f17bec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a24949b477e0888ed51c3e658b4a39671"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a24949b477e0888ed51c3e658b4a39671">nmbs_receive_raw_pdu_response</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, uint8_t *data_out, uint16_t data_out_len)</td></tr>
+<tr class="separator:a24949b477e0888ed51c3e658b4a39671"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae49c12c93f87e560a8750c92655818af"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#ae49c12c93f87e560a8750c92655818af">nmbs_crc_calc</a> (const uint8_t *data, uint32_t length)</td></tr>
 <tr class="separator:ae49c12c93f87e560a8750c92655818af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a96982c55669d90d689ff409d587b00ca"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a96982c55669d90d689ff409d587b00ca">nmbs_strerror</a> (<a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a> error)</td></tr>
@@ -721,8 +721,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="af52eeceed6b4948588ad9a2ab489db88"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af52eeceed6b4948588ad9a2ab489db88">&#9670;&nbsp;</a></span>nmbs_receive_raw_pdu_response()</h2>
+<a id="a24949b477e0888ed51c3e658b4a39671"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a24949b477e0888ed51c3e658b4a39671">&#9670;&nbsp;</a></span>nmbs_receive_raw_pdu_response()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -736,7 +736,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">void *&#160;</td>
+          <td class="paramtype">uint8_t *&#160;</td>
           <td class="paramname"><em>data_out</em>, </td>
         </tr>
         <tr>
@@ -764,8 +764,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a65fa965f4e509384b8ea1ea79882160c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a65fa965f4e509384b8ea1ea79882160c">&#9670;&nbsp;</a></span>nmbs_send_raw_pdu()</h2>
+<a id="a323a7e21723b7257951fb30e58f17bec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a323a7e21723b7257951fb30e58f17bec">&#9670;&nbsp;</a></span>nmbs_send_raw_pdu()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -785,7 +785,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const void *&#160;</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
           <td class="paramname"><em>data</em>, </td>
         </tr>
         <tr>
