@@ -1,5 +1,8 @@
 name: repository traffic
-on: [workflow_dispatch]
+on:
+  schedule: 
+    - cron: "55 23 * * 0"
+
 jobs:
   traffic:
     runs-on: ubuntu-latest
