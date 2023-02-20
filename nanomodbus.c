@@ -803,14 +803,14 @@ static nmbs_error handle_read_registers(nmbs_t* nmbs,
         return err;
 
     if (!nmbs->msg.ignored) {
-        if (quantity < 1 || quantity > 125)
+        if (quantity < 1 || quantity > NMBS_INTERAL_MAX_REGISTER_QUANTITY)
             return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
         if ((uint32_t) address + (uint32_t) quantity > ((uint32_t) 0xFFFF) + 1)
             return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
         if (callback) {
-            uint16_t regs[125] = {0};
+            uint16_t regs[NMBS_INTERAL_MAX_REGISTER_QUANTITY] = {0};
             err = callback(address, quantity, regs, nmbs->msg.unit_id, nmbs->platform.arg);
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
@@ -1508,7 +1508,7 @@ nmbs_error nmbs_read_discrete_inputs(nmbs_t* nmbs, uint16_t address, uint16_t qu
 }
 
 static nmbs_error read_registers(nmbs_t* nmbs, uint8_t fc, uint16_t address, uint16_t quantity, uint16_t* registers) {
-    if (quantity < 1 || quantity > 125)
+    if (quantity < 1 || quantity > NMBS_INTERAL_MAX_REGISTER_QUANTITY)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
     if ((uint32_t) address + (uint32_t) quantity > ((uint32_t) 0xFFFF) + 1)
