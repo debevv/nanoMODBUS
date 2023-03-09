@@ -32,9 +32,9 @@
 
 #ifdef NMBS_DEBUG
 #include <stdio.h>
-#define DEBUG(...) printf(__VA_ARGS__)
+#define NDEBUG(...) printf(__VA_ARGS__)
 #else
-#define DEBUG(...) (void) (0)
+#define NDEBUG(...) (void) (0)
 #endif
 
 #if !defined(NMBS_BIG_ENDIAN) && !defined(NMBS_LITTLE_ENDIAN)
@@ -249,7 +249,7 @@ static nmbs_error send(nmbs_t* nmbs, uint16_t count) {
 
 
 static nmbs_error recv_msg_footer(nmbs_t* nmbs) {
-    DEBUG("\n");
+    NDEBUG("\n");
 
     if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
         uint16_t crc = nmbs_crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx);
@@ -385,14 +385,14 @@ static nmbs_error recv_res_header(nmbs_t* nmbs) {
             if (exception < 1 || exception > 4)
                 return NMBS_ERROR_INVALID_RESPONSE;
 
-            DEBUG("exception %d\n", exception);
+            NDEBUG("exception %d\n", exception);
             return exception;
         }
 
         return NMBS_ERROR_INVALID_RESPONSE;
     }
 
-    DEBUG("NMBS res <- fc %d\t", nmbs->msg.fc);
+    NDEBUG("NMBS res <- fc %d\t", nmbs->msg.fc);
 
     return NMBS_ERROR_NONE;
 }
@@ -416,7 +416,7 @@ static void put_msg_header(nmbs_t* nmbs, uint16_t data_length) {
 
 
 static nmbs_error send_msg(nmbs_t* nmbs) {
-    DEBUG("\n");
+    NDEBUG("\n");
 
     if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
         uint16_t crc = nmbs_crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx);
@@ -432,7 +432,7 @@ static nmbs_error send_msg(nmbs_t* nmbs) {
 #ifndef NMBS_CLIENT_DISABLED
 static void put_req_header(nmbs_t* nmbs, uint16_t data_length) {
     put_msg_header(nmbs, data_length);
-    DEBUG("NMBS req -> fc %d\t", nmbs->msg.fc);
+    NDEBUG("NMBS req -> fc %d\t", nmbs->msg.fc);
 }
 #endif
 
@@ -440,7 +440,7 @@ static void put_req_header(nmbs_t* nmbs, uint16_t data_length) {
 #ifndef NMBS_SERVER_DISABLED
 static void put_res_header(nmbs_t* nmbs, uint16_t data_length) {
     put_msg_header(nmbs, data_length);
-    DEBUG("NMBS res -> fc %d\t", nmbs->msg.fc);
+    NDEBUG("NMBS res -> fc %d\t", nmbs->msg.fc);
 }
 #endif
 
@@ -451,7 +451,7 @@ static nmbs_error send_exception_msg(nmbs_t* nmbs, uint8_t exception) {
     put_msg_header(nmbs, 1);
     put_1(nmbs, exception);
 
-    DEBUG("NMBS res -> exception %d\n", exception);
+    NDEBUG("NMBS res -> exception %d\n", exception);
 
     return send_msg(nmbs);
 }
@@ -467,7 +467,7 @@ static nmbs_error handle_read_discrete(nmbs_t* nmbs, nmbs_error (*callback)(uint
     uint16_t address = get_2(nmbs);
     uint16_t quantity = get_2(nmbs);
 
-    DEBUG("a %d\tq %d", address, quantity);
+    NDEBUG("a %d\tq %d", address, quantity);
 
     err = recv_msg_footer(nmbs);
     if (err != NMBS_ERROR_NONE)
@@ -496,12 +496,12 @@ static nmbs_error handle_read_discrete(nmbs_t* nmbs, nmbs_error (*callback)(uint
 
                 put_1(nmbs, discrete_bytes);
 
-                DEBUG("b %d\t", discrete_bytes);
+                NDEBUG("b %d\t", discrete_bytes);
 
-                DEBUG("coils ");
+                NDEBUG("coils ");
                 for (int i = 0; i < discrete_bytes; i++) {
                     put_1(nmbs, bitfield[i]);
-                    DEBUG("%d", bitfield[i]);
+                    NDEBUG("%d", bitfield[i]);
                 }
 
                 err = send_msg(nmbs);
@@ -528,7 +528,7 @@ static nmbs_error handle_read_registers(nmbs_t* nmbs, nmbs_error (*callback)(uin
     uint16_t address = get_2(nmbs);
     uint16_t quantity = get_2(nmbs);
 
-    DEBUG("a %d\tq %d", address, quantity);
+    NDEBUG("a %d\tq %d", address, quantity);
 
     err = recv_msg_footer(nmbs);
     if (err != NMBS_ERROR_NONE)
@@ -557,12 +557,12 @@ static nmbs_error handle_read_registers(nmbs_t* nmbs, nmbs_error (*callback)(uin
 
                 put_1(nmbs, regs_bytes);
 
-                DEBUG("b %d\t", regs_bytes);
+                NDEBUG("b %d\t", regs_bytes);
 
-                DEBUG("regs ");
+                NDEBUG("regs ");
                 for (int i = 0; i < quantity; i++) {
                     put_2(nmbs, regs[i]);
-                    DEBUG("%d", regs[i]);
+                    NDEBUG("%d", regs[i]);
                 }
 
                 err = send_msg(nmbs);
@@ -617,7 +617,7 @@ static nmbs_error handle_write_single_coil(nmbs_t* nmbs) {
     uint16_t address = get_2(nmbs);
     uint16_t value = get_2(nmbs);
 
-    DEBUG("a %d\tvalue %d", address, value);
+    NDEBUG("a %d\tvalue %d", address, value);
 
     err = recv_msg_footer(nmbs);
     if (err != NMBS_ERROR_NONE)
@@ -641,7 +641,7 @@ static nmbs_error handle_write_single_coil(nmbs_t* nmbs) {
 
                 put_2(nmbs, address);
                 put_2(nmbs, value);
-                DEBUG("a %d\tvalue %d", address, value);
+                NDEBUG("a %d\tvalue %d", address, value);
 
                 err = send_msg(nmbs);
                 if (err != NMBS_ERROR_NONE)
@@ -667,7 +667,7 @@ static nmbs_error handle_write_single_register(nmbs_t* nmbs) {
     uint16_t address = get_2(nmbs);
     uint16_t value = get_2(nmbs);
 
-    DEBUG("a %d\tvalue %d", address, value);
+    NDEBUG("a %d\tvalue %d", address, value);
 
     err = recv_msg_footer(nmbs);
     if (err != NMBS_ERROR_NONE)
@@ -688,7 +688,7 @@ static nmbs_error handle_write_single_register(nmbs_t* nmbs) {
 
                 put_2(nmbs, address);
                 put_2(nmbs, value);
-                DEBUG("a %d\tvalue %d", address, value);
+                NDEBUG("a %d\tvalue %d", address, value);
 
                 err = send_msg(nmbs);
                 if (err != NMBS_ERROR_NONE)
@@ -715,7 +715,7 @@ static nmbs_error handle_write_multiple_coils(nmbs_t* nmbs) {
     uint16_t quantity = get_2(nmbs);
     uint8_t coils_bytes = get_1(nmbs);
 
-    DEBUG("a %d\tq %d\tb %d\tcoils ", address, quantity, coils_bytes);
+    NDEBUG("a %d\tq %d\tb %d\tcoils ", address, quantity, coils_bytes);
 
     err = recv(nmbs, coils_bytes);
     if (err != NMBS_ERROR_NONE)
@@ -724,7 +724,7 @@ static nmbs_error handle_write_multiple_coils(nmbs_t* nmbs) {
     nmbs_bitfield coils;
     for (int i = 0; i < coils_bytes; i++) {
         coils[i] = get_1(nmbs);
-        DEBUG("%d ", coils[i]);
+        NDEBUG("%d ", coils[i]);
     }
 
     err = recv_msg_footer(nmbs);
@@ -758,7 +758,7 @@ static nmbs_error handle_write_multiple_coils(nmbs_t* nmbs) {
 
                 put_2(nmbs, address);
                 put_2(nmbs, quantity);
-                DEBUG("a %d\tq %d", address, quantity);
+                NDEBUG("a %d\tq %d", address, quantity);
 
                 err = send_msg(nmbs);
                 if (err != NMBS_ERROR_NONE)
@@ -785,7 +785,7 @@ static nmbs_error handle_write_multiple_registers(nmbs_t* nmbs) {
     uint16_t quantity = get_2(nmbs);
     uint8_t registers_bytes = get_1(nmbs);
 
-    DEBUG("a %d\tq %d\tb %d\tregs ", address, quantity, registers_bytes);
+    NDEBUG("a %d\tq %d\tb %d\tregs ", address, quantity, registers_bytes);
 
     err = recv(nmbs, registers_bytes);
     if (err != NMBS_ERROR_NONE)
@@ -794,7 +794,7 @@ static nmbs_error handle_write_multiple_registers(nmbs_t* nmbs) {
     uint16_t registers[0x007B];
     for (int i = 0; i < registers_bytes / 2; i++) {
         registers[i] = get_2(nmbs);
-        DEBUG("%d ", registers[i]);
+        NDEBUG("%d ", registers[i]);
     }
 
     err = recv_msg_footer(nmbs);
@@ -828,7 +828,7 @@ static nmbs_error handle_write_multiple_registers(nmbs_t* nmbs) {
 
                 put_2(nmbs, address);
                 put_2(nmbs, quantity);
-                DEBUG("a %d\tq %d", address, quantity);
+                NDEBUG("a %d\tq %d", address, quantity);
 
                 err = send_msg(nmbs);
                 if (err != NMBS_ERROR_NONE)
@@ -847,7 +847,7 @@ static nmbs_error handle_write_multiple_registers(nmbs_t* nmbs) {
 
 #ifndef NMBS_SERVER_DISABLED
 static nmbs_error handle_req_fc(nmbs_t* nmbs) {
-    DEBUG("fc %d\t", nmbs->msg.fc);
+    NDEBUG("fc %d\t", nmbs->msg.fc);
 
     nmbs_error err;
     switch (nmbs->msg.fc) {
@@ -956,7 +956,7 @@ static nmbs_error read_discrete(nmbs_t* nmbs, uint8_t fc, uint16_t address, uint
     put_2(nmbs, address);
     put_2(nmbs, quantity);
 
-    DEBUG("a %d\tq %d", address, quantity);
+    NDEBUG("a %d\tq %d", address, quantity);
 
     nmbs_error err = send_msg(nmbs);
     if (err != NMBS_ERROR_NONE)
@@ -971,16 +971,16 @@ static nmbs_error read_discrete(nmbs_t* nmbs, uint8_t fc, uint16_t address, uint
         return err;
 
     uint8_t coils_bytes = get_1(nmbs);
-    DEBUG("b %d\t", coils_bytes);
+    NDEBUG("b %d\t", coils_bytes);
 
     err = recv(nmbs, coils_bytes);
     if (err != NMBS_ERROR_NONE)
         return err;
 
-    DEBUG("coils ");
+    NDEBUG("coils ");
     for (int i = 0; i < coils_bytes; i++) {
         values[i] = get_1(nmbs);
-        DEBUG("%d", values[i]);
+        NDEBUG("%d", values[i]);
     }
 
     err = recv_msg_footer(nmbs);
@@ -1020,7 +1020,7 @@ static nmbs_error read_registers(nmbs_t* nmbs, uint8_t fc, uint16_t address, uin
     put_2(nmbs, address);
     put_2(nmbs, quantity);
 
-    DEBUG("a %d\tq %d ", address, quantity);
+    NDEBUG("a %d\tq %d ", address, quantity);
 
     nmbs_error err = send_msg(nmbs);
     if (err != NMBS_ERROR_NONE)
@@ -1035,16 +1035,16 @@ static nmbs_error read_registers(nmbs_t* nmbs, uint8_t fc, uint16_t address, uin
         return err;
 
     uint8_t registers_bytes = get_1(nmbs);
-    DEBUG("b %d\t", registers_bytes);
+    NDEBUG("b %d\t", registers_bytes);
 
     err = recv(nmbs, registers_bytes);
     if (err != NMBS_ERROR_NONE)
         return err;
 
-    DEBUG("regs ");
+    NDEBUG("regs ");
     for (int i = 0; i < registers_bytes / 2; i++) {
         registers[i] = get_2(nmbs);
-        DEBUG("%d", registers[i]);
+        NDEBUG("%d", registers[i]);
     }
 
     err = recv_msg_footer(nmbs);
@@ -1083,7 +1083,7 @@ nmbs_error nmbs_write_single_coil(nmbs_t* nmbs, uint16_t address, bool value) {
     put_2(nmbs, address);
     put_2(nmbs, value_req);
 
-    DEBUG("a %d\tvalue %d ", address, value_req);
+    NDEBUG("a %d\tvalue %d ", address, value_req);
 
     nmbs_error err = send_msg(nmbs);
     if (err != NMBS_ERROR_NONE)
@@ -1101,7 +1101,7 @@ nmbs_error nmbs_write_single_coil(nmbs_t* nmbs, uint16_t address, bool value) {
         uint16_t address_res = get_2(nmbs);
         uint16_t value_res = get_2(nmbs);
 
-        DEBUG("a %d\tvalue %d", address, value_res);
+        NDEBUG("a %d\tvalue %d", address, value_res);
 
         err = recv_msg_footer(nmbs);
         if (err != NMBS_ERROR_NONE)
@@ -1127,7 +1127,7 @@ nmbs_error nmbs_write_single_register(nmbs_t* nmbs, uint16_t address, uint16_t v
     put_2(nmbs, address);
     put_2(nmbs, value);
 
-    DEBUG("a %d\tvalue %d", address, value);
+    NDEBUG("a %d\tvalue %d", address, value);
 
     nmbs_error err = send_msg(nmbs);
     if (err != NMBS_ERROR_NONE)
@@ -1144,7 +1144,7 @@ nmbs_error nmbs_write_single_register(nmbs_t* nmbs, uint16_t address, uint16_t v
 
         uint16_t address_res = get_2(nmbs);
         uint16_t value_res = get_2(nmbs);
-        DEBUG("a %d\tvalue %d ", address, value_res);
+        NDEBUG("a %d\tvalue %d ", address, value_res);
 
         err = recv_msg_footer(nmbs);
         if (err != NMBS_ERROR_NONE)
@@ -1178,12 +1178,12 @@ nmbs_error nmbs_write_multiple_coils(nmbs_t* nmbs, uint16_t address, uint16_t qu
     put_2(nmbs, address);
     put_2(nmbs, quantity);
     put_1(nmbs, coils_bytes);
-    DEBUG("a %d\tq %d\tb %d\t", address, quantity, coils_bytes);
+    NDEBUG("a %d\tq %d\tb %d\t", address, quantity, coils_bytes);
 
-    DEBUG("coils ");
+    NDEBUG("coils ");
     for (int i = 0; i < coils_bytes; i++) {
         put_1(nmbs, coils[i]);
-        DEBUG("%d ", coils[i]);
+        NDEBUG("%d ", coils[i]);
     }
 
     nmbs_error err = send_msg(nmbs);
@@ -1201,7 +1201,7 @@ nmbs_error nmbs_write_multiple_coils(nmbs_t* nmbs, uint16_t address, uint16_t qu
 
         uint16_t address_res = get_2(nmbs);
         uint16_t quantity_res = get_2(nmbs);
-        DEBUG("a %d\tq %d", address_res, quantity_res);
+        NDEBUG("a %d\tq %d", address_res, quantity_res);
 
         err = recv_msg_footer(nmbs);
         if (err != NMBS_ERROR_NONE)
@@ -1235,12 +1235,12 @@ nmbs_error nmbs_write_multiple_registers(nmbs_t* nmbs, uint16_t address, uint16_
     put_2(nmbs, address);
     put_2(nmbs, quantity);
     put_1(nmbs, registers_bytes);
-    DEBUG("a %d\tq %d\tb %d\t", address, quantity, registers_bytes);
+    NDEBUG("a %d\tq %d\tb %d\t", address, quantity, registers_bytes);
 
-    DEBUG("regs ");
+    NDEBUG("regs ");
     for (int i = 0; i < quantity; i++) {
         put_2(nmbs, registers[i]);
-        DEBUG("%d ", registers[i]);
+        NDEBUG("%d ", registers[i]);
     }
 
     nmbs_error err = send_msg(nmbs);
@@ -1258,7 +1258,7 @@ nmbs_error nmbs_write_multiple_registers(nmbs_t* nmbs, uint16_t address, uint16_
 
         uint16_t address_res = get_2(nmbs);
         uint16_t quantity_res = get_2(nmbs);
-        DEBUG("a %d\tq %d", address_res, quantity_res);
+        NDEBUG("a %d\tq %d", address_res, quantity_res);
 
         err = recv_msg_footer(nmbs);
         if (err != NMBS_ERROR_NONE)
@@ -1280,10 +1280,10 @@ nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const uint8_t* data, uint
     msg_state_req(nmbs, fc);
     put_msg_header(nmbs, data_len);
 
-    DEBUG("raw ");
+    NDEBUG("raw ");
     for (uint16_t i = 0; i < data_len; i++) {
         put_1(nmbs, data[i]);
-        DEBUG("%d ", data[i]);
+        NDEBUG("%d ", data[i]);
     }
 
     return send_msg(nmbs);
