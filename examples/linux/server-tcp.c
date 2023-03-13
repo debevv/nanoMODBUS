@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
     // Set up the TCP server
     int ret = create_tcp_server(argv[1], argv[2]);
     if (ret != 0) {
-        fprintf(stderr, "Error creating TCP server\n");
+        fprintf(stderr, "Error creating TCP server - %s\n", strerror(ret));
         return 1;
     }
 

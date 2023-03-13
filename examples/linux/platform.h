@@ -106,6 +106,10 @@ int create_tcp_server(const char* address, const char* port) {
 
     freeaddrinfo(results);
 
+    if (fd < 0) {
+        return errno;
+    }
+
     signal(SIGINT, close_server_on_exit);
     signal(SIGTERM, close_server_on_exit);
     signal(SIGQUIT, close_server_on_exit);
