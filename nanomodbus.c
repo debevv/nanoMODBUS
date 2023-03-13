@@ -26,7 +26,6 @@
 
 #include "nanomodbus.h"
 #include <stdbool.h>
-#include <stdlib.h>
 #include <string.h>
 
 
@@ -37,18 +36,6 @@
 #define DEBUG(...) (void) (0)
 #endif
 
-#if !defined(NMBS_BIG_ENDIAN) && !defined(NMBS_LITTLE_ENDIAN)
-#if defined(__BYTE_ORDER) && __BYTE_ORDER == __BIG_ENDIAN || defined(__BIG_ENDIAN__) || defined(__ARMEB__) ||          \
-        defined(__THUMBEB__) || defined(__AARCH64EB__) || defined(_MIBSEB) || defined(__MIBSEB) || defined(__MIBSEB__)
-#define NMBS_BIG_ENDIAN
-#elif defined(__BYTE_ORDER) && __BYTE_ORDER == __LITTLE_ENDIAN || defined(__LITTLE_ENDIAN__) || defined(__ARMEL__) ||  \
-        defined(__THUMBEL__) || defined(__AARCH64EL__) || defined(_MIPSEL) || defined(__MIPSEL) ||                     \
-        defined(__MIPSEL__) || defined(__AVR_ARCH__)
-#define NMBS_LITTLE_ENDIAN
-#else
-#error "Failed to automatically detect platform endianness. Please define either NMBS_BIG_ENDIAN or NMBS_LITTLE_ENDIAN."
-#endif
-#endif
 
 static uint8_t get_1(nmbs_t* nmbs) {
     uint8_t result = nmbs->msg.buf[nmbs->msg.buf_idx];
@@ -56,44 +43,31 @@ static uint8_t get_1(nmbs_t* nmbs) {
     return result;
 }
 
+
 static void put_1(nmbs_t* nmbs, uint8_t data) {
     nmbs->msg.buf[nmbs->msg.buf_idx] = data;
     nmbs->msg.buf_idx++;
 }
 
+
 static void discard_1(nmbs_t* nmbs) {
     nmbs->msg.buf_idx++;
 }
 
-#ifdef NMBS_BIG_ENDIAN
-
-static uint16_t get_2(nmbs_t* m) {
-    uint16_t result = (*(uint16_t*) (m->msg.buf + m->msg.buf_idx));
-    m->msg.buf_idx += 2;
-    return result;
-}
-
-static void put_2(nmbs_t* m, uint16_t w) {
-    (*(uint16_t*) (m->msg.buf + m->msg.buf_idx)) = w;
-    m->msg.buf_idx += 2;
-}
-
-#else
 
 static uint16_t get_2(nmbs_t* nmbs) {
     uint16_t result =
-            ((uint16_t) (nmbs->msg.buf[nmbs->msg.buf_idx + 1])) | (((uint16_t) nmbs->msg.buf[nmbs->msg.buf_idx] << 8));
+            ((uint16_t) nmbs->msg.buf[nmbs->msg.buf_idx]) << 8 | (uint16_t) nmbs->msg.buf[nmbs->msg.buf_idx + 1];
     nmbs->msg.buf_idx += 2;
     return result;
 }
 
+
 static void put_2(nmbs_t* nmbs, uint16_t data) {
-    nmbs->msg.buf[nmbs->msg.buf_idx] = ((uint8_t) ((((uint16_t) (data)) & 0xFF00) >> 8));
-    nmbs->msg.buf[nmbs->msg.buf_idx + 1] = ((uint8_t) (((uint16_t) (data)) & 0x00FF));
+    nmbs->msg.buf[nmbs->msg.buf_idx] = (uint8_t) ((data >> 8) & 0xFFU);
+    nmbs->msg.buf[nmbs->msg.buf_idx + 1] = (uint8_t) data;
     nmbs->msg.buf_idx += 2;
 }
-
-#endif
 
 
 static void msg_buf_reset(nmbs_t* nmbs) {

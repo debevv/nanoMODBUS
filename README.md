@@ -1,6 +1,7 @@
 # nanoMODBUS - A compact MODBUS RTU/TCP C library for embedded/microcontrollers
 
-nanoMODBUS is a small C library that implements the Modbus protocol. It is especially useful in embedded and resource-constrained
+nanoMODBUS is a small C library that implements the Modbus protocol. It is especially useful in embedded and
+resource-constrained
 systems like microcontrollers.  
 Its main features are:
 
@@ -123,12 +124,6 @@ Platform functions and server callbacks can access arbitrary user data through t
 is useful, for example, to pass the connection a function should operate on.    
 Its initial value can be set inside the `nmbs_platform_conf` struct when creating the `nmbs_t` instance, and changed at
 any time via the `nmbs_set_platform_arg` API method.
-
-## Platform endianness
-
-nanoMODBUS will attempt to detect the endianness of the platform at build time. If the automatic detection fails, you
-can manually set the endianness of the platform by defining either `NMBS_BIG_ENDIAN` or `NMBS_LITTLE_ENDIAN` in your
-build flags.
 
 ## Tests and examples
 

@@ -8,8 +8,6 @@
 #include <stdio.h>
 #include <windows.h>
 
-#define NMBS_LITTLE_ENDIAN 1
-
 #include "..\..\nanomodbus.h"
 #include "comm.h"
 
