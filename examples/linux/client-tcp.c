@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
     nmbs_set_read_timeout(&nmbs, 1000);
 
     // Write 2 coils from address 64
-    nmbs_bitfield coils;
+    nmbs_bitfield coils = {0};
     nmbs_bitfield_write(coils, 0, 1);
     nmbs_bitfield_write(coils, 1, 1);
     err = nmbs_write_multiple_coils(&nmbs, 64, 2, coils);
