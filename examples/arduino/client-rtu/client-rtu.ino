@@ -57,7 +57,7 @@ void loop() {
   nmbs_set_destination_rtu_address(&nmbs, RTU_SERVER_ADDRESS);
 
   // Write 2 coils from address 64
-  nmbs_bitfield coils;
+  nmbs_bitfield coils = {0};
   nmbs_bitfield_write(coils, 0, 1);
   nmbs_bitfield_write(coils, 1, 1);
   err = nmbs_write_multiple_coils(&nmbs, 64, 2, coils);

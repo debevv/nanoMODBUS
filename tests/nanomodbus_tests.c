@@ -235,7 +235,7 @@ void test_fc1(nmbs_transport transport) {
     expect(nmbs_read_coils(&CLIENT, 3, 1, NULL) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
     should("read with no error");
-    nmbs_bitfield bf;
+    nmbs_bitfield bf = {0};
     check(nmbs_read_coils(&CLIENT, 10, 3, bf));
     expect(nmbs_bitfield_read(bf, 0) == 1);
     expect(nmbs_bitfield_read(bf, 1) == 0);
@@ -302,7 +302,7 @@ void test_fc2(nmbs_transport transport) {
     expect(nmbs_read_discrete_inputs(&CLIENT, 3, 1, NULL) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
     should("read with no error");
-    nmbs_bitfield bf;
+    nmbs_bitfield bf = {0};
     check(nmbs_read_discrete_inputs(&CLIENT, 10, 3, bf));
     expect(nmbs_bitfield_read(bf, 0) == 1);
     expect(nmbs_bitfield_read(bf, 1) == 0);

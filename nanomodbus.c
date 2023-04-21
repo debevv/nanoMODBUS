@@ -669,7 +669,7 @@ static nmbs_error handle_write_multiple_coils(nmbs_t* nmbs) {
     if (err != NMBS_ERROR_NONE)
         return err;
 
-    nmbs_bitfield coils;
+    nmbs_bitfield coils = {0};
     for (int i = 0; i < coils_bytes; i++) {
         coils[i] = get_1(nmbs);
         NMBS_DEBUG_PRINT("%d ", coils[i]);
