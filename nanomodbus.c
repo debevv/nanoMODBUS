@@ -484,7 +484,7 @@ static nmbs_error recv_read_registers_res(nmbs_t* nmbs, uint16_t quantity, uint1
 }
 
 
-nmbs_error recv_write_single_coil_res(nmbs_t* nmbs, uint16_t address, bool value_req) {
+nmbs_error recv_write_single_coil_res(nmbs_t* nmbs, uint16_t address, uint16_t value_req) {
     nmbs_error err = recv_res_header(nmbs);
     if (err != NMBS_ERROR_NONE)
         return err;
