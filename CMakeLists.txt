@@ -16,6 +16,9 @@ target_compile_definitions(server_disabled PUBLIC NMBS_SERVER_DISABLED)
 add_executable(client_disabled nanomodbus.c tests/client_disabled.c)
 target_compile_definitions(client_disabled PUBLIC NMBS_CLIENT_DISABLED)
 
+add_executable(multi_server_rtu nanomodbus.c tests/multi_server_rtu.c)
+target_compile_definitions(multi_server_rtu PUBLIC NMBS_DEBUG)
+
 add_executable(client-tcp nanomodbus.c examples/linux/client-tcp.c)
 add_executable(server-tcp nanomodbus.c examples/linux/server-tcp.c)
 
