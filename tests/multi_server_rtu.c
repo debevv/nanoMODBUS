@@ -6,7 +6,7 @@
 #include "nanomodbus.h"
 
 #define WIRE_SIZE 1024
-#define ITERATIONS 10
+#define UNUSED_PARAM(x) ((x) = (x))
 
 uint32_t run = 1;
 
@@ -25,7 +25,7 @@ int32_t read_wire(uint8_t* buf, uint16_t count, int32_t timeout_ms, void* arg) {
     while (1) {
         pthread_mutex_lock(&mutex);
 
-        uint32_t index = (uint32_t) arg;
+        uint64_t index = (uint64_t) arg;
         uint32_t read = 0;
         for (int i = 0; i < count; i++) {
             if (indices_r[index] == index_w)
@@ -39,7 +39,7 @@ int32_t read_wire(uint8_t* buf, uint16_t count, int32_t timeout_ms, void* arg) {
         pthread_mutex_unlock(&mutex);
 
         if (read != 0)
-            return read;
+            return (int32_t) read;
 
         if (timeout_ms != 0)
             usleep(timeout_ms * 1000);
@@ -51,9 +51,10 @@ int32_t read_wire(uint8_t* buf, uint16_t count, int32_t timeout_ms, void* arg) {
 }
 
 int32_t write_wire(const uint8_t* buf, uint16_t count, int32_t timeout_ms, void* arg) {
+    UNUSED_PARAM(timeout_ms);
     pthread_mutex_lock(&mutex);
 
-    uint32_t index = (uint32_t) arg;
+    uint64_t index = (uint64_t) arg;
     uint32_t written = 0;
     for (int i = 0; i < count; i++) {
         index_w = (index_w + 1) % WIRE_SIZE;
@@ -64,10 +65,11 @@ int32_t write_wire(const uint8_t* buf, uint16_t count, int32_t timeout_ms, void*
 
     pthread_mutex_unlock(&mutex);
 
-    return written;
+    return (int32_t) written;
 }
 
 nmbs_error read_coils(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, void* arg) {
+    UNUSED_PARAM(arg);
     for (int i = 0; i < quantity; i++)
         nmbs_bitfield_write(coils_out, address + i, 1);
 
@@ -75,18 +77,27 @@ nmbs_error read_coils(uint16_t address, uint16_t quantity, nmbs_bitfield coils_o
 }
 
 void* poll_server1(void* arg) {
+    UNUSED_PARAM(arg);
     while (run) {
         nmbs_server_poll(&server1);
     }
+
+    return NULL;
 }
 
 void* poll_server2(void* arg) {
+    UNUSED_PARAM(arg);
     while (run) {
         nmbs_server_poll(&server2);
     }
+
+    return NULL;
 }
 
 int main(int argc, char* argv[]) {
+    UNUSED_PARAM(argc);
+    UNUSED_PARAM(argv);
+
     nmbs_platform_conf c_conf;
     c_conf.arg = wire;
     c_conf.transport = NMBS_TRANSPORT_RTU;

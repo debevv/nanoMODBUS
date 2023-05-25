@@ -352,7 +352,6 @@ static nmbs_error send_exception_msg(nmbs_t* nmbs, uint8_t exception) {
 #endif
 
 
-#ifndef NMBS_CLIENT_DISABLED
 static nmbs_error recv_res_header(nmbs_t* nmbs) {
     uint16_t req_transaction_id = nmbs->msg.transaction_id;
     uint8_t req_unit_id = nmbs->msg.unit_id;
@@ -399,6 +398,7 @@ static nmbs_error recv_res_header(nmbs_t* nmbs) {
 }
 
 
+#ifndef NMBS_CLIENT_DISABLED
 static void put_req_header(nmbs_t* nmbs, uint16_t data_length) {
     put_msg_header(nmbs, data_length);
 #ifdef NMBS_DEBUG
@@ -484,7 +484,7 @@ static nmbs_error recv_read_registers_res(nmbs_t* nmbs, uint16_t quantity, uint1
 }
 
 
-nmbs_error recv_write_single_coil_res(nmbs_t* nmbs, uint16_t address, bool value_req) {
+nmbs_error recv_write_single_coil_res(nmbs_t* nmbs, uint16_t address, uint16_t value_req) {
     nmbs_error err = recv_res_header(nmbs);
     if (err != NMBS_ERROR_NONE)
         return err;
