@@ -102,7 +102,7 @@ static void msg_state_req(nmbs_t* nmbs, uint8_t fc) {
 #endif
 
 
-int nmbs_create(nmbs_t* nmbs, const nmbs_platform_conf* platform_conf) {
+nmbs_error nmbs_create(nmbs_t* nmbs, const nmbs_platform_conf* platform_conf) {
     if (!nmbs)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
@@ -386,7 +386,7 @@ static nmbs_error recv_res_header(nmbs_t* nmbs) {
 
             NMBS_DEBUG_PRINT("%d NMBS res <- address_rtu %d\texception %d\n", nmbs->address_rtu, nmbs->msg.unit_id,
                              exception);
-            return exception;
+            return (nmbs_error) exception;
         }
 
         return NMBS_ERROR_INVALID_RESPONSE;
