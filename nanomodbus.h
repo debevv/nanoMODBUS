@@ -146,35 +146,40 @@ typedef struct nmbs_platform_conf {
 typedef struct nmbs_callbacks {
 #ifndef NMBS_SERVER_DISABLED
 #ifndef NMBS_SERVER_READ_COILS_DISABLED
-    nmbs_error (*read_coils)(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, void* arg);
+    nmbs_error (*read_coils)(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, uint8_t unit_id, void* arg);
 #endif
 
 #ifndef NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED
-    nmbs_error (*read_discrete_inputs)(uint16_t address, uint16_t quantity, nmbs_bitfield inputs_out, void* arg);
+    nmbs_error (*read_discrete_inputs)(uint16_t address, uint16_t quantity, nmbs_bitfield inputs_out, uint8_t unit_id,
+                                       void* arg);
 #endif
 
 #ifndef NMBS_SERVER_READ_HOLDING_REGISTERS_DISABLED
-    nmbs_error (*read_holding_registers)(uint16_t address, uint16_t quantity, uint16_t* registers_out, void* arg);
+    nmbs_error (*read_holding_registers)(uint16_t address, uint16_t quantity, uint16_t* registers_out, uint8_t unit_id,
+                                         void* arg);
 #endif
 
 #ifndef NMBS_SERVER_READ_INPUT_REGISTERS_DISABLED
-    nmbs_error (*read_input_registers)(uint16_t address, uint16_t quantity, uint16_t* registers_out, void* arg);
+    nmbs_error (*read_input_registers)(uint16_t address, uint16_t quantity, uint16_t* registers_out, uint8_t unit_id,
+                                       void* arg);
 #endif
 
 #ifndef NMBS_SERVER_WRITE_SINGLE_COIL_DISABLED
-    nmbs_error (*write_single_coil)(uint16_t address, bool value, void* arg);
+    nmbs_error (*write_single_coil)(uint16_t address, bool value, uint8_t unit_id, void* arg);
 #endif
 
 #ifndef NMBS_SERVER_WRITE_SINGLE_REGISTER_DISABLED
-    nmbs_error (*write_single_register)(uint16_t address, uint16_t value, void* arg);
+    nmbs_error (*write_single_register)(uint16_t address, uint16_t value, uint8_t unit_id, void* arg);
 #endif
 
 #ifndef NMBS_SERVER_WRITE_MULTIPLE_COILS_DISABLED
-    nmbs_error (*write_multiple_coils)(uint16_t address, uint16_t quantity, const nmbs_bitfield coils, void* arg);
+    nmbs_error (*write_multiple_coils)(uint16_t address, uint16_t quantity, const nmbs_bitfield coils, uint8_t unit_id,
+                                       void* arg);
 #endif
 
 #ifndef NMBS_SERVER_WRITE_MULTIPLE_REGISTERS_DISABLED
-    nmbs_error (*write_multiple_registers)(uint16_t address, uint16_t quantity, const uint16_t* registers, void* arg);
+    nmbs_error (*write_multiple_registers)(uint16_t address, uint16_t quantity, const uint16_t* registers,
+                                           uint8_t unit_id, void* arg);
 #endif
 #endif
 
