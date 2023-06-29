@@ -5,3 +5,4 @@ build*
 /tests/build*
 /examples/cmake-build*
 /examples/build*
+doxygen
