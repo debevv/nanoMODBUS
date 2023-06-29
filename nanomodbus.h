@@ -140,8 +140,10 @@ typedef struct nmbs_platform_conf {
 /**
  * Modbus server request callbacks. Passed to nmbs_server_create().
  *
- * These methods accept a pointer to arbitrary user-data, which is the arg member of the nmbs_platform_conf that was passed
+ * These methods accept a pointer to arbitrary user data, which is the arg member of the nmbs_platform_conf that was passed
  * to nmbs_server_create together with this struct.
+ *
+ * `unit_id` is the RTU unit ID of the request sender. It is always 0 on TCP.
  */
 typedef struct nmbs_callbacks {
 #ifndef NMBS_SERVER_DISABLED
