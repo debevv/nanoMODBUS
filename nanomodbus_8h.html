@@ -174,6 +174,10 @@ Functions</h2></td></tr>
 <tr class="separator:aa9b955faaaa7c18746ee1d195e07c5d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2790c21b28f52822d3b32788f6ee5517"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a2790c21b28f52822d3b32788f6ee5517">nmbs_write_multiple_registers</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, uint16_t address, uint16_t quantity, const uint16_t *registers)</td></tr>
 <tr class="separator:a2790c21b28f52822d3b32788f6ee5517"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac897b19d4b6a1a99c4ce6883d68631af"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#ac897b19d4b6a1a99c4ce6883d68631af">nmbs_read_file_record</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, uint16_t file_number, uint16_t record_number, uint16_t *registers, uint16_t count)</td></tr>
+<tr class="separator:ac897b19d4b6a1a99c4ce6883d68631af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f38d8c59db816827a2639fc4ab18294"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a9f38d8c59db816827a2639fc4ab18294">nmbs_write_file_record</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, uint16_t file_number, uint16_t record_number, const uint16_t *registers, uint16_t count)</td></tr>
+<tr class="separator:a9f38d8c59db816827a2639fc4ab18294"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a323a7e21723b7257951fb30e58f17bec"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a323a7e21723b7257951fb30e58f17bec">nmbs_send_raw_pdu</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, uint8_t fc, const uint8_t *data, uint16_t data_len)</td></tr>
 <tr class="separator:a323a7e21723b7257951fb30e58f17bec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a24949b477e0888ed51c3e658b4a39671"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a24949b477e0888ed51c3e658b4a39671">nmbs_receive_raw_pdu_response</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, uint8_t *data_out, uint16_t data_out_len)</td></tr>
@@ -616,6 +620,63 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="ac897b19d4b6a1a99c4ce6883d68631af"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac897b19d4b6a1a99c4ce6883d68631af">&#9670;&nbsp;</a></span>nmbs_read_file_record()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a> nmbs_read_file_record </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structnmbs__t.html">nmbs_t</a> *&#160;</td>
+          <td class="paramname"><em>nmbs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>file_number</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>record_number</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t *&#160;</td>
+          <td class="paramname"><em>registers</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>count</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Send a FC 20 (0x14) Read File Record </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">nmbs</td><td>pointer to the <a class="el" href="structnmbs__t.html">nmbs_t</a> instance </td></tr>
+    <tr><td class="paramname">file_number</td><td>file number (1 to 65535) </td></tr>
+    <tr><td class="paramname">record_number</td><td>record number from file (0000 to 9999) </td></tr>
+    <tr><td class="paramname">registers</td><td>array of registers to read </td></tr>
+    <tr><td class="paramname">count</td><td>count of registers</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>NMBS_ERROR_NONE if successful, other errors otherwise. </dd></dl>
+
+</div>
+</div>
 <a id="a5ed24d1b54568de57bb7f6838eb4e667"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5ed24d1b54568de57bb7f6838eb4e667">&#9670;&nbsp;</a></span>nmbs_read_holding_registers()</h2>
 
@@ -1046,6 +1107,63 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>string representation of the error </dd></dl>
+
+</div>
+</div>
+<a id="a9f38d8c59db816827a2639fc4ab18294"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9f38d8c59db816827a2639fc4ab18294">&#9670;&nbsp;</a></span>nmbs_write_file_record()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a> nmbs_write_file_record </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structnmbs__t.html">nmbs_t</a> *&#160;</td>
+          <td class="paramname"><em>nmbs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>file_number</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>record_number</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint16_t *&#160;</td>
+          <td class="paramname"><em>registers</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>count</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Send a FC 21 (0x15) Write File Record </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">nmbs</td><td>pointer to the <a class="el" href="structnmbs__t.html">nmbs_t</a> instance </td></tr>
+    <tr><td class="paramname">file_number</td><td>file number (1 to 65535) </td></tr>
+    <tr><td class="paramname">record_number</td><td>record number from file (0000 to 9999) </td></tr>
+    <tr><td class="paramname">registers</td><td>array of registers to write </td></tr>
+    <tr><td class="paramname">count</td><td>count of registers</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>NMBS_ERROR_NONE if successful, other errors otherwise. </dd></dl>
 
 </div>
 </div>
