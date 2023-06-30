@@ -148,7 +148,6 @@ int main(int argc, char* argv[]) {
     platform_conf.write = write_fd_linux;
     platform_conf.arg = NULL;    // We will set the arg (socket fd) later
 
-    // These functions are defined in server.h
     nmbs_callbacks callbacks = {0};
     callbacks.read_coils = handle_read_coils;
     callbacks.write_multiple_coils = handle_write_multiple_coils;
