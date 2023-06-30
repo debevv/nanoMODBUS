@@ -183,6 +183,16 @@ typedef struct nmbs_callbacks {
     nmbs_error (*write_multiple_registers)(uint16_t address, uint16_t quantity, const uint16_t* registers,
                                            uint8_t unit_id, void* arg);
 #endif
+
+#ifndef NMBS_SERVER_READ_FILE_RECORD_DISABLED
+    nmbs_error (*read_file_record)(uint16_t file_number, uint16_t record_number, uint16_t* registers, uint16_t count,
+                                   uint8_t unit_id, void* arg);
+#endif
+
+#ifndef NMBS_SERVER_WRITE_FILE_RECORD_DISABLED
+    nmbs_error (*write_file_record)(uint16_t file_number, uint16_t record_number, const uint16_t* registers,
+                                    uint16_t count, uint8_t unit_id, void* arg);
+#endif
 #endif
 
     char _nonempty;    // Struct may become empty, which is undefined behavior
@@ -356,6 +366,30 @@ nmbs_error nmbs_write_multiple_coils(nmbs_t* nmbs, uint16_t address, uint16_t qu
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
 nmbs_error nmbs_write_multiple_registers(nmbs_t* nmbs, uint16_t address, uint16_t quantity, const uint16_t* registers);
+
+/** Send a FC 20 (0x14) Read File Record
+ * @param nmbs pointer to the nmbs_t instance
+ * @param file_number file number (1 to 65535)
+ * @param record_number record number from file (0000 to 9999)
+ * @param registers array of registers to read
+ * @param count count of registers
+ *
+ * @return NMBS_ERROR_NONE if successful, other errors otherwise.
+ */
+nmbs_error nmbs_read_file_record(nmbs_t* nmbs, uint16_t file_number, uint16_t record_number, uint16_t* registers,
+                                 uint16_t count);
+
+/** Send a FC 21 (0x15) Write File Record
+ * @param nmbs pointer to the nmbs_t instance
+ * @param file_number file number (1 to 65535)
+ * @param record_number record number from file (0000 to 9999)
+ * @param registers array of registers to write
+ * @param count count of registers
+ *
+ * @return NMBS_ERROR_NONE if successful, other errors otherwise.
+ */
+nmbs_error nmbs_write_file_record(nmbs_t* nmbs, uint16_t file_number, uint16_t record_number, const uint16_t* registers,
+                                  uint16_t count);
 
 /** Send a raw Modbus PDU.
  * CRC on RTU will be calculated and sent by this function.

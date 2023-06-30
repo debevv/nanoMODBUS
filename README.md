@@ -24,6 +24,8 @@ Its main features are:
     - 06 (0x06) Write Single Register
     - 15 (0x0F) Write Multiple Coils
     - 16 (0x10) Write Multiple registers
+    - 20 (0x14) Read File Record
+    - 21 (0x15) Write File Record
 - Platform-agnostic
     - Requires only C99 and its standard library
     - Data transport read/write function are implemented by the user
@@ -151,5 +153,7 @@ Please refer to `examples/arduino/README.md` for more info about building and ru
         - `NMBS_SERVER_WRITE_SINGLE_REGISTER_DISABLED`
         - `NMBS_SERVER_WRITE_MULTIPLE_COILS_DISABLED`
         - `NMBS_SERVER_WRITE_MULTIPLE_REGISTERS_DISABLED`
+        - `NMBS_SERVER_READ_FILE_RECORD_DISABLED`
+        - `NMBS_SERVER_WRITE_FILE_RECORD_DISABLED`
     - `NMBS_STRERROR_DISABLED` to disable the code that converts `nmbs_error`s to strings
 - Debug prints about received and sent messages can be enabled by defining `NMBS_DEBUG`

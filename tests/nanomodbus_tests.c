@@ -821,6 +821,148 @@ void test_fc16(nmbs_transport transport) {
 }
 
 
+nmbs_error read_file(uint16_t file_number, uint16_t record_number, uint16_t* registers, uint16_t count, uint8_t unit_id,
+                     void* arg) {
+    UNUSED_PARAM(arg);
+    UNUSED_PARAM(unit_id);
+
+    if (file_number == 1)
+        return -1;
+
+    if (file_number == 2)
+        return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+
+    if (file_number == 3)
+        return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE;
+
+    if (file_number == 4 && record_number == 4 && count == 4) {
+        registers[0] = 0;
+        registers[1] = 0xFF;
+        registers[2] = 0xAA55;
+        registers[3] = 0xFFFF;
+    }
+
+    if (file_number == 255 && record_number == 9999 && count == 119)
+        registers[118] = 42;
+
+    return NMBS_ERROR_NONE;
+}
+
+
+void test_fc20(nmbs_transport transport) {
+    uint16_t registers[128];
+    nmbs_callbacks callbacks_empty = {0};
+
+    start_client_and_server(transport, &callbacks_empty);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_FUNCTION when callback is not registered server-side");
+    expect(nmbs_read_file_record(&CLIENT, 1, 0, NULL, 0) == NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+
+    stop_client_and_server();
+
+    start_client_and_server(transport, &(nmbs_callbacks){.read_file_record = read_file});
+
+    should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with file_number 0");
+    expect(nmbs_read_file_record(&CLIENT, 0, 0, registers, 1) == NMBS_ERROR_INVALID_ARGUMENT);
+
+    should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with record_number > 9999");
+    expect(nmbs_read_file_record(&CLIENT, 1, 10000, registers, 1) == NMBS_ERROR_INVALID_ARGUMENT);
+
+    should("return NMBS_EXCEPTION_SERVER_DEVICE_FAILURE when server handler returns any non-exception error");
+    expect(nmbs_read_file_record(&CLIENT, 1, 1, registers, 3) == NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS if returned by server handler");
+    expect(nmbs_read_file_record(&CLIENT, 2, 1, registers, 3) == NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE if returned by server handler");
+    expect(nmbs_read_file_record(&CLIENT, 3, 1, registers, 3) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+    should("read with no error");
+    check(nmbs_read_file_record(&CLIENT, 4, 4, registers, 4));
+    expect(registers[0] == 0);
+    expect(registers[1] == 0xFF);
+    expect(registers[2] == 0xAA55);
+    expect(registers[3] == 0xFFFF);
+
+    check(nmbs_read_file_record(&CLIENT, 255, 9999, registers, 119));
+    expect(registers[118] == 42);
+
+    stop_client_and_server();
+}
+
+
+nmbs_error write_file(uint16_t file_number, uint16_t record_number, const uint16_t* registers, uint16_t count,
+                      uint8_t unit_id, void* arg) {
+    UNUSED_PARAM(arg);
+    UNUSED_PARAM(unit_id);
+
+    if (file_number == 1)
+        return -1;
+
+    if (file_number == 2)
+        return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+
+    if (file_number == 3)
+        return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE;
+
+    if (file_number == 4 && record_number == 4 && count == 4) {
+        expect(registers[0] == 0);
+        expect(registers[1] == 0xFF);
+        expect(registers[2] == 0xAA55);
+        expect(registers[3] == 0xFFFF);
+
+        return NMBS_ERROR_NONE;
+    }
+
+    if (file_number == 255 && record_number == 9999 && count == 119)
+        expect(registers[118] == 42);
+
+    return NMBS_ERROR_NONE;
+}
+
+
+void test_fc21(nmbs_transport transport) {
+    uint16_t registers[128];
+    nmbs_callbacks callbacks_empty = {0};
+
+    start_client_and_server(transport, &callbacks_empty);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_FUNCTION when callback is not registered server-side");
+    expect(nmbs_write_file_record(&CLIENT, 1, 0, NULL, 0) == NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+
+    stop_client_and_server();
+
+    start_client_and_server(transport, &(nmbs_callbacks){.write_file_record = write_file});
+
+    should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with file_number 0");
+    expect(nmbs_write_file_record(&CLIENT, 0, 0, registers, 1) == NMBS_ERROR_INVALID_ARGUMENT);
+
+    should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with record_number > 0x007B");
+    expect(nmbs_write_file_record(&CLIENT, 1, 10000, registers, 1) == NMBS_ERROR_INVALID_ARGUMENT);
+
+    should("return NMBS_EXCEPTION_SERVER_DEVICE_FAILURE when server handler returns any non-exception error");
+    expect(nmbs_write_file_record(&CLIENT, 1, 1, registers, 1) == NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS if returned by server handler");
+    expect(nmbs_write_file_record(&CLIENT, 2, 2, registers, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE if returned by server handler");
+    expect(nmbs_write_file_record(&CLIENT, 3, 3, registers, 3) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+    should("write with no error");
+    registers[0] = 0;
+    registers[1] = 0xFF;
+    registers[2] = 0xAA55;
+    registers[3] = 0xFFFF;
+    check(nmbs_write_file_record(&CLIENT, 4, 4, registers, 4));
+
+    registers[118] = 42;
+    check(nmbs_write_file_record(&CLIENT, 255, 9999, registers, 119));
+
+    stop_client_and_server();
+}
+
+
 nmbs_transport transports[2] = {NMBS_TRANSPORT_RTU, NMBS_TRANSPORT_TCP};
 const char* transports_str[2] = {"RTU", "TCP"};
 
@@ -854,6 +996,10 @@ int main(int argc, char* argv[]) {
     for_transports(test_fc15, "send and receive FC 15 (0x0F) Write Multiple Coils");
 
     for_transports(test_fc16, "send and receive FC 16 (0x10) Write Multiple registers");
+
+    for_transports(test_fc20, "send and receive FC 20 (0x14) Read File Record");
+
+    for_transports(test_fc21, "send and receive FC 21 (0x15) Write File Record");
 
     return 0;
 }

@@ -22,13 +22,16 @@
 // The data model of this sever will support coils addresses 0 to 100 and registers addresses from 0 to 32
 #define COILS_ADDR_MAX 100
 #define REGS_ADDR_MAX 32
+#define FILE_SIZE_MAX 32
 
 // A single nmbs_bitfield variable can keep 2000 coils
 nmbs_bitfield server_coils = {0};
 uint16_t server_registers[REGS_ADDR_MAX] = {0};
+uint16_t server_file[FILE_SIZE_MAX];
 
-nmbs_error handle_read_coils(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, void* arg) {
+nmbs_error handle_read_coils(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, uint8_t unit_id, void* arg) {
     UNUSED_PARAM(arg);
+    UNUSED_PARAM(unit_id);
 
     if (address + quantity > COILS_ADDR_MAX + 1)
         return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
@@ -43,8 +46,10 @@ nmbs_error handle_read_coils(uint16_t address, uint16_t quantity, nmbs_bitfield 
 }
 
 
-nmbs_error handle_write_multiple_coils(uint16_t address, uint16_t quantity, const nmbs_bitfield coils, void* arg) {
+nmbs_error handle_write_multiple_coils(uint16_t address, uint16_t quantity, const nmbs_bitfield coils, uint8_t unit_id,
+                                       void* arg) {
     UNUSED_PARAM(arg);
+    UNUSED_PARAM(unit_id);
 
     if (address + quantity > COILS_ADDR_MAX + 1)
         return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
@@ -58,8 +63,10 @@ nmbs_error handle_write_multiple_coils(uint16_t address, uint16_t quantity, cons
 }
 
 
-nmbs_error handler_read_holding_registers(uint16_t address, uint16_t quantity, uint16_t* registers_out, void* arg) {
+nmbs_error handler_read_holding_registers(uint16_t address, uint16_t quantity, uint16_t* registers_out, uint8_t unit_id,
+                                          void* arg) {
     UNUSED_PARAM(arg);
+    UNUSED_PARAM(unit_id);
 
     if (address + quantity > REGS_ADDR_MAX + 1)
         return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
@@ -72,8 +79,10 @@ nmbs_error handler_read_holding_registers(uint16_t address, uint16_t quantity, u
 }
 
 
-nmbs_error handle_write_multiple_registers(uint16_t address, uint16_t quantity, const uint16_t* registers, void* arg) {
+nmbs_error handle_write_multiple_registers(uint16_t address, uint16_t quantity, const uint16_t* registers,
+                                           uint8_t unit_id, void* arg) {
     UNUSED_PARAM(arg);
+    UNUSED_PARAM(unit_id);
 
     if (address + quantity > REGS_ADDR_MAX + 1)
         return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
@@ -81,6 +90,40 @@ nmbs_error handle_write_multiple_registers(uint16_t address, uint16_t quantity, 
     // Write registers values to our server_registers
     for (int i = 0; i < quantity; i++)
         server_registers[address + i] = registers[i];
+
+    return NMBS_ERROR_NONE;
+}
+
+
+nmbs_error handle_read_file_record(uint16_t file_number, uint16_t record_number, uint16_t* registers, uint16_t count,
+                                   uint8_t unit_id, void* arg) {
+    UNUSED_PARAM(arg);
+    UNUSED_PARAM(unit_id);
+
+    if (file_number != 1)
+        return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+
+    if ((record_number + count) > FILE_SIZE_MAX)
+        return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+
+    memcpy(registers, server_file + record_number, count * sizeof(uint16_t));
+
+    return NMBS_ERROR_NONE;
+}
+
+
+nmbs_error handle_write_file_record(uint16_t file_number, uint16_t record_number, const uint16_t* registers,
+                                    uint16_t count, uint8_t unit_id, void* arg) {
+    UNUSED_PARAM(arg);
+    UNUSED_PARAM(unit_id);
+
+    if (file_number != 1)
+        return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+
+    if ((record_number + count) > FILE_SIZE_MAX)
+        return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+
+    memcpy(server_file + record_number, registers, count * sizeof(uint16_t));
 
     return NMBS_ERROR_NONE;
 }
@@ -111,6 +154,8 @@ int main(int argc, char* argv[]) {
     callbacks.write_multiple_coils = handle_write_multiple_coils;
     callbacks.read_holding_registers = handler_read_holding_registers;
     callbacks.write_multiple_registers = handle_write_multiple_registers;
+    callbacks.read_file_record = handle_read_file_record;
+    callbacks.write_file_record = handle_write_file_record;
 
     // Create the modbus server. It's ok to set address_rtu to 0 since we are on TCP
     nmbs_t nmbs;

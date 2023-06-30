@@ -12,7 +12,6 @@
 #include "nanomodbus.h"
 #include "platform.h"
 
-
 int main(int argc, char* argv[]) {
     if (argc < 3) {
         fprintf(stderr, "Usage: client-tcp [address] [port]\n");
@@ -89,6 +88,30 @@ int main(int argc, char* argv[]) {
     else {
         printf("Register at address 26: %d\n", r_regs[0]);
         printf("Register at address 27: %d\n", r_regs[1]);
+    }
+
+    // Write file
+    uint16_t file[4] = {0x0000, 0x00AA, 0x5500, 0xFFFF};
+    err = nmbs_write_file_record(&nmbs, 1, 0, file, 4);
+    if (err != NMBS_ERROR_NONE) {
+        fprintf(stderr, "Error writing file - %s", nmbs_strerror(err));
+        if (!nmbs_error_is_exception(err))
+            return 1;
+    }
+    else {
+        printf("Write file registers: 0x%04X 0x%04X 0x%04X 0x%04X\n", file[0], file[1], file[2], file[3]);
+    }
+
+    // Read file
+    memset(file, 0, sizeof(file));
+    err = nmbs_read_file_record(&nmbs, 1, 0, file, 4);
+    if (err != NMBS_ERROR_NONE) {
+        fprintf(stderr, "Error writing file - %s", nmbs_strerror(err));
+        if (!nmbs_error_is_exception(err))
+            return 1;
+    }
+    else {
+        printf("Read file registers: 0x%04X 0x%04X 0x%04X 0x%04X\n", file[0], file[1], file[2], file[3]);
     }
 
     // Close the TCP connection

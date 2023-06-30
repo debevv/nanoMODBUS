@@ -68,8 +68,9 @@ int32_t write_wire(const uint8_t* buf, uint16_t count, int32_t timeout_ms, void*
     return (int32_t) written;
 }
 
-nmbs_error read_coils(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, void* arg) {
+nmbs_error read_coils(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, uint8_t unit_id, void* arg) {
     UNUSED_PARAM(arg);
+    UNUSED_PARAM(unit_id);
     for (int i = 0; i < quantity; i++)
         nmbs_bitfield_write(coils_out, address + i, 1);
 

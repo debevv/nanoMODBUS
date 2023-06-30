@@ -55,6 +55,11 @@ static void discard_1(nmbs_t* nmbs) {
 }
 
 
+static void discard_n(nmbs_t* nmbs, uint16_t n) {
+    nmbs->msg.buf_idx += n;
+}
+
+
 static uint16_t get_2(nmbs_t* nmbs) {
     uint16_t result =
             ((uint16_t) nmbs->msg.buf[nmbs->msg.buf_idx]) << 8 | (uint16_t) nmbs->msg.buf[nmbs->msg.buf_idx + 1];
@@ -67,6 +72,39 @@ static void put_2(nmbs_t* nmbs, uint16_t data) {
     nmbs->msg.buf[nmbs->msg.buf_idx] = (uint8_t) ((data >> 8) & 0xFFU);
     nmbs->msg.buf[nmbs->msg.buf_idx + 1] = (uint8_t) data;
     nmbs->msg.buf_idx += 2;
+}
+
+
+static uint8_t* get_n(nmbs_t* nmbs, uint16_t n) {
+    uint8_t* msg_buf_ptr = nmbs->msg.buf + nmbs->msg.buf_idx;
+    nmbs->msg.buf_idx += n;
+    return msg_buf_ptr;
+}
+
+
+static uint16_t* get_regs(nmbs_t* nmbs, uint16_t n) {
+    uint16_t* msg_buf_ptr = (uint16_t*) (nmbs->msg.buf + nmbs->msg.buf_idx);
+    nmbs->msg.buf_idx += n * 2;
+    while (n--) {
+        msg_buf_ptr[n] = (msg_buf_ptr[n] << 8) | ((msg_buf_ptr[n] >> 8) & 0xFF);
+    }
+    return msg_buf_ptr;
+}
+
+
+static void put_regs(nmbs_t* nmbs, const uint16_t* data, uint16_t n) {
+    uint16_t* msg_buf_ptr = (uint16_t*) (nmbs->msg.buf + nmbs->msg.buf_idx);
+    nmbs->msg.buf_idx += n * 2;
+    while (n--) {
+        msg_buf_ptr[n] = (data[n] << 8) | ((data[n] >> 8) & 0xFF);
+    }
+}
+
+
+static void swap_regs(uint16_t* data, uint16_t n) {
+    while (n--) {
+        data[n] = (data[n] << 8) | ((data[n] >> 8) & 0xFF);
+    }
 }
 
 
@@ -593,6 +631,95 @@ nmbs_error recv_write_multiple_registers_res(nmbs_t* nmbs, uint16_t address, uin
 }
 
 
+nmbs_error recv_read_file_record_res(nmbs_t* nmbs, uint16_t* registers, uint16_t count) {
+    nmbs_error err = recv_res_header(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    err = recv(nmbs, 1);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    uint8_t respone_size = get_1(nmbs);
+
+    err = recv(nmbs, respone_size);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    uint8_t subreq_data_size = get_1(nmbs) - 1;
+    uint8_t subreq_reference_type = get_1(nmbs);
+    uint16_t* subreq_record_data = (uint16_t*) get_n(nmbs, subreq_data_size);
+
+    err = recv_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (registers) {
+        if (subreq_reference_type != 6)
+            return NMBS_ERROR_INVALID_RESPONSE;
+
+        if (count != (subreq_data_size / 2))
+            return NMBS_ERROR_INVALID_RESPONSE;
+
+        swap_regs(subreq_record_data, subreq_data_size / 2);
+        memcpy(registers, subreq_record_data, subreq_data_size);
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
+
+nmbs_error recv_write_file_record_res(nmbs_t* nmbs, uint16_t file_number, uint16_t record_number,
+                                      const uint16_t* registers, uint16_t count) {
+    nmbs_error err = recv_res_header(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    err = recv(nmbs, 1);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    uint8_t respone_size = get_1(nmbs);
+
+    err = recv(nmbs, respone_size);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    uint8_t subreq_reference_type = get_1(nmbs);
+    uint16_t subreq_file_number = get_2(nmbs);
+    uint16_t subreq_record_number = get_2(nmbs);
+    uint16_t subreq_record_lenght = get_2(nmbs);
+    NMBS_DEBUG_PRINT("a %d\tr %d\tl %d\t fwrite ", subreq_file_number, subreq_record_number, subreq_record_lenght);
+
+    uint16_t subreq_data_size = subreq_record_lenght * 2;
+    uint16_t* subreq_record_data = (uint16_t*) get_n(nmbs, subreq_data_size);
+
+    err = recv_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (registers) {
+        if (subreq_reference_type != 6)
+            return NMBS_ERROR_INVALID_RESPONSE;
+
+        if (subreq_file_number != file_number)
+            return NMBS_ERROR_INVALID_RESPONSE;
+
+        if (subreq_record_number != record_number)
+            return NMBS_ERROR_INVALID_RESPONSE;
+
+        if (subreq_record_lenght != count)
+            return NMBS_ERROR_INVALID_RESPONSE;
+
+        swap_regs(subreq_record_data, subreq_record_lenght);
+        if (memcmp(registers, subreq_record_data, subreq_data_size))
+            return NMBS_ERROR_INVALID_RESPONSE;
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
+
 #ifndef NMBS_SERVER_DISABLED
 #if !defined(NMBS_SERVER_READ_COILS_DISABLED) || !defined(NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED)
 static nmbs_error handle_read_discrete(nmbs_t* nmbs,
@@ -1002,6 +1129,206 @@ static nmbs_error handle_write_multiple_registers(nmbs_t* nmbs) {
 }
 #endif
 
+#ifndef NMBS_SERVER_READ_FILE_RECORD_DISABLED
+static nmbs_error handle_read_file_record(nmbs_t* nmbs) {
+    nmbs_error err = recv(nmbs, 1);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    uint8_t request_size = get_1(nmbs);
+
+    err = recv(nmbs, request_size);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    const uint8_t subreq_header_size = 7;
+    uint8_t subreq_count = request_size / subreq_header_size;
+
+    struct {
+        uint8_t reference_type;
+        uint16_t file_number;
+        uint16_t record_number;
+        uint16_t record_lenght;
+    } subreq[subreq_count];
+
+    uint8_t respone_data_size = 0;
+
+    for (uint8_t i = 0; i < subreq_count; i++) {
+        subreq[i].reference_type = get_1(nmbs);
+        subreq[i].file_number = get_2(nmbs);
+        subreq[i].record_number = get_2(nmbs);
+        subreq[i].record_lenght = get_2(nmbs);
+
+        respone_data_size += 2 + subreq[i].record_lenght * 2;
+    }
+
+    discard_n(nmbs, request_size % subreq_header_size);
+
+    err = recv_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (!nmbs->msg.ignored) {
+        if (request_size % subreq_header_size)
+            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+        if (request_size < 0x07 || request_size > 0xF5)
+            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+        put_res_header(nmbs, respone_data_size);
+        put_1(nmbs, respone_data_size);
+
+        for (uint8_t i = 0; i < subreq_count; i++) {
+            if (subreq[i].reference_type != 0x06)
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+            if (subreq[i].file_number == 0x0000)
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+            if (subreq[i].record_number > 0x270F)
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+            NMBS_DEBUG_PRINT("a %d\tr %d\tl %d\t fread ", subreq[i].file_number, subreq[i].record_number,
+                             subreq[i].record_lenght);
+
+            uint16_t subreq_data_size = subreq[i].record_lenght * 2;
+            put_1(nmbs, subreq_data_size + 1);
+            put_1(nmbs, 0x06);    // add Reference Type const
+            uint16_t* subreq_data = (uint16_t*) get_n(nmbs, subreq[i].record_lenght * 2);
+
+            if (nmbs->callbacks.read_file_record) {
+                err = nmbs->callbacks.read_file_record(subreq[i].file_number, subreq[i].record_number, subreq_data,
+                                                       subreq[i].record_lenght, nmbs->msg.unit_id, nmbs->platform.arg);
+                if (err != NMBS_ERROR_NONE) {
+                    if (nmbs_error_is_exception(err))
+                        return send_exception_msg(nmbs, err);
+
+                    return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+                }
+
+                swap_regs(subreq_data, subreq[i].record_lenght);
+                //get_regs(nmbs, subreq[i].record_lenght);
+            }
+            else {
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+            }
+        }
+
+        if (!nmbs->msg.broadcast) {
+            err = send_msg(nmbs);
+            if (err != NMBS_ERROR_NONE)
+                return err;
+        }
+    }
+    else {
+        return recv_read_file_record_res(nmbs, NULL, 0);
+    }
+
+    return NMBS_ERROR_NONE;
+}
+#endif
+
+#ifndef NMBS_SERVER_WRITE_FILE_RECORD_DISABLED
+static nmbs_error handle_write_file_record(nmbs_t* nmbs) {
+    nmbs_error err = recv(nmbs, 1);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    uint8_t request_size = get_1(nmbs);
+
+    err = recv(nmbs, request_size);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    // We can save msg.buf index and use it later for context recovery.
+    uint16_t msg_buf_idx = nmbs->msg.buf_idx;
+    discard_n(nmbs, request_size);
+
+    err = recv_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (!nmbs->msg.ignored) {
+        const uint8_t subreq_header_size = 7;
+        uint16_t size = request_size;
+        nmbs->msg.buf_idx = msg_buf_idx;    // restore context
+
+        if (request_size < 0x07 || request_size > 0xF5)
+            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+        do {
+            uint8_t subreq_reference_type = get_1(nmbs);
+            uint16_t subreq_file_number = get_2(nmbs);
+            uint16_t subreq_record_number = get_2(nmbs);
+            uint16_t subreq_record_lenght = get_2(nmbs);
+            discard_n(nmbs, subreq_record_lenght * 2);
+
+            if (subreq_reference_type != 0x06)
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+            if (subreq_file_number == 0x0000)
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+            if (subreq_record_number > 0x270F)
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+            NMBS_DEBUG_PRINT("a %d\tr %d\tl %d\t fwrite ", subreq_file_number, subreq_record_number,
+                             subreq_record_lenght);
+            size -= (subreq_header_size + subreq_record_lenght * 2);
+        } while (size >= subreq_header_size);
+
+        if (size)
+            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+        // checks completed
+
+        size = request_size;
+        nmbs->msg.buf_idx = msg_buf_idx;    // restore context
+
+        do {
+            discard_1(nmbs);
+            uint16_t subreq_file_number = get_2(nmbs);
+            uint16_t subreq_record_number = get_2(nmbs);
+            uint16_t subreq_record_lenght = get_2(nmbs);
+            uint16_t* subreq_data = get_regs(nmbs, subreq_record_lenght);
+
+            if (nmbs->callbacks.write_file_record) {
+                err = nmbs->callbacks.write_file_record(subreq_file_number, subreq_record_number, subreq_data,
+                                                        subreq_record_lenght, nmbs->msg.unit_id, nmbs->platform.arg);
+                if (err != NMBS_ERROR_NONE) {
+                    if (nmbs_error_is_exception(err))
+                        return send_exception_msg(nmbs, err);
+
+                    return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+                }
+
+                swap_regs(subreq_data, subreq_record_lenght);    // restore swapping
+            }
+            else {
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+            }
+
+            size -= (subreq_header_size + subreq_record_lenght * 2);
+        } while (size >= subreq_header_size);
+
+        if (!nmbs->msg.broadcast) {
+            // The normal response to 'Write File' is an echo of the request.
+            // We can restore buffer index and respone msg.
+            nmbs->msg.buf_idx = msg_buf_idx;
+            discard_n(nmbs, request_size);
+
+            err = send_msg(nmbs);
+            if (err != NMBS_ERROR_NONE)
+                return err;
+        }
+    }
+    else {
+        return recv_write_file_record_res(nmbs, 0, 0, NULL, 0);
+    }
+
+    return NMBS_ERROR_NONE;
+}
+#endif
 
 static nmbs_error handle_req_fc(nmbs_t* nmbs) {
     NMBS_DEBUG_PRINT("fc %d\t", nmbs->msg.fc);
@@ -1053,6 +1380,18 @@ static nmbs_error handle_req_fc(nmbs_t* nmbs) {
 #ifndef NMBS_SERVER_WRITE_MULTIPLE_REGISTERS_DISABLED
         case 16:
             err = handle_write_multiple_registers(nmbs);
+            break;
+#endif
+
+#ifndef NMBS_SERVER_READ_FILE_RECORD_DISABLED
+        case 20:
+            err = handle_read_file_record(nmbs);
+            break;
+#endif
+
+#ifndef NMBS_SERVER_WRITE_FILE_RECORD_DISABLED
+        case 21:
+            err = handle_write_file_record(nmbs);
             break;
 #endif
 
@@ -1294,6 +1633,67 @@ nmbs_error nmbs_write_multiple_registers(nmbs_t* nmbs, uint16_t address, uint16_
 
     if (!nmbs->msg.broadcast)
         return recv_write_single_register_res(nmbs, address, quantity);
+
+    return NMBS_ERROR_NONE;
+}
+
+
+nmbs_error nmbs_read_file_record(nmbs_t* nmbs, uint16_t file_number, uint16_t record_number, uint16_t* registers,
+                                 uint16_t count) {
+    if (file_number == 0x0000)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    if (record_number > 0x270F)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    msg_state_req(nmbs, 20);
+    put_req_header(nmbs, 8);
+
+    put_1(nmbs, 7);    // add Byte Count
+    put_1(nmbs, 6);    // add Reference Type const
+    put_2(nmbs, file_number);
+    put_2(nmbs, record_number);
+    put_2(nmbs, count);
+    NMBS_DEBUG_PRINT("a %d\tr %d\tl %d\t fread ", file_number, record_number, count);
+
+    nmbs_error err = send_msg(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (!nmbs->msg.broadcast)
+        return recv_read_file_record_res(nmbs, registers, count);
+
+    return NMBS_ERROR_NONE;
+}
+
+
+nmbs_error nmbs_write_file_record(nmbs_t* nmbs, uint16_t file_number, uint16_t record_number, const uint16_t* registers,
+                                  uint16_t count) {
+    if (file_number == 0x0000)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    if (record_number > 0x270F)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    uint16_t data_size = count * 2;
+
+    msg_state_req(nmbs, 21);
+    put_req_header(nmbs, 8 + data_size);
+
+    put_1(nmbs, 7 + data_size);    // add Byte Count
+    put_1(nmbs, 6);                // add Reference Type const
+    put_2(nmbs, file_number);
+    put_2(nmbs, record_number);
+    put_2(nmbs, count);
+    put_regs(nmbs, registers, count);
+    NMBS_DEBUG_PRINT("a %d\tr %d\tl %d\t fwrite ", file_number, record_number, count);
+
+    nmbs_error err = send_msg(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (!nmbs->msg.broadcast)
+        return recv_write_file_record_res(nmbs, file_number, record_number, registers, count);
 
     return NMBS_ERROR_NONE;
 }
