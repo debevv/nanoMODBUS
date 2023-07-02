@@ -42,7 +42,7 @@ void onError() {
 }
 
 
-nmbs_error handle_read_coils(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, void *arg) {
+nmbs_error handle_read_coils(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, uint8_t unit_id, void *arg) {
   if (address + quantity > COILS_ADDR_MAX + 1)
     return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
 
@@ -56,7 +56,7 @@ nmbs_error handle_read_coils(uint16_t address, uint16_t quantity, nmbs_bitfield 
 }
 
 
-nmbs_error handle_write_multiple_coils(uint16_t address, uint16_t quantity, const nmbs_bitfield coils, void *arg) {
+nmbs_error handle_write_multiple_coils(uint16_t address, uint16_t quantity, const nmbs_bitfield coils, uint8_t unit_id, void *arg) {
   if (address + quantity > COILS_ADDR_MAX + 1)
     return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
 
@@ -69,7 +69,7 @@ nmbs_error handle_write_multiple_coils(uint16_t address, uint16_t quantity, cons
 }
 
 
-nmbs_error handler_read_holding_registers(uint16_t address, uint16_t quantity, uint16_t* registers_out, void *arg) {
+nmbs_error handler_read_holding_registers(uint16_t address, uint16_t quantity, uint16_t* registers_out, uint8_t unit_id, void *arg) {
   if (address + quantity > REGS_ADDR_MAX + 1)
     return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
 
@@ -81,7 +81,7 @@ nmbs_error handler_read_holding_registers(uint16_t address, uint16_t quantity, u
 }
 
 
-nmbs_error handle_write_multiple_registers(uint16_t address, uint16_t quantity, const uint16_t* registers, void *arg) {
+nmbs_error handle_write_multiple_registers(uint16_t address, uint16_t quantity, const uint16_t* registers, uint8_t unit_id, void *arg) {
   if (address + quantity > REGS_ADDR_MAX + 1)
     return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
 
@@ -102,7 +102,7 @@ void setup() {
 
 
 void loop() {
-  nmbs_platform_conf platform_conf = {0};
+  nmbs_platform_conf platform_conf;
   platform_conf.transport = NMBS_TRANSPORT_RTU;
   platform_conf.read = read_serial;
   platform_conf.write = write_serial;

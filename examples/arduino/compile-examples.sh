@@ -10,6 +10,7 @@ then
 fi
 
 # Set up example folders
+rm -rf build/arduino
 mkdir -p build/arduino
 cp -r examples/arduino build
 cp nanomodbus.h nanomodbus.c build/arduino/server-rtu/
@@ -20,5 +21,6 @@ arduino-cli core update-index
 arduino-cli core install arduino:avr
 
 # Compile both examples
-arduino-cli compile -b $BOARD --output-dir build/arduino -- build/arduino/server-rtu/server-rtu.ino
-arduino-cli compile -b $BOARD --output-dir build/arduino -- build/arduino/client-rtu/client-rtu.ino
+arduino-cli compile --clean -b $BOARD --output-dir build/arduino -- build/arduino/server-rtu
+arduino-cli compile --clean -b $BOARD --output-dir build/arduino -- build/arduino/client-rtu
+
