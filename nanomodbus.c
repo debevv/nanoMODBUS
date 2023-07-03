@@ -1142,14 +1142,14 @@ static nmbs_error handle_read_file_record(nmbs_t* nmbs) {
         return err;
 
     const uint8_t subreq_header_size = 7;
-    uint8_t subreq_count = request_size / subreq_header_size;
+    const uint8_t subreq_count = request_size / subreq_header_size;
 
     struct {
         uint8_t reference_type;
         uint16_t file_number;
         uint16_t record_number;
         uint16_t record_length;
-    } subreq[subreq_count];
+    } subreq[35];    // 245 / subreq_header_size
 
     uint8_t response_data_size = 0;
 
@@ -1258,23 +1258,23 @@ static nmbs_error handle_write_file_record(nmbs_t* nmbs) {
 
         do {
             uint8_t subreq_reference_type = get_1(nmbs);
-            uint16_t subreq_file_number = get_2(nmbs);
-            uint16_t subreq_record_number = get_2(nmbs);
-            uint16_t subreq_record_length = get_2(nmbs);
-            discard_n(nmbs, subreq_record_length * 2);
+            uint16_t subreq_file_number_c = get_2(nmbs);
+            uint16_t subreq_record_number_c = get_2(nmbs);
+            uint16_t subreq_record_length_c = get_2(nmbs);
+            discard_n(nmbs, subreq_record_length_c * 2);
 
             if (subreq_reference_type != 0x06)
                 return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
-            if (subreq_file_number == 0x0000)
+            if (subreq_file_number_c == 0x0000)
                 return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
-            if (subreq_record_number > 0x270F)
+            if (subreq_record_number_c > 0x270F)
                 return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
             NMBS_DEBUG_PRINT("a %d\tr %d\tl %d\t fwrite ", subreq_file_number, subreq_record_number,
                              subreq_record_length);
-            size -= (subreq_header_size + subreq_record_length * 2);
+            size -= (subreq_header_size + subreq_record_length_c * 2);
         } while (size >= subreq_header_size);
 
         if (size)
