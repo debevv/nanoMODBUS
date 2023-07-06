@@ -1175,9 +1175,6 @@ static nmbs_error handle_read_file_record(nmbs_t* nmbs) {
         if (request_size < 0x07 || request_size > 0xF5)
             return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
-        put_res_header(nmbs, response_data_size);
-        put_1(nmbs, response_data_size);
-
         for (uint8_t i = 0; i < subreq_count; i++) {
             if (subreq[i].reference_type != 0x06)
                 return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
@@ -1190,13 +1187,18 @@ static nmbs_error handle_read_file_record(nmbs_t* nmbs) {
 
             NMBS_DEBUG_PRINT("a %d\tr %d\tl %d\t fread ", subreq[i].file_number, subreq[i].record_number,
                              subreq[i].record_length);
+        }
 
-            uint16_t subreq_data_size = subreq[i].record_length * 2;
-            put_1(nmbs, subreq_data_size + 1);
-            put_1(nmbs, 0x06);    // add Reference Type const
-            uint16_t* subreq_data = (uint16_t*) get_n(nmbs, subreq[i].record_length * 2);
+        put_res_header(nmbs, response_data_size);
+        put_1(nmbs, response_data_size);
 
-            if (nmbs->callbacks.read_file_record) {
+        if (nmbs->callbacks.read_file_record) {
+            for (uint8_t i = 0; i < subreq_count; i++) {
+                uint16_t subreq_data_size = subreq[i].record_length * 2;
+                put_1(nmbs, subreq_data_size + 1);
+                put_1(nmbs, 0x06);    // add Reference Type const
+                uint16_t* subreq_data = (uint16_t*) get_n(nmbs, subreq_data_size);
+
                 err = nmbs->callbacks.read_file_record(subreq[i].file_number, subreq[i].record_number, subreq_data,
                                                        subreq[i].record_length, nmbs->msg.unit_id, nmbs->platform.arg);
                 if (err != NMBS_ERROR_NONE) {
@@ -1207,11 +1209,10 @@ static nmbs_error handle_read_file_record(nmbs_t* nmbs) {
                 }
 
                 swap_regs(subreq_data, subreq[i].record_length);
-                //get_regs(nmbs, subreq[i].record_length);
             }
-            else {
-                return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
-            }
+        }
+        else {
+            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
         }
 
         if (!nmbs->msg.broadcast) {
