@@ -1272,8 +1272,8 @@ static nmbs_error handle_write_file_record(nmbs_t* nmbs) {
             if (subreq_record_number_c > 0x270F)
                 return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
-            NMBS_DEBUG_PRINT("a %d\tr %d\tl %d\t fwrite ", subreq_file_number, subreq_record_number,
-                             subreq_record_length);
+            NMBS_DEBUG_PRINT("a %d\tr %d\tl %d\t fwrite ", subreq_file_number_c, subreq_record_number_c,
+                             subreq_record_length_c);
             size -= (subreq_header_size + subreq_record_length_c * 2);
         } while (size >= subreq_header_size);
 
