@@ -755,7 +755,7 @@ static nmbs_error handle_read_discrete(nmbs_t* nmbs,
             }
 
             if (!nmbs->msg.broadcast) {
-                uint8_t discrete_bytes = (quantity / 8) + 1;
+                uint8_t discrete_bytes = (quantity + 7) / 8;
                 put_res_header(nmbs, 1 + discrete_bytes);
 
                 put_1(nmbs, discrete_bytes);
@@ -1019,7 +1019,7 @@ static nmbs_error handle_write_multiple_coils(nmbs_t* nmbs) {
         if (coils_bytes == 0)
             return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
-        if ((quantity / 8) + 1 != coils_bytes)
+        if ((quantity + 7) / 8 != coils_bytes)
             return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
         if (nmbs->callbacks.write_multiple_coils) {
@@ -1577,7 +1577,7 @@ nmbs_error nmbs_write_multiple_coils(nmbs_t* nmbs, uint16_t address, uint16_t qu
     if ((uint32_t) address + (uint32_t) quantity > ((uint32_t) 0xFFFF) + 1)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
-    uint8_t coils_bytes = (quantity / 8) + 1;
+    uint8_t coils_bytes = (quantity + 7) / 8;
 
     msg_state_req(nmbs, 15);
     put_req_header(nmbs, 5 + coils_bytes);
