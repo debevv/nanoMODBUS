@@ -1149,7 +1149,12 @@ static nmbs_error handle_read_file_record(nmbs_t* nmbs) {
         uint16_t file_number;
         uint16_t record_number;
         uint16_t record_length;
-    } subreq[35];    // 245 / subreq_header_size
+    }
+#ifdef __STDC_NO_VLA__
+    subreq[35];    // 245 / subreq_header_size
+#else
+    subreq[subreq_count];
+#endif
 
     uint8_t response_data_size = 0;
 
