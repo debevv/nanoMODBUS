@@ -1190,6 +1190,9 @@ static nmbs_error handle_read_file_record(nmbs_t* nmbs) {
             if (subreq[i].record_number > 0x270F)
                 return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
+            if (subreq[i].record_length > 124)
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
             NMBS_DEBUG_PRINT("a %d\tr %d\tl %d\t fread ", subreq[i].file_number, subreq[i].record_number,
                              subreq[i].record_length);
         }
@@ -1259,7 +1262,7 @@ static nmbs_error handle_write_file_record(nmbs_t* nmbs) {
         uint16_t size = request_size;
         nmbs->msg.buf_idx = msg_buf_idx;    // restore context
 
-        if (request_size < 0x07 || request_size > 0xF5)
+        if (request_size < 0x07 || request_size > 0xFB)
             return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
         do {
@@ -1276,6 +1279,9 @@ static nmbs_error handle_write_file_record(nmbs_t* nmbs) {
                 return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
             if (subreq_record_number_c > 0x270F)
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+            if (subreq_record_length_c > 122)
                 return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
 
             NMBS_DEBUG_PRINT("a %d\tr %d\tl %d\t fwrite ", subreq_file_number_c, subreq_record_number_c,
@@ -1652,6 +1658,9 @@ nmbs_error nmbs_read_file_record(nmbs_t* nmbs, uint16_t file_number, uint16_t re
     if (record_number > 0x270F)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
+    if (count > 124)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
     msg_state_req(nmbs, 20);
     put_req_header(nmbs, 8);
 
@@ -1679,6 +1688,9 @@ nmbs_error nmbs_write_file_record(nmbs_t* nmbs, uint16_t file_number, uint16_t r
         return NMBS_ERROR_INVALID_ARGUMENT;
 
     if (record_number > 0x270F)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    if (count > 122)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
     uint16_t data_size = count * 2;
