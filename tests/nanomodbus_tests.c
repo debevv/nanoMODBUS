@@ -842,8 +842,8 @@ nmbs_error read_file(uint16_t file_number, uint16_t record_number, uint16_t* reg
         registers[3] = 0xFFFF;
     }
 
-    if (file_number == 255 && record_number == 9999 && count == 119)
-        registers[118] = 42;
+    if (file_number == 255 && record_number == 9999 && count == 124)
+        registers[123] = 42;
 
     return NMBS_ERROR_NONE;
 }
@@ -868,6 +868,9 @@ void test_fc20(nmbs_transport transport) {
     should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with record_number > 9999");
     expect(nmbs_read_file_record(&CLIENT, 1, 10000, registers, 1) == NMBS_ERROR_INVALID_ARGUMENT);
 
+    should("return NMBS_ERROR_INVALID_ARGUMENT when calling with count > 124");
+    expect(nmbs_read_file_record(&CLIENT, 1, 0, registers, 125) == NMBS_ERROR_INVALID_ARGUMENT);
+
     should("return NMBS_EXCEPTION_SERVER_DEVICE_FAILURE when server handler returns any non-exception error");
     expect(nmbs_read_file_record(&CLIENT, 1, 1, registers, 3) == NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
 
@@ -884,8 +887,8 @@ void test_fc20(nmbs_transport transport) {
     expect(registers[2] == 0xAA55);
     expect(registers[3] == 0xFFFF);
 
-    check(nmbs_read_file_record(&CLIENT, 255, 9999, registers, 119));
-    expect(registers[118] == 42);
+    check(nmbs_read_file_record(&CLIENT, 255, 9999, registers, 124));
+    expect(registers[123] == 42);
 
     stop_client_and_server();
 }
@@ -914,8 +917,8 @@ nmbs_error write_file(uint16_t file_number, uint16_t record_number, const uint16
         return NMBS_ERROR_NONE;
     }
 
-    if (file_number == 255 && record_number == 9999 && count == 119)
-        expect(registers[118] == 42);
+    if (file_number == 255 && record_number == 9999 && count == 122)
+        expect(registers[121] == 42);
 
     return NMBS_ERROR_NONE;
 }
@@ -937,8 +940,11 @@ void test_fc21(nmbs_transport transport) {
     should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with file_number 0");
     expect(nmbs_write_file_record(&CLIENT, 0, 0, registers, 1) == NMBS_ERROR_INVALID_ARGUMENT);
 
-    should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with record_number > 0x007B");
+    should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with record_number > 9999");
     expect(nmbs_write_file_record(&CLIENT, 1, 10000, registers, 1) == NMBS_ERROR_INVALID_ARGUMENT);
+
+    should("return NMBS_ERROR_INVALID_ARGUMENT hen calling with count > 123");
+    expect(nmbs_write_file_record(&CLIENT, 1, 0, registers, 123) == NMBS_ERROR_INVALID_ARGUMENT);
 
     should("return NMBS_EXCEPTION_SERVER_DEVICE_FAILURE when server handler returns any non-exception error");
     expect(nmbs_write_file_record(&CLIENT, 1, 1, registers, 1) == NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
@@ -956,8 +962,8 @@ void test_fc21(nmbs_transport transport) {
     registers[3] = 0xFFFF;
     check(nmbs_write_file_record(&CLIENT, 4, 4, registers, 4));
 
-    registers[118] = 42;
-    check(nmbs_write_file_record(&CLIENT, 255, 9999, registers, 119));
+    registers[121] = 42;
+    check(nmbs_write_file_record(&CLIENT, 255, 9999, registers, 122));
 
     stop_client_and_server();
 }
