@@ -968,6 +968,37 @@ void test_fc21(nmbs_transport transport) {
     stop_client_and_server();
 }
 
+void test_fc23(nmbs_transport transport) {
+    const uint8_t fc = 16;
+    uint8_t raw_res[260];
+    uint16_t registers[125];
+    uint16_t registers_write[125] = {42};
+    nmbs_callbacks callbacks_empty = {0};
+
+    start_client_and_server(transport, &callbacks_empty);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_FUNCTION when callback is not registered server-side");
+    expect(nmbs_read_write_registers(&CLIENT, 0, 1, registers, 0, 1, registers_write) == NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+
+    stop_client_and_server();
+
+    start_client_and_server(transport, &(nmbs_callbacks){
+        .read_holding_registers = read_registers,
+        .write_multiple_registers = write_registers});
+
+    should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with quantity 0");
+    expect(nmbs_read_write_registers(&CLIENT, 1, 0, registers, 1, 0, registers_write) == NMBS_ERROR_INVALID_ARGUMENT);
+
+    should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with quantity > 0x007B");
+    expect(nmbs_read_write_registers(&CLIENT, 1, 0x007C, registers, 1, 0x007C, registers_write) == NMBS_ERROR_INVALID_ARGUMENT);
+
+    should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with address + quantity > 0xFFFF + 1");
+    expect(nmbs_read_write_registers(&CLIENT, 0xFFFF, 2, registers, 0xFFFF, 2, registers_write) == NMBS_ERROR_INVALID_ARGUMENT);
+
+    // TODO add actual tests
+
+    stop_client_and_server();
+}
 
 nmbs_transport transports[2] = {NMBS_TRANSPORT_RTU, NMBS_TRANSPORT_TCP};
 const char* transports_str[2] = {"RTU", "TCP"};
@@ -1007,5 +1038,6 @@ int main(int argc, char* argv[]) {
 
     for_transports(test_fc21, "send and receive FC 21 (0x15) Write File Record");
 
+    for_transports(test_fc23, "send and receive FC 23 (0x17) Read/Write Multiple Registers");
     return 0;
 }
