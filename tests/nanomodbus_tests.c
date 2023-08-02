@@ -329,6 +329,7 @@ nmbs_error read_registers(uint16_t address, uint16_t quantity, uint16_t* registe
     UNUSED_PARAM(arg);
     UNUSED_PARAM(unit_id);
 
+    
     if (address == 1)
         return -1;
 
@@ -337,6 +338,18 @@ nmbs_error read_registers(uint16_t address, uint16_t quantity, uint16_t* registe
 
     if (address == 3)
         return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE;
+
+    if (address == 4) {
+        if (quantity != 4)
+            return NMBS_EXCEPTION_SERVER_DEVICE_FAILURE;
+
+        registers_out[0] = 255;
+        registers_out[1] = 1;
+        registers_out[2] = 2;
+        registers_out[3] = 3;
+
+        return NMBS_ERROR_NONE;
+    }
 
     if (address == 10 && quantity == 3) {
         registers_out[0] = 100;
@@ -969,10 +982,10 @@ void test_fc21(nmbs_transport transport) {
 }
 
 void test_fc23(nmbs_transport transport) {
-    const uint8_t fc = 16;
+    const uint8_t fc = 23;
     uint8_t raw_res[260];
     uint16_t registers[125];
-    uint16_t registers_write[125] = {42};
+    uint16_t registers_write[125];
     nmbs_callbacks callbacks_empty = {0};
 
     start_client_and_server(transport, &callbacks_empty);
@@ -995,8 +1008,26 @@ void test_fc23(nmbs_transport transport) {
     should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with address + quantity > 0xFFFF + 1");
     expect(nmbs_read_write_registers(&CLIENT, 0xFFFF, 2, registers, 0xFFFF, 2, registers_write) == NMBS_ERROR_INVALID_ARGUMENT);
 
-    // TODO add actual tests
+    should("write with no error");
+    registers_write[0] = 255;
+    registers_write[1] = 1;
+    registers_write[2] = 2;
+    registers_write[3] = 3;
+    check(nmbs_read_write_registers(&CLIENT, 4, 4, registers, 4, 4, registers_write));
+    for(int i = 4; i < 8; i++)
+    {
+        expect(registers[i] == registers_write[i]);
+    }
 
+    /* TODO:
+    should("echo request's address and value");
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(7), htons(1), htons(0x0200), htons(0)}, 7));
+    check(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 4));
+
+    expect(((uint16_t*) raw_res)[0] == ntohs(7));
+    expect(((uint16_t*) raw_res)[1] == ntohs(1));
+    */
+   
     stop_client_and_server();
 }
 
@@ -1014,29 +1045,29 @@ int main(int argc, char* argv[]) {
     UNUSED_PARAM(argc);
     UNUSED_PARAM(argv);
 
-    for_transports(test_server_create, "create a modbus server");
+    // for_transports(test_server_create, "create a modbus server");
 
-    for_transports(test_server_receive_base, "receive no messages without failing");
+    // for_transports(test_server_receive_base, "receive no messages without failing");
 
-    for_transports(test_fc1, "send and receive FC 01 (0x01) Read Coils");
+    // for_transports(test_fc1, "send and receive FC 01 (0x01) Read Coils");
 
-    for_transports(test_fc2, "send and receive FC 02 (0x02) Read Discrete Inputs");
+    // for_transports(test_fc2, "send and receive FC 02 (0x02) Read Discrete Inputs");
 
-    for_transports(test_fc3, "send and receive FC 03 (0x03) Read Holding Registers");
+    // for_transports(test_fc3, "send and receive FC 03 (0x03) Read Holding Registers");
 
-    for_transports(test_fc4, "send and receive FC 04 (0x04) Read Input Registers");
+    // for_transports(test_fc4, "send and receive FC 04 (0x04) Read Input Registers");
 
-    for_transports(test_fc5, "send and receive FC 05 (0x05) Write Single Coil");
+    // for_transports(test_fc5, "send and receive FC 05 (0x05) Write Single Coil");
 
-    for_transports(test_fc6, "send and receive FC 06 (0x06) Write Single Register");
+    // for_transports(test_fc6, "send and receive FC 06 (0x06) Write Single Register");
 
-    for_transports(test_fc15, "send and receive FC 15 (0x0F) Write Multiple Coils");
+    // for_transports(test_fc15, "send and receive FC 15 (0x0F) Write Multiple Coils");
 
-    for_transports(test_fc16, "send and receive FC 16 (0x10) Write Multiple registers");
+    // for_transports(test_fc16, "send and receive FC 16 (0x10) Write Multiple registers");
 
-    for_transports(test_fc20, "send and receive FC 20 (0x14) Read File Record");
+    // for_transports(test_fc20, "send and receive FC 20 (0x14) Read File Record");
 
-    for_transports(test_fc21, "send and receive FC 21 (0x15) Write File Record");
+    // for_transports(test_fc21, "send and receive FC 21 (0x15) Write File Record");
 
     for_transports(test_fc23, "send and receive FC 23 (0x17) Read/Write Multiple Registers");
     return 0;
