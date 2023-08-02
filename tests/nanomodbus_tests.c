@@ -1045,29 +1045,29 @@ int main(int argc, char* argv[]) {
     UNUSED_PARAM(argc);
     UNUSED_PARAM(argv);
 
-    // for_transports(test_server_create, "create a modbus server");
+    for_transports(test_server_create, "create a modbus server");
 
-    // for_transports(test_server_receive_base, "receive no messages without failing");
+    for_transports(test_server_receive_base, "receive no messages without failing");
 
-    // for_transports(test_fc1, "send and receive FC 01 (0x01) Read Coils");
+    for_transports(test_fc1, "send and receive FC 01 (0x01) Read Coils");
 
-    // for_transports(test_fc2, "send and receive FC 02 (0x02) Read Discrete Inputs");
+    for_transports(test_fc2, "send and receive FC 02 (0x02) Read Discrete Inputs");
 
-    // for_transports(test_fc3, "send and receive FC 03 (0x03) Read Holding Registers");
+    for_transports(test_fc3, "send and receive FC 03 (0x03) Read Holding Registers");
 
-    // for_transports(test_fc4, "send and receive FC 04 (0x04) Read Input Registers");
+    for_transports(test_fc4, "send and receive FC 04 (0x04) Read Input Registers");
 
-    // for_transports(test_fc5, "send and receive FC 05 (0x05) Write Single Coil");
+    for_transports(test_fc5, "send and receive FC 05 (0x05) Write Single Coil");
 
-    // for_transports(test_fc6, "send and receive FC 06 (0x06) Write Single Register");
+    for_transports(test_fc6, "send and receive FC 06 (0x06) Write Single Register");
 
-    // for_transports(test_fc15, "send and receive FC 15 (0x0F) Write Multiple Coils");
+    for_transports(test_fc15, "send and receive FC 15 (0x0F) Write Multiple Coils");
 
-    // for_transports(test_fc16, "send and receive FC 16 (0x10) Write Multiple registers");
+    for_transports(test_fc16, "send and receive FC 16 (0x10) Write Multiple registers");
 
-    // for_transports(test_fc20, "send and receive FC 20 (0x14) Read File Record");
+    for_transports(test_fc20, "send and receive FC 20 (0x14) Read File Record");
 
-    // for_transports(test_fc21, "send and receive FC 21 (0x15) Write File Record");
+    for_transports(test_fc21, "send and receive FC 21 (0x15) Write File Record");
 
     for_transports(test_fc23, "send and receive FC 23 (0x17) Read/Write Multiple Registers");
     return 0;
