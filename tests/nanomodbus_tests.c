@@ -1014,7 +1014,7 @@ void test_fc23(nmbs_transport transport) {
     registers_write[2] = 2;
     registers_write[3] = 3;
     check(nmbs_read_write_registers(&CLIENT, 4, 4, registers, 4, 4, registers_write));
-    for(int i = 4; i < 8; i++)
+    for(int i = 0; i < 4; i++)
     {
         expect(registers[i] == registers_write[i]);
     }
