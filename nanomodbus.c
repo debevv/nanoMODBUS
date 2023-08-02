@@ -1716,6 +1716,58 @@ nmbs_error nmbs_write_file_record(nmbs_t* nmbs, uint16_t file_number, uint16_t r
     return NMBS_ERROR_NONE;
 }
 
+nmbs_error nmbs_read_write_registers(nmbs_t* nmbs,
+                                     uint16_t read_address,
+                                     uint16_t read_quantity,
+                                     uint16_t* registers_out,
+                                     uint16_t write_address,
+                                     uint16_t write_quantity,
+                                     const uint16_t* registers)
+{
+   if(read_quantity < 1 || read_quantity > 125)
+      return NMBS_ERROR_INVALID_ARGUMENT;
+
+   if((uint32_t)read_address + (uint32_t)read_quantity > ((uint32_t)0xFFFF) + 1)
+      return NMBS_ERROR_INVALID_ARGUMENT;
+
+   if(write_quantity < 1 || write_quantity > 0x007B)
+      return NMBS_ERROR_INVALID_ARGUMENT;
+
+   if((uint32_t)write_address + (uint32_t)write_quantity > ((uint32_t)0xFFFF) + 1)
+      return NMBS_ERROR_INVALID_ARGUMENT;
+
+   uint8_t registers_bytes = write_quantity * 2;
+
+   msg_state_req(nmbs, 23);
+   put_req_header(nmbs, 9 + registers_bytes);
+
+   put_2(nmbs, read_address);
+   put_2(nmbs, read_quantity);
+   put_2(nmbs, write_address);
+   put_2(nmbs, write_quantity);
+   put_1(nmbs, registers_bytes);
+
+   NMBS_DEBUG_PRINT("read a %d\tq %d ", read_address, read_quantity);
+   NMBS_DEBUG_PRINT("write a %d\tq %d\tb %d\t", write_address, write_quantity, registers_bytes);
+
+   NMBS_DEBUG_PRINT("regs ");
+   for(int i = 0; i < write_quantity; i++)
+   {
+      put_2(nmbs, registers[i]);
+      NMBS_DEBUG_PRINT("%d ", registers[i]);
+   }
+
+   nmbs_error err = send_msg(nmbs);
+   if(err != NMBS_ERROR_NONE)
+      return err;
+
+   if(!nmbs->msg.broadcast)
+   {
+      return recv_read_registers_res(nmbs, read_quantity, registers_out);
+   }
+
+   return NMBS_ERROR_NONE;
+}
 
 nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const uint8_t* data, uint16_t data_len) {
     msg_state_req(nmbs, fc);

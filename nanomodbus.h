@@ -391,6 +391,25 @@ nmbs_error nmbs_read_file_record(nmbs_t* nmbs, uint16_t file_number, uint16_t re
 nmbs_error nmbs_write_file_record(nmbs_t* nmbs, uint16_t file_number, uint16_t record_number, const uint16_t* registers,
                                   uint16_t count);
 
+/** Send a FC 23 (0x17) Read Write multiple registers
+ * @param nmbs pointer to the nmbs_t instance
+ * @param read_address starting read address
+ * @param read_quantity quantity of registers to read
+ * @param registers_out array where the read registers will be stored
+ * @param write_address starting write address
+ * @param write_quantity quantity of registers to write
+ * @param registers array of registers values to write
+ *
+ * @return NMBS_ERROR_NONE if successful, other errors otherwise.
+ */
+nmbs_error nmbs_read_write_registers(nmbs_t* nmbs,
+                                     uint16_t read_address,
+                                     uint16_t read_quantity,
+                                     uint16_t* registers_out,
+                                     uint16_t write_address,
+                                     uint16_t write_quantity,
+                                     const uint16_t* registers);
+                                     
 /** Send a raw Modbus PDU.
  * CRC on RTU will be calculated and sent by this function.
  * @param nmbs pointer to the nmbs_t instance
