@@ -202,7 +202,7 @@ typedef struct nmbs_callbacks {
   #define NMBS_INTERNAL_BUFFER_SIZE 260
 #endif
 
-#define NMBS_INTERAL_MAX_REGISTER_QUANTITY ((NMBS_INTERNAL_BUFFER_SIZE - 7) / 2) // 7 Extra bytes for MODBUS (tcp) needed
+#define NMBS_INTERNAL_MAX_REGISTER_QUANTITY ((NMBS_INTERNAL_BUFFER_SIZE - 7) / 2) // 7 Extra bytes for MODBUS (tcp) needed
 
 /**
  * nanoMODBUS client/server instance type. All struct members are to be considered private, it is not advisable to read/write them directly.
