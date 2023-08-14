@@ -329,7 +329,7 @@ nmbs_error read_registers(uint16_t address, uint16_t quantity, uint16_t* registe
     UNUSED_PARAM(arg);
     UNUSED_PARAM(unit_id);
 
-    
+
     if (address == 1)
         return -1;
 
@@ -991,22 +991,24 @@ void test_fc23(nmbs_transport transport) {
     start_client_and_server(transport, &callbacks_empty);
 
     should("return NMBS_EXCEPTION_ILLEGAL_FUNCTION when callback is not registered server-side");
-    expect(nmbs_read_write_registers(&CLIENT, 0, 1, registers, 0, 1, registers_write) == NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+    expect(nmbs_read_write_registers(&CLIENT, 0, 1, registers, 0, 1, registers_write) ==
+           NMBS_EXCEPTION_ILLEGAL_FUNCTION);
 
     stop_client_and_server();
 
-    start_client_and_server(transport, &(nmbs_callbacks){
-        .read_holding_registers = read_registers,
-        .write_multiple_registers = write_registers});
+    start_client_and_server(transport, &(nmbs_callbacks){.read_holding_registers = read_registers,
+                                                         .write_multiple_registers = write_registers});
 
     should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with quantity 0");
     expect(nmbs_read_write_registers(&CLIENT, 1, 0, registers, 1, 0, registers_write) == NMBS_ERROR_INVALID_ARGUMENT);
 
     should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with quantity > 0x007B");
-    expect(nmbs_read_write_registers(&CLIENT, 1, 0x007C, registers, 1, 0x007C, registers_write) == NMBS_ERROR_INVALID_ARGUMENT);
+    expect(nmbs_read_write_registers(&CLIENT, 1, 0x007C, registers, 1, 0x007C, registers_write) ==
+           NMBS_ERROR_INVALID_ARGUMENT);
 
     should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with address + quantity > 0xFFFF + 1");
-    expect(nmbs_read_write_registers(&CLIENT, 0xFFFF, 2, registers, 0xFFFF, 2, registers_write) == NMBS_ERROR_INVALID_ARGUMENT);
+    expect(nmbs_read_write_registers(&CLIENT, 0xFFFF, 2, registers, 0xFFFF, 2, registers_write) ==
+           NMBS_ERROR_INVALID_ARGUMENT);
 
     should("write with no error");
     registers_write[0] = 255;
@@ -1014,8 +1016,7 @@ void test_fc23(nmbs_transport transport) {
     registers_write[2] = 2;
     registers_write[3] = 3;
     check(nmbs_read_write_registers(&CLIENT, 4, 4, registers, 4, 4, registers_write));
-    for(int i = 0; i < 4; i++)
-    {
+    for (int i = 0; i < 4; i++) {
         expect(registers[i] == registers_write[i]);
     }
 
@@ -1027,7 +1028,7 @@ void test_fc23(nmbs_transport transport) {
     expect(((uint16_t*) raw_res)[0] == ntohs(7));
     expect(((uint16_t*) raw_res)[1] == ntohs(1));
     */
-   
+
     stop_client_and_server();
 }
 

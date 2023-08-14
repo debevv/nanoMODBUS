@@ -1129,138 +1129,6 @@ static nmbs_error handle_write_multiple_registers(nmbs_t* nmbs) {
 }
 #endif
 
-#ifndef NMBS_SERVER_READ_WRITE_REGISTERS_DISABLED
-static nmbs_error handle_read_write_registers(nmbs_t* nmbs)
-{
-   nmbs_error err = recv(nmbs, 9);
-   if(err != NMBS_ERROR_NONE)
-      return err;
-   uint16_t read_address = get_2(nmbs);
-   uint16_t read_quantity = get_2(nmbs);
-   uint16_t write_address = get_2(nmbs);
-   uint16_t write_quantity = get_2(nmbs);
-
-   uint8_t byte_count_write = get_1(nmbs);
-
-   NMBS_DEBUG_PRINT("ra %d\trq %d\t wa %d\t wq %d\t b %d\tregs ",
-                    read_address,
-                    read_quantity,
-                    write_address,
-                    write_quantity,
-                    byte_count_write);
-
-   err = recv(nmbs, byte_count_write);
-   if(err != NMBS_ERROR_NONE)
-      return err;
-
-   uint16_t registers[0x007B];
-   for(int i = 0; i < byte_count_write / 2; i++)
-   {
-      registers[i] = get_2(nmbs);
-      NMBS_DEBUG_PRINT("%d ", registers[i]);
-   }
-
-   err = recv_msg_footer(nmbs);
-   if(err != NMBS_ERROR_NONE)
-      return err;
-
-   if(!nmbs->msg.ignored)
-   {
-      {
-         // write handling BEFORE read handling (see fig 27 at
-         // https://modbus.org/docs/Modbus_Application_Protocol_V1_1b.pdf)
-         if(write_quantity < 1 || write_quantity > 0x007B)
-            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
-
-         if((uint32_t)write_address + (uint32_t)write_quantity > ((uint32_t)0xFFFF) + 1)
-            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
-
-         if(byte_count_write == 0)
-            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
-
-         if(byte_count_write != write_quantity * 2)
-            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
-
-         if(nmbs->callbacks.write_multiple_registers)
-         {
-            err = nmbs->callbacks.write_multiple_registers(write_address,
-                                                           write_quantity,
-                                                           registers,
-                                                           nmbs->msg.unit_id,
-                                                           nmbs->platform.arg);
-            if(err != NMBS_ERROR_NONE)
-            {
-               if(nmbs_error_is_exception(err))
-                  return send_exception_msg(nmbs, err);
-
-               return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
-            }
-         }
-         else
-         {
-            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
-         }
-      }
-      {
-         // read handling
-         if(read_quantity < 1 || read_quantity > 125)
-            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
-
-         if((uint32_t)read_address + (uint32_t)read_quantity > ((uint32_t)0xFFFF) + 1)
-            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
-
-         if(nmbs->callbacks.read_holding_registers)
-         {
-            uint16_t regs[125] = {0};
-            err = nmbs->callbacks.read_holding_registers(read_address,
-                                                         read_quantity,
-                                                         regs,
-                                                         nmbs->msg.unit_id,
-                                                         nmbs->platform.arg);
-            if(err != NMBS_ERROR_NONE)
-            {
-               if(nmbs_error_is_exception(err))
-                  return send_exception_msg(nmbs, err);
-
-               return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
-            }
-
-            if(!nmbs->msg.broadcast)
-            {
-               uint8_t regs_bytes = read_quantity * 2;
-               put_res_header(nmbs, 1 + regs_bytes);
-
-               put_1(nmbs, regs_bytes);
-
-               NMBS_DEBUG_PRINT("b %d\t", regs_bytes);
-
-               NMBS_DEBUG_PRINT("regs ");
-               for(int i = 0; i < read_quantity; i++)
-               {
-                  put_2(nmbs, regs[i]);
-                  NMBS_DEBUG_PRINT("%d ", regs[i]);
-               }
-
-               err = send_msg(nmbs);
-               if(err != NMBS_ERROR_NONE)
-                  return err;
-            }
-         }
-         else
-         {
-            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
-         }
-      }
-   }
-   else
-   {
-      return recv_write_multiple_registers_res(nmbs, write_address, write_quantity);
-   }
-
-   return NMBS_ERROR_NONE;
-}
-#endif
-
 #ifndef NMBS_SERVER_READ_FILE_RECORD_DISABLED
 static nmbs_error handle_read_file_record(nmbs_t* nmbs) {
     nmbs_error err = recv(nmbs, 1);
@@ -1474,6 +1342,110 @@ static nmbs_error handle_write_file_record(nmbs_t* nmbs) {
 }
 #endif
 
+#ifndef NMBS_SERVER_READ_WRITE_REGISTERS_DISABLED
+static nmbs_error handle_read_write_registers(nmbs_t* nmbs) {
+    nmbs_error err = recv(nmbs, 9);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    uint16_t read_address = get_2(nmbs);
+    uint16_t read_quantity = get_2(nmbs);
+    uint16_t write_address = get_2(nmbs);
+    uint16_t write_quantity = get_2(nmbs);
+
+    uint8_t byte_count_write = get_1(nmbs);
+
+    NMBS_DEBUG_PRINT("ra %d\trq %d\t wa %d\t wq %d\t b %d\tregs ", read_address, read_quantity, write_address,
+                     write_quantity, byte_count_write);
+
+    err = recv(nmbs, byte_count_write);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+#ifdef __STDC_NO_VLA__
+    uint16_t registers[0x007B];
+#else
+    uint16_t registers[byte_count_write / 2];
+#endif
+    for (int i = 0; i < byte_count_write / 2; i++) {
+        registers[i] = get_2(nmbs);
+        NMBS_DEBUG_PRINT("%d ", registers[i]);
+    }
+
+    err = recv_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (!nmbs->msg.ignored) {
+        if (read_quantity < 1 || read_quantity > 0x007D)
+            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+        if (write_quantity < 1 || write_quantity > 0x007B)
+            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+        if (byte_count_write != write_quantity * 2)
+            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+        if ((uint32_t) read_address + (uint32_t) read_quantity > ((uint32_t) 0xFFFF) + 1)
+            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+        if ((uint32_t) write_address + (uint32_t) write_quantity > ((uint32_t) 0xFFFF) + 1)
+            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+        if (!nmbs->callbacks.write_multiple_registers || !nmbs->callbacks.read_holding_registers)
+            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+
+        err = nmbs->callbacks.write_multiple_registers(write_address, write_quantity, registers, nmbs->msg.unit_id,
+                                                       nmbs->platform.arg);
+        if (err != NMBS_ERROR_NONE) {
+            if (nmbs_error_is_exception(err))
+                return send_exception_msg(nmbs, err);
+
+            return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+        }
+
+        if (!nmbs->msg.broadcast) {
+#ifdef __STDC_NO_VLA__
+            uint16_t regs[125];
+#else
+            uint16_t regs[read_quantity];
+#endif
+            err = nmbs->callbacks.read_holding_registers(read_address, read_quantity, regs, nmbs->msg.unit_id,
+                                                         nmbs->platform.arg);
+            if (err != NMBS_ERROR_NONE) {
+                if (nmbs_error_is_exception(err))
+                    return send_exception_msg(nmbs, err);
+
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+            }
+
+            uint8_t regs_bytes = read_quantity * 2;
+            put_res_header(nmbs, 1 + regs_bytes);
+
+            put_1(nmbs, regs_bytes);
+
+            NMBS_DEBUG_PRINT("b %d\t", regs_bytes);
+
+            NMBS_DEBUG_PRINT("regs ");
+            for (int i = 0; i < read_quantity; i++) {
+                put_2(nmbs, regs[i]);
+                NMBS_DEBUG_PRINT("%d ", regs[i]);
+            }
+
+            err = send_msg(nmbs);
+            if (err != NMBS_ERROR_NONE)
+                return err;
+        }
+    }
+    else {
+        return recv_write_multiple_registers_res(nmbs, write_address, write_quantity);
+    }
+
+    return NMBS_ERROR_NONE;
+}
+#endif
+
+
 static nmbs_error handle_req_fc(nmbs_t* nmbs) {
     NMBS_DEBUG_PRINT("fc %d\t", nmbs->msg.fc);
 
@@ -1538,10 +1510,11 @@ static nmbs_error handle_req_fc(nmbs_t* nmbs) {
             err = handle_write_file_record(nmbs);
             break;
 #endif
-#ifndef NMBS_SERVER_READ_WRITE_REGISTERS
-   case 23:
-      err = handle_read_write_registers(nmbs);
-      break;
+
+#ifndef NMBS_SERVER_READ_WRITE_REGISTERS_DISABLED
+        case 23:
+            err = handle_read_write_registers(nmbs);
+            break;
 #endif
         default:
             err = NMBS_EXCEPTION_ILLEGAL_FUNCTION;
@@ -1852,57 +1825,50 @@ nmbs_error nmbs_write_file_record(nmbs_t* nmbs, uint16_t file_number, uint16_t r
     return NMBS_ERROR_NONE;
 }
 
-nmbs_error nmbs_read_write_registers(nmbs_t* nmbs,
-                                     uint16_t read_address,
-                                     uint16_t read_quantity,
-                                     uint16_t* registers_out,
-                                     uint16_t write_address,
-                                     uint16_t write_quantity,
-                                     const uint16_t* registers)
-{
-   if(read_quantity < 1 || read_quantity > 125)
-      return NMBS_ERROR_INVALID_ARGUMENT;
+nmbs_error nmbs_read_write_registers(nmbs_t* nmbs, uint16_t read_address, uint16_t read_quantity,
+                                     uint16_t* registers_out, uint16_t write_address, uint16_t write_quantity,
+                                     const uint16_t* registers) {
+    if (read_quantity < 1 || read_quantity > 0x007D)
+        return NMBS_ERROR_INVALID_ARGUMENT;
 
-   if((uint32_t)read_address + (uint32_t)read_quantity > ((uint32_t)0xFFFF) + 1)
-      return NMBS_ERROR_INVALID_ARGUMENT;
+    if ((uint32_t) read_address + (uint32_t) read_quantity > ((uint32_t) 0xFFFF) + 1)
+        return NMBS_ERROR_INVALID_ARGUMENT;
 
-   if(write_quantity < 1 || write_quantity > 0x007B)
-      return NMBS_ERROR_INVALID_ARGUMENT;
+    if (write_quantity < 1 || write_quantity > 0x0079)
+        return NMBS_ERROR_INVALID_ARGUMENT;
 
-   if((uint32_t)write_address + (uint32_t)write_quantity > ((uint32_t)0xFFFF) + 1)
-      return NMBS_ERROR_INVALID_ARGUMENT;
+    if ((uint32_t) write_address + (uint32_t) write_quantity > ((uint32_t) 0xFFFF) + 1)
+        return NMBS_ERROR_INVALID_ARGUMENT;
 
-   uint8_t registers_bytes = write_quantity * 2;
+    uint8_t registers_bytes = write_quantity * 2;
 
-   msg_state_req(nmbs, 23);
-   put_req_header(nmbs, 9 + registers_bytes);
+    msg_state_req(nmbs, 23);
+    put_req_header(nmbs, 9 + registers_bytes);
 
-   put_2(nmbs, read_address);
-   put_2(nmbs, read_quantity);
-   put_2(nmbs, write_address);
-   put_2(nmbs, write_quantity);
-   put_1(nmbs, registers_bytes);
+    put_2(nmbs, read_address);
+    put_2(nmbs, read_quantity);
+    put_2(nmbs, write_address);
+    put_2(nmbs, write_quantity);
+    put_1(nmbs, registers_bytes);
 
-   NMBS_DEBUG_PRINT("read a %d\tq %d ", read_address, read_quantity);
-   NMBS_DEBUG_PRINT("write a %d\tq %d\tb %d\t", write_address, write_quantity, registers_bytes);
+    NMBS_DEBUG_PRINT("read a %d\tq %d ", read_address, read_quantity);
+    NMBS_DEBUG_PRINT("write a %d\tq %d\tb %d\t", write_address, write_quantity, registers_bytes);
 
-   NMBS_DEBUG_PRINT("regs ");
-   for(int i = 0; i < write_quantity; i++)
-   {
-      put_2(nmbs, registers[i]);
-      NMBS_DEBUG_PRINT("%d ", registers[i]);
-   }
+    NMBS_DEBUG_PRINT("regs ");
+    for (int i = 0; i < write_quantity; i++) {
+        put_2(nmbs, registers[i]);
+        NMBS_DEBUG_PRINT("%d ", registers[i]);
+    }
 
-   nmbs_error err = send_msg(nmbs);
-   if(err != NMBS_ERROR_NONE)
-      return err;
+    nmbs_error err = send_msg(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
 
-   if(!nmbs->msg.broadcast)
-   {
-      return recv_read_registers_res(nmbs, read_quantity, registers_out);
-   }
+    if (!nmbs->msg.broadcast) {
+        return recv_read_registers_res(nmbs, read_quantity, registers_out);
+    }
 
-   return NMBS_ERROR_NONE;
+    return NMBS_ERROR_NONE;
 }
 
 nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const uint8_t* data, uint16_t data_len) {
