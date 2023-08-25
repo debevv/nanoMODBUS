@@ -26,6 +26,7 @@ Its main features are:
     - 16 (0x10) Write Multiple registers
     - 20 (0x14) Read File Record
     - 21 (0x15) Write File Record
+    - 23 (0x17) Read/Write Multiple registers
 - Platform-agnostic
     - Requires only C99 and its standard library
     - Data transport read/write function are implemented by the user
