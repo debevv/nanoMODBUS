@@ -156,5 +156,6 @@ Please refer to `examples/arduino/README.md` for more info about building and ru
         - `NMBS_SERVER_WRITE_MULTIPLE_REGISTERS_DISABLED`
         - `NMBS_SERVER_READ_FILE_RECORD_DISABLED`
         - `NMBS_SERVER_WRITE_FILE_RECORD_DISABLED`
+        - `NMBS_SERVER_READ_WRITE_REGISTERS_DISABLED`
     - `NMBS_STRERROR_DISABLED` to disable the code that converts `nmbs_error`s to strings
 - Debug prints about received and sent messages can be enabled by defining `NMBS_DEBUG`
