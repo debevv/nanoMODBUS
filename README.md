@@ -1,12 +1,11 @@
 # nanoMODBUS - A compact MODBUS RTU/TCP C library for embedded/microcontrollers
 
 nanoMODBUS is a small C library that implements the Modbus protocol. It is especially useful in embedded and
-resource-constrained
-systems like microcontrollers.  
+resource-constrained systems like microcontrollers.  
 Its main features are:
 
 - Compact size
-    - Only ~1000 lines of code
+    - Only ~1500 lines of code
     - Client and server code can be disabled, if not needed
 - No dynamic memory allocations
 - Transports:
