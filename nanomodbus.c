@@ -1575,6 +1575,11 @@ nmbs_error nmbs_server_poll(nmbs_t* nmbs) {
 
     return NMBS_ERROR_NONE;
 }
+
+void nmbs_set_callbacks_arg(nmbs_t* nmbs, void* arg)
+{
+    nmbs->callbacks.arg = arg;
+}
 #endif
 
 
