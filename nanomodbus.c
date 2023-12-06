@@ -746,7 +746,7 @@ static nmbs_error handle_read_discrete(nmbs_t* nmbs,
 
         if (callback) {
             nmbs_bitfield bitfield = {0};
-            err = callback(address, quantity, bitfield, nmbs->msg.unit_id, nmbs->platform.arg);
+            err = callback(address, quantity, bitfield, nmbs->msg.unit_id, nmbs->callbacks.arg);
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
@@ -811,7 +811,7 @@ static nmbs_error handle_read_registers(nmbs_t* nmbs,
 
         if (callback) {
             uint16_t regs[125] = {0};
-            err = callback(address, quantity, regs, nmbs->msg.unit_id, nmbs->platform.arg);
+            err = callback(address, quantity, regs, nmbs->msg.unit_id, nmbs->callbacks.arg);
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
@@ -900,7 +900,7 @@ static nmbs_error handle_write_single_coil(nmbs_t* nmbs) {
                 return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
             err = nmbs->callbacks.write_single_coil(address, value == 0 ? false : true, nmbs->msg.unit_id,
-                                                    nmbs->platform.arg);
+                                                    nmbs->callbacks.arg);
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
@@ -950,7 +950,7 @@ static nmbs_error handle_write_single_register(nmbs_t* nmbs) {
 
     if (!nmbs->msg.ignored) {
         if (nmbs->callbacks.write_single_register) {
-            err = nmbs->callbacks.write_single_register(address, value, nmbs->msg.unit_id, nmbs->platform.arg);
+            err = nmbs->callbacks.write_single_register(address, value, nmbs->msg.unit_id, nmbs->callbacks.arg);
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
@@ -1023,7 +1023,7 @@ static nmbs_error handle_write_multiple_coils(nmbs_t* nmbs) {
             return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
         if (nmbs->callbacks.write_multiple_coils) {
-            err = nmbs->callbacks.write_multiple_coils(address, quantity, coils, nmbs->msg.unit_id, nmbs->platform.arg);
+            err = nmbs->callbacks.write_multiple_coils(address, quantity, coils, nmbs->msg.unit_id, nmbs->callbacks.arg);
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
@@ -1097,7 +1097,7 @@ static nmbs_error handle_write_multiple_registers(nmbs_t* nmbs) {
 
         if (nmbs->callbacks.write_multiple_registers) {
             err = nmbs->callbacks.write_multiple_registers(address, quantity, registers, nmbs->msg.unit_id,
-                                                           nmbs->platform.arg);
+                                                           nmbs->callbacks.arg);
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
@@ -1208,7 +1208,7 @@ static nmbs_error handle_read_file_record(nmbs_t* nmbs) {
                 uint16_t* subreq_data = (uint16_t*) get_n(nmbs, subreq_data_size);
 
                 err = nmbs->callbacks.read_file_record(subreq[i].file_number, subreq[i].record_number, subreq_data,
-                                                       subreq[i].record_length, nmbs->msg.unit_id, nmbs->platform.arg);
+                                                       subreq[i].record_length, nmbs->msg.unit_id, nmbs->callbacks.arg);
                 if (err != NMBS_ERROR_NONE) {
                     if (nmbs_error_is_exception(err))
                         return send_exception_msg(nmbs, err);
@@ -1306,7 +1306,7 @@ static nmbs_error handle_write_file_record(nmbs_t* nmbs) {
 
             if (nmbs->callbacks.write_file_record) {
                 err = nmbs->callbacks.write_file_record(subreq_file_number, subreq_record_number, subreq_data,
-                                                        subreq_record_length, nmbs->msg.unit_id, nmbs->platform.arg);
+                                                        subreq_record_length, nmbs->msg.unit_id, nmbs->callbacks.arg);
                 if (err != NMBS_ERROR_NONE) {
                     if (nmbs_error_is_exception(err))
                         return send_exception_msg(nmbs, err);
@@ -1396,7 +1396,7 @@ static nmbs_error handle_read_write_registers(nmbs_t* nmbs) {
             return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
 
         err = nmbs->callbacks.write_multiple_registers(write_address, write_quantity, registers, nmbs->msg.unit_id,
-                                                       nmbs->platform.arg);
+                                                       nmbs->callbacks.arg);
         if (err != NMBS_ERROR_NONE) {
             if (nmbs_error_is_exception(err))
                 return send_exception_msg(nmbs, err);
@@ -1411,7 +1411,7 @@ static nmbs_error handle_read_write_registers(nmbs_t* nmbs) {
             uint16_t regs[read_quantity];
 #endif
             err = nmbs->callbacks.read_holding_registers(read_address, read_quantity, regs, nmbs->msg.unit_id,
-                                                         nmbs->platform.arg);
+                                                         nmbs->callbacks.arg);
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
