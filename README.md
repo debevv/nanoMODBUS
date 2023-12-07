@@ -122,12 +122,11 @@ Their return value should be the number of bytes actually read/written, or `< 0`
 A return value between `0` and `count - 1` will be treated as if a timeout occurred on the transport side. All other
 values will be treated as transport errors.
 
-### Platform functions argument
+### Callbacks and platform functions arguments
 
-Platform functions and server callbacks can access arbitrary user data through their `void* arg` argument. The argument
-is useful, for example, to pass the connection a function should operate on.    
-Its initial value can be set inside the `nmbs_platform_conf` struct when creating the `nmbs_t` instance, and changed at
-any time via the `nmbs_set_platform_arg` API method.
+Server callbacks and platform functions can access arbitrary user data through their `void* arg` argument. The argument
+is useful, for example, to pass the connection a function should operate on.  
+Their initial values can be set via the `nmbs_set_callbacks_arg` and `nmbs_set_platform_arg` API methods.
 
 ## Tests and examples
 

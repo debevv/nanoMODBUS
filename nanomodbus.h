@@ -274,8 +274,8 @@ nmbs_error nmbs_server_create(nmbs_t* nmbs, uint8_t address_rtu, const nmbs_plat
 nmbs_error nmbs_server_poll(nmbs_t* nmbs);
 
 /** Set the pointer to user data argument passed to server request callbacks.
- * @param  nmbs pointer to the nmbs_t instance
- * @param  arg user data argument
+ * @param nmbs pointer to the nmbs_t instance
+ * @param arg user data argument
  */
 void nmbs_set_callbacks_arg(nmbs_t* nmbs, void* arg);
 #endif
