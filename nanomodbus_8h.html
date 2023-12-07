@@ -78,6 +78,12 @@ $(function() {
 Include dependency graph for nanomodbus.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="nanomodbus_8h__incl.png" border="0" usemap="#ananomodbus_8h" alt=""/></div>
+<map name="ananomodbus_8h" id="ananomodbus_8h">
+<area shape="rect" title=" " alt="" coords="89,5,207,32"/>
+<area shape="rect" title=" " alt="" coords="5,80,88,107"/>
+<area shape="rect" title=" " alt="" coords="113,80,183,107"/>
+<area shape="rect" title=" " alt="" coords="207,80,278,107"/>
+</map>
 </div>
 </div>
 <p><a href="nanomodbus_8h_source.html">Go to the source code of this file.</a></p>
@@ -154,6 +160,8 @@ Functions</h2></td></tr>
 <tr class="separator:ab3b4efe8cd44b0fa21229005df4ac9dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a794eaab77178a8025879fe23b41362ec"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a794eaab77178a8025879fe23b41362ec">nmbs_server_poll</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs)</td></tr>
 <tr class="separator:a794eaab77178a8025879fe23b41362ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad6007bd9c471e7db393890264c2b8fd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#aad6007bd9c471e7db393890264c2b8fd">nmbs_set_callbacks_arg</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, void *arg)</td></tr>
+<tr class="separator:aad6007bd9c471e7db393890264c2b8fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b807cdc252c36eea090af9bc5006fc9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a3b807cdc252c36eea090af9bc5006fc9">nmbs_client_create</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, const <a class="el" href="structnmbs__platform__conf.html">nmbs_platform_conf</a> *platform_conf)</td></tr>
 <tr class="separator:a3b807cdc252c36eea090af9bc5006fc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a606330276f5d8485b4178e901b4a3120"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a606330276f5d8485b4178e901b4a3120">nmbs_set_destination_rtu_address</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, uint8_t address)</td></tr>
@@ -1047,6 +1055,41 @@ Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">nmbs</td><td>pointer to the <a class="el" href="structnmbs__t.html">nmbs_t</a> instance </td></tr>
     <tr><td class="paramname">timeout_ms</td><td>timeout in milliseconds. If &lt; 0, the timeout is disabled. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aad6007bd9c471e7db393890264c2b8fd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aad6007bd9c471e7db393890264c2b8fd">&#9670;&nbsp;</a></span>nmbs_set_callbacks_arg()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void nmbs_set_callbacks_arg </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structnmbs__t.html">nmbs_t</a> *&#160;</td>
+          <td class="paramname"><em>nmbs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>arg</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Set the pointer to user data argument passed to server request callbacks. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">nmbs</td><td>pointer to the <a class="el" href="structnmbs__t.html">nmbs_t</a> instance </td></tr>
+    <tr><td class="paramname">arg</td><td>user data argument </td></tr>
   </table>
   </dd>
 </dl>
