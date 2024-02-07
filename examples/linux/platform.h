@@ -59,10 +59,11 @@ int server_fd = -1;
 int client_read_fd = -1;
 fd_set client_connections;
 
-void close_server_on_exit(int sig) {
-    UNUSED_PARAM(sig);
-    if (server_fd != -1)
+void close_tcp_server() {
+    if (server_fd != -1) {
         close(server_fd);
+        printf("Server closed\n");
+    }
 }
 
 
@@ -109,12 +110,6 @@ int create_tcp_server(const char* address, const char* port) {
     if (fd < 0) {
         return errno;
     }
-
-    signal(SIGINT, close_server_on_exit);
-    signal(SIGTERM, close_server_on_exit);
-    signal(SIGQUIT, close_server_on_exit);
-    signal(SIGSTOP, close_server_on_exit);
-    signal(SIGHUP, close_server_on_exit);
 
     server_fd = fd;
     FD_ZERO(&client_connections);
@@ -163,14 +158,9 @@ void* server_poll(void) {
 
 void disconnect(void* conn) {
     int fd = *(int*) conn;
+    FD_CLR(fd, &client_connections);
     close(fd);
     printf("Closed connection %d\n", fd);
-}
-
-
-void close_server(void) {
-    close(server_fd);
-    printf("Server closed\n");
 }
 
 

@@ -25,9 +25,16 @@
 #define FILE_SIZE_MAX 32
 
 // A single nmbs_bitfield variable can keep 2000 coils
+bool terminate = false;
 nmbs_bitfield server_coils = {0};
 uint16_t server_registers[REGS_ADDR_MAX] = {0};
 uint16_t server_file[FILE_SIZE_MAX];
+
+
+void sighandler(int s) {
+    UNUSED_PARAM(s);
+    terminate = true;
+}
 
 nmbs_error handle_read_coils(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, uint8_t unit_id, void* arg) {
     UNUSED_PARAM(arg);
@@ -130,6 +137,11 @@ nmbs_error handle_write_file_record(uint16_t file_number, uint16_t record_number
 
 
 int main(int argc, char* argv[]) {
+    signal(SIGTERM, sighandler);
+    signal(SIGSTOP, sighandler);
+    signal(SIGINT, sighandler);
+    signal(SIGQUIT, sighandler);
+
     if (argc < 3) {
         fprintf(stderr, "Usage: server-tcp [address] [port]\n");
         return 1;
@@ -170,14 +182,13 @@ int main(int argc, char* argv[]) {
     printf("Modbus TCP server started\n");
 
     // Our server supports requests from more than one client
-    while (true) {
+    while (!terminate) {
         // Our server_poll() function will return the next client TCP connection to read from
         void* conn = server_poll();
-        if (!conn)
-            break;
-
-        // Set the next connection handler used by the read/write platform functions
-        nmbs_set_platform_arg(&nmbs, conn);
+        if (conn) {
+            // Set the next connection handler used by the read/write platform functions
+            nmbs_set_platform_arg(&nmbs, conn);
+        }
 
         err = nmbs_server_poll(&nmbs);
         if (err != NMBS_ERROR_NONE) {
@@ -187,7 +198,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Close the TCP server
-    close_server();
+    close_tcp_server();
 
     // No need to destroy the nmbs instance, bye bye
     return 0;
