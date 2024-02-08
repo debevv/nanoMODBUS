@@ -467,6 +467,10 @@ static nmbs_error recv_read_discrete_res(nmbs_t* nmbs, nmbs_bitfield values) {
     uint8_t coils_bytes = get_1(nmbs);
     NMBS_DEBUG_PRINT("b %d\t", coils_bytes);
 
+    if (coils_bytes > 250) {
+        return NMBS_ERROR_INVALID_RESPONSE;
+    }
+
     err = recv(nmbs, coils_bytes);
     if (err != NMBS_ERROR_NONE)
         return err;
@@ -498,6 +502,9 @@ static nmbs_error recv_read_registers_res(nmbs_t* nmbs, uint16_t quantity, uint1
 
     uint8_t registers_bytes = get_1(nmbs);
     NMBS_DEBUG_PRINT("b %d\t", registers_bytes);
+
+    if (registers_bytes > 250)
+        return NMBS_ERROR_INVALID_RESPONSE;
 
     err = recv(nmbs, registers_bytes);
     if (err != NMBS_ERROR_NONE)
@@ -641,6 +648,9 @@ nmbs_error recv_read_file_record_res(nmbs_t* nmbs, uint16_t* registers, uint16_t
         return err;
 
     uint8_t response_size = get_1(nmbs);
+    if (response_size > 245) {
+        return NMBS_ERROR_INVALID_RESPONSE;
+    }
 
     err = recv(nmbs, response_size);
     if (err != NMBS_ERROR_NONE)
@@ -680,6 +690,8 @@ nmbs_error recv_write_file_record_res(nmbs_t* nmbs, uint16_t file_number, uint16
         return err;
 
     uint8_t response_size = get_1(nmbs);
+    if (response_size > 251)
+        return NMBS_ERROR_INVALID_RESPONSE;
 
     err = recv(nmbs, response_size);
     if (err != NMBS_ERROR_NONE)
@@ -995,6 +1007,9 @@ static nmbs_error handle_write_multiple_coils(nmbs_t* nmbs) {
 
     NMBS_DEBUG_PRINT("a %d\tq %d\tb %d\tcoils ", address, quantity, coils_bytes);
 
+    if (coils_bytes > 246)
+        return NMBS_ERROR_INVALID_REQUEST;
+
     err = recv(nmbs, coils_bytes);
     if (err != NMBS_ERROR_NONE)
         return err;
@@ -1023,7 +1038,8 @@ static nmbs_error handle_write_multiple_coils(nmbs_t* nmbs) {
             return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
         if (nmbs->callbacks.write_multiple_coils) {
-            err = nmbs->callbacks.write_multiple_coils(address, quantity, coils, nmbs->msg.unit_id, nmbs->callbacks.arg);
+            err = nmbs->callbacks.write_multiple_coils(address, quantity, coils, nmbs->msg.unit_id,
+                                                       nmbs->callbacks.arg);
             if (err != NMBS_ERROR_NONE) {
                 if (nmbs_error_is_exception(err))
                     return send_exception_msg(nmbs, err);
@@ -1071,6 +1087,9 @@ static nmbs_error handle_write_multiple_registers(nmbs_t* nmbs) {
     err = recv(nmbs, registers_bytes);
     if (err != NMBS_ERROR_NONE)
         return err;
+
+    if (registers_bytes > 246)
+        return NMBS_ERROR_INVALID_REQUEST;
 
     uint16_t registers[0x007B];
     for (int i = 0; i < registers_bytes / 2; i++) {
@@ -1136,6 +1155,8 @@ static nmbs_error handle_read_file_record(nmbs_t* nmbs) {
         return err;
 
     uint8_t request_size = get_1(nmbs);
+    if (request_size > 245)
+        return NMBS_ERROR_INVALID_REQUEST;
 
     err = recv(nmbs, request_size);
     if (err != NMBS_ERROR_NONE)
@@ -1244,6 +1265,9 @@ static nmbs_error handle_write_file_record(nmbs_t* nmbs) {
         return err;
 
     uint8_t request_size = get_1(nmbs);
+    if (request_size > 251) {
+        return NMBS_ERROR_INVALID_REQUEST;
+    }
 
     err = recv(nmbs, request_size);
     if (err != NMBS_ERROR_NONE)
@@ -1357,6 +1381,9 @@ static nmbs_error handle_read_write_registers(nmbs_t* nmbs) {
 
     NMBS_DEBUG_PRINT("ra %d\trq %d\t wa %d\t wq %d\t b %d\tregs ", read_address, read_quantity, write_address,
                      write_quantity, byte_count_write);
+
+    if (byte_count_write > 242)
+        return NMBS_ERROR_INVALID_REQUEST;
 
     err = recv(nmbs, byte_count_write);
     if (err != NMBS_ERROR_NONE)
@@ -1576,8 +1603,7 @@ nmbs_error nmbs_server_poll(nmbs_t* nmbs) {
     return NMBS_ERROR_NONE;
 }
 
-void nmbs_set_callbacks_arg(nmbs_t* nmbs, void* arg)
-{
+void nmbs_set_callbacks_arg(nmbs_t* nmbs, void* arg) {
     nmbs->callbacks.arg = arg;
 }
 #endif

@@ -54,6 +54,7 @@ extern "C" {
  */
 typedef enum nmbs_error {
     // Library errors
+    NMBS_ERROR_INVALID_REQUEST = -8,  /**< Received invalid request from client */
     NMBS_ERROR_INVALID_UNIT_ID = -7,  /**< Received invalid unit ID in response from server */
     NMBS_ERROR_INVALID_TCP_MBAP = -6, /**< Received invalid TCP MBAP */
     NMBS_ERROR_CRC = -5,              /**< Received invalid CRC */
