@@ -934,7 +934,7 @@ void test_fc20(nmbs_transport transport) {
     expect(registers[2] == 0xAA55);
     expect(registers[3] == 0xFFFF);
 
-    check(nmbs_read_file_record(&CLIENT, 255, 9999, registers, 120));
+    check(nmbs_read_file_record(&CLIENT, 255, 9999, registers, 124));
     expect(registers[123] == 42);
 
     stop_client_and_server();

@@ -648,7 +648,7 @@ nmbs_error recv_read_file_record_res(nmbs_t* nmbs, uint16_t* registers, uint16_t
         return err;
 
     uint8_t response_size = get_1(nmbs);
-    if (response_size > 245) {
+    if (response_size > 250) {
         return NMBS_ERROR_INVALID_RESPONSE;
     }
 
@@ -1798,6 +1798,7 @@ nmbs_error nmbs_read_file_record(nmbs_t* nmbs, uint16_t file_number, uint16_t re
     if (record_number > 0x270F)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
+    // In expected response: max PDU length = 253, assuming a single file request, (253 - 1 - 1 - 1 - 1) / 2 = 124
     if (count > 124)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
