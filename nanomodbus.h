@@ -72,6 +72,19 @@ typedef enum nmbs_error {
 } nmbs_error;
 
 /**
+ * 43 / 14 (0x2B / 0x0E) Read Device Identification Object Id definitions
+ */
+typedef enum nmbs_object_id {
+    NMBS_OBJECT_ID_VENDOR_NAME = 0,
+    NMBS_OBJECT_ID_PRODUCT_CODE = 1,
+    NMBS_OBJECT_ID_MAJOR_MINOR_REVISION = 2,
+    NMBS_OBJECT_ID_VENDOR_URL = 3,
+    NMBS_OBJECT_ID_PRODUCT_NAME = 4,
+    NMBS_OBJECT_ID_MODEL_NAME = 5,
+    NMBS_OBJECT_ID_USER_APPLICATION_NAME = 6,
+} nmbs_object_id;
+
+/**
  * Return whether the nmbs_error is a modbus exception
  * @e nmbs_error to check
  */
@@ -84,9 +97,24 @@ typedef enum nmbs_error {
 typedef uint8_t nmbs_bitfield[250];
 
 /**
+ * Bitfield consisting of 256 values
+ */
+typedef uint8_t nmbs_bitfield_256[32];
+
+/**
  * Read a bit from the nmbs_bitfield bf at position b
  */
 #define nmbs_bitfield_read(bf, b) ((bool) ((bf)[(b) / 8] & (0x1 << ((b) % 8))))
+
+/**
+ * Set a bit of the nmbs_bitfield bf at position b
+ */
+#define nmbs_bitfield_set(bf, b) (((bf)[(b) / 8]) = (((bf)[(b) / 8]) | (0x1 << ((b) % 8))))
+
+/**
+ * Reset a bit of the nmbs_bitfield bf at position b
+ */
+#define nmbs_bitfield_unset(bf, b) (((bf)[(b) / 8]) = (((bf)[(b) / 8]) & ~(0x1 << ((b) % 8))))
 
 /**
  * Write value v to the nmbs_bitfield bf at position b
@@ -97,8 +125,7 @@ typedef uint8_t nmbs_bitfield[250];
 /**
  * Reset (zero) the whole bitfield
  */
-#define nmbs_bitfield_reset(bf) memset(bf, 0, sizeof(nmbs_bitfield))
-
+#define nmbs_bitfield_reset(bf) memset(bf, 0, sizeof(bf))
 
 /**
  * Modbus transport type.
@@ -194,6 +221,12 @@ typedef struct nmbs_callbacks {
     nmbs_error (*write_file_record)(uint16_t file_number, uint16_t record_number, const uint16_t* registers,
                                     uint16_t count, uint8_t unit_id, void* arg);
 #endif
+
+#ifndef NMBS_SERVER_READ_DEVICE_IDENTIFICATION_DISABLED
+#define NMBS_DEVICE_IDENTIFICATION_STRING_LENGTH 128
+    nmbs_error (*read_device_identification)(uint8_t object_id, char buffer[NMBS_DEVICE_IDENTIFICATION_STRING_LENGTH]);
+    nmbs_error (*read_device_identification_map)(nmbs_bitfield_256 map);
+#endif
 #endif
 
     void* arg;    // User data, will be passed to functions above
@@ -201,7 +234,8 @@ typedef struct nmbs_callbacks {
 
 
 /**
- * nanoMODBUS client/server instance type. All struct members are to be considered private, it is not advisable to read/write them directly.
+ * nanoMODBUS client/server instance type. All struct members are to be considered private,
+ * it is not advisable to read/write them directly.
  */
 typedef struct nmbs_t {
     struct {
@@ -413,6 +447,61 @@ nmbs_error nmbs_read_write_registers(nmbs_t* nmbs, uint16_t read_address, uint16
                                      uint16_t* registers_out, uint16_t write_address, uint16_t write_quantity,
                                      const uint16_t* registers);
 
+/** Send a FC 43 / 14 (0x2B / 0x0E) Read Device Identification to read all Basic Object Id values (Read Device ID code 1)
+ * @param nmbs pointer to the nmbs_t instance
+ * @param object_id requested Object Id
+ * @param vendor_name char array where the read VendorName value will be stored
+ * @param product_code char array where the read ProductCode value will be stored
+ * @param major_minor_revision char array where the read MajorMinorRevision value will be stored
+ * @param buffer_length length of every char array
+ *
+ * @return NMBS_ERROR_NONE if successful, other errors otherwise.
+ */
+nmbs_error nmbs_read_device_identification_basic(nmbs_t* nmbs, char* vendor_name, char* product_code,
+                                                 char* major_minor_revision, uint8_t buffers_length);
+
+/** Send a FC 43 / 14 (0x2B / 0x0E) Read Device Identification to read all Regular Object Id values (Read Device ID code 2)
+ * @param nmbs pointer to the nmbs_t instance
+ * @param object_id requested Object Id
+ * @param vendor_url char array where the read VendorUrl value will be stored
+ * @param product_name char array where the read ProductName value will be stored
+ * @param model_name char array where the read ModelName value will be stored
+ * @param user_application_name char array where the read UserApplicationName value will be stored
+ *
+ * @param buffer_length length of every char array
+ *
+ * @return NMBS_ERROR_NONE if successful, other errors otherwise.
+ */
+nmbs_error nmbs_read_device_identification_regular(nmbs_t* nmbs, char* vendor_url, char* product_name, char* model_name,
+                                                   char* user_application_name, uint8_t buffers_length);
+
+/** Send a FC 43 / 14 (0x2B / 0x0E) Read Device Identification to read all Extended Object Id values (Read Device ID code 3)
+ * @param nmbs pointer to the nmbs_t instance
+ * @param object_id requested Object Id
+ * @param ids array where the read Object Ids will be stored
+ * @param buffers array of char arrays where the read values will be stored
+ * @param ids_length length of the ids array and buffers array
+ * @param buffer_length length of each char array
+ * @param objects_count_out retrieved Object Ids count
+ *
+ * @return NMBS_ERROR_NONE if successful, NMBS_INVALID_ARGUMENT if buffers_count is less than retrieved Object Ids count,
+ * other errors otherwise.
+ */
+nmbs_error nmbs_read_device_identification_extended(nmbs_t* nmbs, uint8_t object_id_start, uint8_t* ids, char** buffers,
+                                                    uint8_t ids_length, uint8_t buffer_length,
+                                                    uint8_t* objects_count_out);
+
+/** Send a FC 43 / 14 (0x2B / 0x0E) Read Device Identification to retrieve a single Object Id value (Read Device ID code 4)
+ * @param nmbs pointer to the nmbs_t instance
+ * @param object_id requested Object Id
+ * @param buffer char array where the resulting value will be stored
+ * @param buffer_length length of the char array
+ *
+ * @return NMBS_ERROR_NONE if successful, other errors otherwise.
+ */
+nmbs_error nmbs_read_device_identification(nmbs_t* nmbs, uint8_t object_id, char* buffer, uint8_t buffer_length);
+
+
 /** Send a raw Modbus PDU.
  * CRC on RTU will be calculated and sent by this function.
  * @param nmbs pointer to the nmbs_t instance
@@ -426,12 +515,12 @@ nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const uint8_t* data, uint
 
 /** Receive a raw response Modbus PDU.
  * @param nmbs pointer to the nmbs_t instance
- * @param data_out response data. It's up to the caller to convert this data to host byte order.
- * @param data_out_len length of the data_out parameter
+ * @param data_out response data. It's up to the caller to convert this data to host byte order. Can be NULL.
+ * @param data_out_len number of bytes to receive
  *
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
-nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, uint8_t* data_out, uint16_t data_out_len);
+nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, uint8_t* data_out, uint8_t data_out_len);
 #endif
 
 /** Calculate the Modbus CRC of some data.

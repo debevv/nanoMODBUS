@@ -1,6 +1,8 @@
 #include "nanomodbus_tests.h"
+
 #include <netinet/in.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static int64_t callbacks_user_data = -64;
@@ -994,7 +996,7 @@ void test_fc21(nmbs_transport transport) {
     should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with record_number > 9999");
     expect(nmbs_write_file_record(&CLIENT, 1, 10000, registers, 1) == NMBS_ERROR_INVALID_ARGUMENT);
 
-    should("return NMBS_ERROR_INVALID_ARGUMENT hen calling with count > 123");
+    should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with count > 123");
     expect(nmbs_write_file_record(&CLIENT, 1, 0, registers, 123) == NMBS_ERROR_INVALID_ARGUMENT);
 
     should("return NMBS_EXCEPTION_SERVER_DEVICE_FAILURE when server handler returns any non-exception error");
@@ -1020,8 +1022,6 @@ void test_fc21(nmbs_transport transport) {
 }
 
 void test_fc23(nmbs_transport transport) {
-    const uint8_t fc = 23;
-    uint8_t raw_res[260];
     uint16_t registers[125];
     uint16_t registers_write[125];
     nmbs_callbacks callbacks_empty = {0};
@@ -1071,6 +1071,185 @@ void test_fc23(nmbs_transport transport) {
     stop_client_and_server();
 }
 
+nmbs_error read_device_identification_map(nmbs_bitfield_256 map) {
+    nmbs_bitfield_set(map, NMBS_OBJECT_ID_VENDOR_NAME);
+    nmbs_bitfield_set(map, NMBS_OBJECT_ID_PRODUCT_CODE);
+    nmbs_bitfield_set(map, NMBS_OBJECT_ID_MAJOR_MINOR_REVISION);
+    nmbs_bitfield_set(map, NMBS_OBJECT_ID_VENDOR_URL);
+    nmbs_bitfield_set(map, NMBS_OBJECT_ID_PRODUCT_NAME);
+    nmbs_bitfield_set(map, NMBS_OBJECT_ID_MODEL_NAME);
+    nmbs_bitfield_set(map, NMBS_OBJECT_ID_USER_APPLICATION_NAME);
+    nmbs_bitfield_set(map, 0x80);
+    nmbs_bitfield_set(map, 0x91);
+    nmbs_bitfield_set(map, 0xA2);
+    nmbs_bitfield_set(map, 0xB3);
+    return NMBS_ERROR_NONE;
+}
+
+nmbs_error read_device_identification_map_incomplete(nmbs_bitfield_256 map) {
+    nmbs_bitfield_set(map, NMBS_OBJECT_ID_VENDOR_NAME);
+    nmbs_bitfield_set(map, NMBS_OBJECT_ID_MAJOR_MINOR_REVISION);
+    return NMBS_ERROR_NONE;
+}
+
+nmbs_error read_device_identification(uint8_t object_id, char buffer[NMBS_DEVICE_IDENTIFICATION_STRING_LENGTH]) {
+    switch (object_id) {
+        case NMBS_OBJECT_ID_VENDOR_NAME:
+            strcpy(buffer, "VendorName");
+            break;
+        case NMBS_OBJECT_ID_PRODUCT_CODE:
+            strcpy(buffer, "ProductCode");
+            break;
+        case NMBS_OBJECT_ID_MAJOR_MINOR_REVISION:
+            strcpy(buffer, "MajorMinorRevision");
+            break;
+        case NMBS_OBJECT_ID_VENDOR_URL:
+            strncpy(buffer,
+                    "VendorUrl90byteslongextendedobjectthatcombinedwithotheronesisdefinitelygonnaexceedthepdusiz"
+                    "e0123456",
+                    NMBS_DEVICE_IDENTIFICATION_STRING_LENGTH);
+            break;
+        case NMBS_OBJECT_ID_PRODUCT_NAME:
+            strncpy(buffer,
+                    "ProductName90byteslongextendedobjectthatcombinedwithotheronesisdefinitelygonnaexceedthepdus"
+                    "ize0123456",
+                    NMBS_DEVICE_IDENTIFICATION_STRING_LENGTH);
+            break;
+        case NMBS_OBJECT_ID_MODEL_NAME:
+            strncpy(buffer,
+                    "ModelName90byteslongextendedobjectthatcombinedwithotheronesisdefinitelygonnaexceedthepdusiz"
+                    "e0123456",
+                    NMBS_DEVICE_IDENTIFICATION_STRING_LENGTH);
+            break;
+        case NMBS_OBJECT_ID_USER_APPLICATION_NAME:
+            strcpy(buffer, "UserApplicationName");
+            break;
+        case 0x80:
+        case 0x91:
+        case 0xA2:
+        case 0xB3:
+            strncpy(buffer,
+                    "90byteslongextendedobjectthatcombinedwithotheronesisdefinitelygonnaexceedthepdusize0123456",
+                    NMBS_DEVICE_IDENTIFICATION_STRING_LENGTH);
+            break;
+        default:
+            return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
+void test_fc43_14(nmbs_transport transport) {
+    const uint8_t fc = 43;
+    const uint8_t mei = 14;
+    const uint8_t buf_size = 128;
+
+    char mem[7 * buf_size];
+    char* buffers[7];
+    for (int i = 0; i < 7; i++) {
+        buffers[i] = &mem[i * buf_size];
+    }
+
+    nmbs_callbacks callbacks_empty = {0};
+    start_client_and_server(transport, &callbacks_empty);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_FUNCTION when callback is not registered server-side");
+    expect(nmbs_read_device_identification(&CLIENT, 0x00, buffers[0], buf_size) == NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+
+    stop_client_and_server();
+    start_client_and_server(transport,
+                            &(nmbs_callbacks){.read_device_identification = read_device_identification,
+                                              .read_device_identification_map = read_device_identification_map});
+    nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
+
+    should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with an invalid Object Id");
+    expect(nmbs_read_device_identification(&CLIENT, 0x07, buffers[0], buf_size) == NMBS_ERROR_INVALID_ARGUMENT);
+
+    stop_client_and_server();
+    start_client_and_server(
+            transport, &(nmbs_callbacks){.read_device_identification = read_device_identification,
+                                         .read_device_identification_map = read_device_identification_map_incomplete});
+    nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
+
+    should("return NMBS_ERROR_SERVER_DEVICE_FAILURE when not exposing Basic object IDs");
+    expect(nmbs_read_device_identification_basic(&CLIENT, buffers[0], buffers[1], buffers[2], buf_size) ==
+           NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+
+    stop_client_and_server();
+    start_client_and_server(transport,
+                            &(nmbs_callbacks){.read_device_identification = read_device_identification,
+                                              .read_device_identification_map = read_device_identification_map});
+    nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_FUNCTION with wrong MEI type");
+    nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t[]){69, 1, 0}, 3);
+    expect(nmbs_receive_raw_pdu_response(&CLIENT, NULL, 2) == NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE with wrong Read Device ID code");
+    nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t[]){mei, 0, 0}, 3);
+    expect(nmbs_receive_raw_pdu_response(&CLIENT, NULL, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE with wrong Read Device ID code");
+    nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t[]){mei, 5, 0}, 3);
+    expect(nmbs_receive_raw_pdu_response(&CLIENT, NULL, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS with reserved Object ID");
+    nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t[]){mei, 1, 0x07}, 3);
+    expect(nmbs_receive_raw_pdu_response(&CLIENT, NULL, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS with reserved Object ID");
+    nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t[]){mei, 4, 0x07}, 3);
+    expect(nmbs_receive_raw_pdu_response(&CLIENT, NULL, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS with out of range Object ID");
+    nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t[]){mei, 1, 0x03}, 3);
+    expect(nmbs_receive_raw_pdu_response(&CLIENT, NULL, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS with out of range Object ID");
+    nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t[]){mei, 2, 0x01}, 3);
+    expect(nmbs_receive_raw_pdu_response(&CLIENT, NULL, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS with out of range Object ID");
+    nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t[]){mei, 3, 0x02}, 3);
+    expect(nmbs_receive_raw_pdu_response(&CLIENT, NULL, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+    should("read basic object ids with no error");
+    check(nmbs_read_device_identification_basic(&CLIENT, buffers[0], buffers[1], buffers[2], buf_size));
+    expect(strcmp(buffers[0], "VendorName") == 0);
+    expect(strcmp(buffers[1], "ProductCode") == 0);
+    expect(strcmp(buffers[2], "MajorMinorRevision") == 0);
+
+    should("read regular object ids with no error");
+    check(nmbs_read_device_identification_regular(&CLIENT, buffers[0], buffers[1], buffers[2], buffers[3], buf_size));
+    expect(strcmp(buffers[0], "VendorUrl90byteslongextendedobjectthatcombinedwithotheronesisdefinitelygonnaexceedthepdu"
+                              "size0123456") == 0);
+    expect(strcmp(buffers[1], "ProductName90byteslongextendedobjectthatcombinedwithotheronesisdefinitelygonnaexceedthep"
+                              "dusize0123456") == 0);
+    expect(strcmp(buffers[2], "ModelName90byteslongextendedobjectthatcombinedwithotheronesisdefinitelygonnaexceedthepdu"
+                              "size0123456") == 0);
+    expect(strcmp(buffers[3], "UserApplicationName") == 0);
+
+    should("immediately return NMBS_ERROR_INVALID_ARGUMENT when buffers_count is smaller that retrieved object ids");
+    uint8_t object_id = 0x80;
+    uint8_t objects_count = 0;
+    uint8_t ids[7];
+    expect(nmbs_read_device_identification_extended(&CLIENT, object_id, ids, buffers, 1, buf_size, &objects_count) ==
+           NMBS_ERROR_INVALID_ARGUMENT);
+
+    should("read extended object ids with no error");
+    check(nmbs_read_device_identification_extended(&CLIENT, object_id, ids, buffers, 7, buf_size, &objects_count));
+    expect(strcmp(buffers[0],
+                  "90byteslongextendedobjectthatcombinedwithotheronesisdefinitelygonnaexceedthepdusize0123456") == 0);
+    expect(strcmp(buffers[1],
+                  "90byteslongextendedobjectthatcombinedwithotheronesisdefinitelygonnaexceedthepdusize0123456") == 0);
+    expect(strcmp(buffers[2],
+                  "90byteslongextendedobjectthatcombinedwithotheronesisdefinitelygonnaexceedthepdusize0123456") == 0);
+    expect(strcmp(buffers[3],
+                  "90byteslongextendedobjectthatcombinedwithotheronesisdefinitelygonnaexceedthepdusize0123456") == 0);
+
+    stop_client_and_server();
+}
+
 nmbs_transport transports[2] = {NMBS_TRANSPORT_RTU, NMBS_TRANSPORT_TCP};
 const char* transports_str[2] = {"RTU", "TCP"};
 
@@ -1084,6 +1263,8 @@ void for_transports(void (*test_fn)(nmbs_transport), const char* should_str) {
 int main(int argc, char* argv[]) {
     UNUSED_PARAM(argc);
     UNUSED_PARAM(argv);
+
+    for_transports(test_fc43_14, "send and receive FC 43 / 14 (0x2B / 0x0E) Read Device Identification");
 
     for_transports(test_server_create, "create a modbus server");
 
@@ -1110,5 +1291,6 @@ int main(int argc, char* argv[]) {
     for_transports(test_fc21, "send and receive FC 21 (0x15) Write File Record");
 
     for_transports(test_fc23, "send and receive FC 23 (0x17) Read/Write Multiple Registers");
+
     return 0;
 }
