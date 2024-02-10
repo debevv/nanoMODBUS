@@ -103,10 +103,17 @@ Macros</h2></td></tr>
 <tr class="separator:ae530ff8bb0fbe317af1bfd083da79870"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a850091de1f63fbeb095aa3ba18944cf5"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a850091de1f63fbeb095aa3ba18944cf5">nmbs_bitfield_read</a>(bf,  b)&#160;&#160;&#160;((bool) ((bf)[(b) / 8] &amp; (0x1 &lt;&lt; ((b) % 8))))</td></tr>
 <tr class="separator:a850091de1f63fbeb095aa3ba18944cf5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3ef5104c23cbf4044eeea950303d01c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#ac3ef5104c23cbf4044eeea950303d01c">nmbs_bitfield_set</a>(bf,  b)&#160;&#160;&#160;(((bf)[(b) / 8]) = (((bf)[(b) / 8]) | (0x1 &lt;&lt; ((b) % 8))))</td></tr>
+<tr class="separator:ac3ef5104c23cbf4044eeea950303d01c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a32e6e45a6887734f23e48bc1d29ca7a1"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a32e6e45a6887734f23e48bc1d29ca7a1">nmbs_bitfield_unset</a>(bf,  b)&#160;&#160;&#160;(((bf)[(b) / 8]) = (((bf)[(b) / 8]) &amp; ~(0x1 &lt;&lt; ((b) % 8))))</td></tr>
+<tr class="separator:a32e6e45a6887734f23e48bc1d29ca7a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4e3c601b21c048c678680a9b63becfe"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#ac4e3c601b21c048c678680a9b63becfe">nmbs_bitfield_write</a>(bf,  b,  v)&#160;&#160;&#160;    (((bf)[(b) / 8]) = ((v) ? (((bf)[(b) / 8]) | (0x1 &lt;&lt; ((b) % 8))) : (((bf)[(b) / 8]) &amp; ~(0x1 &lt;&lt; ((b) % 8)))))</td></tr>
 <tr class="separator:ac4e3c601b21c048c678680a9b63becfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5ff01183649d3ec6afab78512f944bca"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a5ff01183649d3ec6afab78512f944bca">nmbs_bitfield_reset</a>(bf)&#160;&#160;&#160;memset(bf, 0, sizeof(<a class="el" href="nanomodbus_8h.html#a20e71e909a11b2b19b9046080ff3017d">nmbs_bitfield</a>))</td></tr>
+<tr class="memitem:a5ff01183649d3ec6afab78512f944bca"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a5ff01183649d3ec6afab78512f944bca">nmbs_bitfield_reset</a>(bf)&#160;&#160;&#160;memset(bf, 0, sizeof(bf))</td></tr>
 <tr class="separator:a5ff01183649d3ec6afab78512f944bca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86920d432b9f4a81da1b602a9cb4359e"><td class="memItemLeft" align="right" valign="top"><a id="a86920d432b9f4a81da1b602a9cb4359e"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>NMBS_DEVICE_IDENTIFICATION_STRING_LENGTH</b>&#160;&#160;&#160;128</td></tr>
+<tr class="separator:a86920d432b9f4a81da1b602a9cb4359e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
@@ -114,6 +121,8 @@ Typedefs</h2></td></tr>
 <tr class="separator:a9aecd22d877f63a8ecccead980197c22"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a20e71e909a11b2b19b9046080ff3017d"><td class="memItemLeft" align="right" valign="top">typedef uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a20e71e909a11b2b19b9046080ff3017d">nmbs_bitfield</a>[250]</td></tr>
 <tr class="separator:a20e71e909a11b2b19b9046080ff3017d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc91871667e2d7bc10b7ed8a37d21593"><td class="memItemLeft" align="right" valign="top">typedef uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#adc91871667e2d7bc10b7ed8a37d21593">nmbs_bitfield_256</a>[32]</td></tr>
+<tr class="separator:adc91871667e2d7bc10b7ed8a37d21593"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a871f72391b22d426fd7f6b6d1f46ebbd"><td class="memItemLeft" align="right" valign="top">typedef enum <a class="el" href="nanomodbus_8h.html#ad4308b11d9bab11f45b94a1d4840f5fd">nmbs_transport</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a871f72391b22d426fd7f6b6d1f46ebbd">nmbs_transport</a></td></tr>
 <tr class="separator:a871f72391b22d426fd7f6b6d1f46ebbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb17db7903de2780f735f66a6e80231a"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structnmbs__platform__conf.html">nmbs_platform_conf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#adb17db7903de2780f735f66a6e80231a">nmbs_platform_conf</a></td></tr>
@@ -126,20 +135,22 @@ Typedefs</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
 <tr class="memitem:a1cb1b1b4b26001764e36a1df4335f7f0"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a> { <br />
-&#160;&#160;<a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a1f267ca874a2d43f38575b0db5fd987d">NMBS_ERROR_INVALID_UNIT_ID</a> = -7
+&#160;&#160;<a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a56141096259eb60a04bce6239e5689e8">NMBS_ERROR_INVALID_REQUEST</a> = -8
+, <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a1f267ca874a2d43f38575b0db5fd987d">NMBS_ERROR_INVALID_UNIT_ID</a> = -7
 , <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a40991993acd534c2848b9516a7931ac4">NMBS_ERROR_INVALID_TCP_MBAP</a> = -6
 , <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0ae179b232e51a9f3f69349d9cbf38b09c">NMBS_ERROR_CRC</a> = -5
-, <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a3fc83fc7b819f1aff75aa2a6c8c0a34d">NMBS_ERROR_TRANSPORT</a> = -4
 , <br />
-&#160;&#160;<a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a6d88681884c55f97bfd6b2e4f9c52ec5">NMBS_ERROR_TIMEOUT</a> = -3
+&#160;&#160;<a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a3fc83fc7b819f1aff75aa2a6c8c0a34d">NMBS_ERROR_TRANSPORT</a> = -4
+, <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a6d88681884c55f97bfd6b2e4f9c52ec5">NMBS_ERROR_TIMEOUT</a> = -3
 , <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a5dba2268665b5f2ea5c50ef92513c0fc">NMBS_ERROR_INVALID_RESPONSE</a> = -2
 , <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a2f6672c3501f57f4cdb7c1c0207eaa17">NMBS_ERROR_INVALID_ARGUMENT</a> = -1
-, <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a237f769a847f812d352b398602df4da3">NMBS_ERROR_NONE</a> = 0
 , <br />
-&#160;&#160;<a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a857cefb6ce605215d219ac3a7a983905">NMBS_EXCEPTION_ILLEGAL_FUNCTION</a> = 1
+&#160;&#160;<a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a237f769a847f812d352b398602df4da3">NMBS_ERROR_NONE</a> = 0
+, <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a857cefb6ce605215d219ac3a7a983905">NMBS_EXCEPTION_ILLEGAL_FUNCTION</a> = 1
 , <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a31705357988dc0820d0820d76be9fdd0">NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS</a> = 2
 , <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a6ba8c8a7039f53e2a770a490641ab47a">NMBS_EXCEPTION_ILLEGAL_DATA_VALUE</a> = 3
-, <a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a959c4b38e339556145dfaddfcd64e23a">NMBS_EXCEPTION_SERVER_DEVICE_FAILURE</a> = 4
+, <br />
+&#160;&#160;<a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0a959c4b38e339556145dfaddfcd64e23a">NMBS_EXCEPTION_SERVER_DEVICE_FAILURE</a> = 4
 <br />
  }</td></tr>
 <tr class="separator:a1cb1b1b4b26001764e36a1df4335f7f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -188,10 +199,18 @@ Functions</h2></td></tr>
 <tr class="separator:a9f38d8c59db816827a2639fc4ab18294"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acdc03a103775d6ee6643dec9c67260b4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#acdc03a103775d6ee6643dec9c67260b4">nmbs_read_write_registers</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, uint16_t read_address, uint16_t read_quantity, uint16_t *registers_out, uint16_t write_address, uint16_t write_quantity, const uint16_t *registers)</td></tr>
 <tr class="separator:acdc03a103775d6ee6643dec9c67260b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aebcd64b5464f073106a0ee9173e98fbd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#aebcd64b5464f073106a0ee9173e98fbd">nmbs_read_device_identification_basic</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, char *vendor_name, char *product_code, char *major_minor_revision, uint8_t buffer_length)</td></tr>
+<tr class="separator:aebcd64b5464f073106a0ee9173e98fbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6cec6dd225f8e7b6300b426a0e7a424e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a6cec6dd225f8e7b6300b426a0e7a424e">nmbs_read_device_identification_regular</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, char *vendor_url, char *product_name, char *model_name, char *user_application_name, uint8_t buffer_length)</td></tr>
+<tr class="separator:a6cec6dd225f8e7b6300b426a0e7a424e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab16c423dc2074905a0b76f45dd0182f3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#ab16c423dc2074905a0b76f45dd0182f3">nmbs_read_device_identification_extended</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, uint8_t object_id_start, uint8_t *ids, char **buffers, uint8_t ids_length, uint8_t buffer_length, uint8_t *objects_count_out)</td></tr>
+<tr class="separator:ab16c423dc2074905a0b76f45dd0182f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa861c4867dae8b58b4b85e56dcd8c16"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#afa861c4867dae8b58b4b85e56dcd8c16">nmbs_read_device_identification</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, uint8_t object_id, char *buffer, uint8_t buffer_length)</td></tr>
+<tr class="separator:afa861c4867dae8b58b4b85e56dcd8c16"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a323a7e21723b7257951fb30e58f17bec"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a323a7e21723b7257951fb30e58f17bec">nmbs_send_raw_pdu</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, uint8_t fc, const uint8_t *data, uint16_t data_len)</td></tr>
 <tr class="separator:a323a7e21723b7257951fb30e58f17bec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a24949b477e0888ed51c3e658b4a39671"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a24949b477e0888ed51c3e658b4a39671">nmbs_receive_raw_pdu_response</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, uint8_t *data_out, uint16_t data_out_len)</td></tr>
-<tr class="separator:a24949b477e0888ed51c3e658b4a39671"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a76658e34ab543b71f6215c14e5a51c14"><td class="memItemLeft" align="right" valign="top"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a76658e34ab543b71f6215c14e5a51c14">nmbs_receive_raw_pdu_response</a> (<a class="el" href="structnmbs__t.html">nmbs_t</a> *nmbs, uint8_t *data_out, uint8_t data_out_len)</td></tr>
+<tr class="separator:a76658e34ab543b71f6215c14e5a51c14"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae49c12c93f87e560a8750c92655818af"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#ae49c12c93f87e560a8750c92655818af">nmbs_crc_calc</a> (const uint8_t *data, uint32_t length)</td></tr>
 <tr class="separator:ae49c12c93f87e560a8750c92655818af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a96982c55669d90d689ff409d587b00ca"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomodbus_8h.html#a96982c55669d90d689ff409d587b00ca">nmbs_strerror</a> (<a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a> error)</td></tr>
@@ -238,11 +257,69 @@ Functions</h2></td></tr>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">bf</td><td>)</td>
-          <td>&#160;&#160;&#160;memset(bf, 0, sizeof(<a class="el" href="nanomodbus_8h.html#a20e71e909a11b2b19b9046080ff3017d">nmbs_bitfield</a>))</td>
+          <td>&#160;&#160;&#160;memset(bf, 0, sizeof(bf))</td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Reset (zero) the whole bitfield </p>
+
+</div>
+</div>
+<a id="ac3ef5104c23cbf4044eeea950303d01c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac3ef5104c23cbf4044eeea950303d01c">&#9670;&nbsp;</a></span>nmbs_bitfield_set</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define nmbs_bitfield_set</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">bf, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">b&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td>&#160;&#160;&#160;(((bf)[(b) / 8]) = (((bf)[(b) / 8]) | (0x1 &lt;&lt; ((b) % 8))))</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Set a bit of the nmbs_bitfield bf at position b </p>
+
+</div>
+</div>
+<a id="a32e6e45a6887734f23e48bc1d29ca7a1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a32e6e45a6887734f23e48bc1d29ca7a1">&#9670;&nbsp;</a></span>nmbs_bitfield_unset</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define nmbs_bitfield_unset</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">bf, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">b&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td>&#160;&#160;&#160;(((bf)[(b) / 8]) = (((bf)[(b) / 8]) &amp; ~(0x1 &lt;&lt; ((b) % 8))))</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reset a bit of the nmbs_bitfield bf at position b </p>
 
 </div>
 </div>
@@ -313,6 +390,21 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Bitfield consisting of 2000 coils/discrete inputs </p>
+
+</div>
+</div>
+<a id="adc91871667e2d7bc10b7ed8a37d21593"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adc91871667e2d7bc10b7ed8a37d21593">&#9670;&nbsp;</a></span>nmbs_bitfield_256</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef uint8_t nmbs_bitfield_256[32]</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Bitfield consisting of 256 values </p>
 
 </div>
 </div>
@@ -415,7 +507,9 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>nanoMODBUS errors. Values &lt;= 0 are library errors, &gt; 0 are modbus exceptions. </p>
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a1cb1b1b4b26001764e36a1df4335f7f0a1f267ca874a2d43f38575b0db5fd987d"></a>NMBS_ERROR_INVALID_UNIT_ID&#160;</td><td class="fielddoc"><p>Received invalid unit ID in response from server </p>
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a1cb1b1b4b26001764e36a1df4335f7f0a56141096259eb60a04bce6239e5689e8"></a>NMBS_ERROR_INVALID_REQUEST&#160;</td><td class="fielddoc"><p>Received invalid request from client </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a1cb1b1b4b26001764e36a1df4335f7f0a1f267ca874a2d43f38575b0db5fd987d"></a>NMBS_ERROR_INVALID_UNIT_ID&#160;</td><td class="fielddoc"><p>Received invalid unit ID in response from server </p>
 </td></tr>
 <tr><td class="fieldname"><a id="a1cb1b1b4b26001764e36a1df4335f7f0a40991993acd534c2848b9516a7931ac4"></a>NMBS_ERROR_INVALID_TCP_MBAP&#160;</td><td class="fielddoc"><p>Received invalid TCP MBAP </p>
 </td></tr>
@@ -573,6 +667,248 @@ Functions</h2></td></tr>
     <tr><td class="paramname">address</td><td>starting address </td></tr>
     <tr><td class="paramname">quantity</td><td>quantity of coils </td></tr>
     <tr><td class="paramname">coils_out</td><td>nmbs_bitfield where the coils will be stored</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>NMBS_ERROR_NONE if successful, other errors otherwise. </dd></dl>
+
+</div>
+</div>
+<a id="afa861c4867dae8b58b4b85e56dcd8c16"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afa861c4867dae8b58b4b85e56dcd8c16">&#9670;&nbsp;</a></span>nmbs_read_device_identification()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a> nmbs_read_device_identification </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structnmbs__t.html">nmbs_t</a> *&#160;</td>
+          <td class="paramname"><em>nmbs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>object_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>buffer_length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Send a FC 43 / 14 (0x2B / 0x0E) Read Device Identification to retrieve a single Object Id value (Read Device ID code 4) </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">nmbs</td><td>pointer to the <a class="el" href="structnmbs__t.html">nmbs_t</a> instance </td></tr>
+    <tr><td class="paramname">object_id</td><td>requested Object Id </td></tr>
+    <tr><td class="paramname">buffer</td><td>char array where the resulting value will be stored </td></tr>
+    <tr><td class="paramname">buffer_length</td><td>length of the char array</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>NMBS_ERROR_NONE if successful, other errors otherwise. </dd></dl>
+
+</div>
+</div>
+<a id="aebcd64b5464f073106a0ee9173e98fbd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aebcd64b5464f073106a0ee9173e98fbd">&#9670;&nbsp;</a></span>nmbs_read_device_identification_basic()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a> nmbs_read_device_identification_basic </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structnmbs__t.html">nmbs_t</a> *&#160;</td>
+          <td class="paramname"><em>nmbs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>vendor_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>product_code</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>major_minor_revision</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>buffer_length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Send a FC 43 / 14 (0x2B / 0x0E) Read Device Identification to read all Basic Object Id values (Read Device ID code 1) </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">nmbs</td><td>pointer to the <a class="el" href="structnmbs__t.html">nmbs_t</a> instance </td></tr>
+    <tr><td class="paramname">vendor_name</td><td>char array where the read VendorName value will be stored </td></tr>
+    <tr><td class="paramname">product_code</td><td>char array where the read ProductCode value will be stored </td></tr>
+    <tr><td class="paramname">major_minor_revision</td><td>char array where the read MajorMinorRevision value will be stored </td></tr>
+    <tr><td class="paramname">buffer_length</td><td>length of every char array</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>NMBS_ERROR_NONE if successful, other errors otherwise. </dd></dl>
+
+</div>
+</div>
+<a id="ab16c423dc2074905a0b76f45dd0182f3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab16c423dc2074905a0b76f45dd0182f3">&#9670;&nbsp;</a></span>nmbs_read_device_identification_extended()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a> nmbs_read_device_identification_extended </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structnmbs__t.html">nmbs_t</a> *&#160;</td>
+          <td class="paramname"><em>nmbs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>object_id_start</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>ids</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char **&#160;</td>
+          <td class="paramname"><em>buffers</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>ids_length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>buffer_length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>objects_count_out</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Send a FC 43 / 14 (0x2B / 0x0E) Read Device Identification to read all Extended Object Id values (Read Device ID code 3) </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">nmbs</td><td>pointer to the <a class="el" href="structnmbs__t.html">nmbs_t</a> instance </td></tr>
+    <tr><td class="paramname">object_id_start</td><td>Object Id to start reading from </td></tr>
+    <tr><td class="paramname">ids</td><td>array where the read Object Ids will be stored </td></tr>
+    <tr><td class="paramname">buffers</td><td>array of char arrays where the read values will be stored </td></tr>
+    <tr><td class="paramname">ids_length</td><td>length of the ids array and buffers array </td></tr>
+    <tr><td class="paramname">buffer_length</td><td>length of each char array </td></tr>
+    <tr><td class="paramname">objects_count_out</td><td>retrieved Object Ids count</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>NMBS_ERROR_NONE if successful, NMBS_INVALID_ARGUMENT if buffers_count is less than retrieved Object Ids count, other errors otherwise. </dd></dl>
+
+</div>
+</div>
+<a id="a6cec6dd225f8e7b6300b426a0e7a424e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6cec6dd225f8e7b6300b426a0e7a424e">&#9670;&nbsp;</a></span>nmbs_read_device_identification_regular()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="nanomodbus_8h.html#a1cb1b1b4b26001764e36a1df4335f7f0">nmbs_error</a> nmbs_read_device_identification_regular </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structnmbs__t.html">nmbs_t</a> *&#160;</td>
+          <td class="paramname"><em>nmbs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>vendor_url</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>product_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>model_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>user_application_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>buffer_length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Send a FC 43 / 14 (0x2B / 0x0E) Read Device Identification to read all Regular Object Id values (Read Device ID code 2) </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">nmbs</td><td>pointer to the <a class="el" href="structnmbs__t.html">nmbs_t</a> instance </td></tr>
+    <tr><td class="paramname">vendor_url</td><td>char array where the read VendorUrl value will be stored </td></tr>
+    <tr><td class="paramname">product_name</td><td>char array where the read ProductName value will be stored </td></tr>
+    <tr><td class="paramname">model_name</td><td>char array where the read ModelName value will be stored </td></tr>
+    <tr><td class="paramname">user_application_name</td><td>char array where the read UserApplicationName value will be stored </td></tr>
+    <tr><td class="paramname">buffer_length</td><td>length of every char array</td></tr>
   </table>
   </dd>
 </dl>
@@ -858,8 +1194,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a24949b477e0888ed51c3e658b4a39671"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a24949b477e0888ed51c3e658b4a39671">&#9670;&nbsp;</a></span>nmbs_receive_raw_pdu_response()</h2>
+<a id="a76658e34ab543b71f6215c14e5a51c14"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a76658e34ab543b71f6215c14e5a51c14">&#9670;&nbsp;</a></span>nmbs_receive_raw_pdu_response()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -879,7 +1215,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramtype">uint8_t&#160;</td>
           <td class="paramname"><em>data_out_len</em>&#160;</td>
         </tr>
         <tr>
@@ -892,8 +1228,8 @@ Functions</h2></td></tr>
 <p>Receive a raw response Modbus PDU. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">nmbs</td><td>pointer to the <a class="el" href="structnmbs__t.html">nmbs_t</a> instance </td></tr>
-    <tr><td class="paramname">data_out</td><td>response data. It's up to the caller to convert this data to host byte order. </td></tr>
-    <tr><td class="paramname">data_out_len</td><td>length of the data_out parameter</td></tr>
+    <tr><td class="paramname">data_out</td><td>response data. It's up to the caller to convert this data to host byte order. Can be NULL. </td></tr>
+    <tr><td class="paramname">data_out_len</td><td>number of bytes to receive</td></tr>
   </table>
   </dd>
 </dl>
