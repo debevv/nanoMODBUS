@@ -2,12 +2,6 @@
  * This example application sets up a TCP server at the specified address and port, and polls from modbus requests
  * from more than one modbus client (more specifically from maximum 1024 clients, since it uses select())
  *
- * This server supports the following function codes:
- * FC 01 (0x01) Read Coils
- * FC 03 (0x03) Read Holding Registers
- * FC 15 (0x0F) Write Multiple Coils
- * FC 16 (0x10) Write Multiple registers
- *
  * Since the platform for this example is linux, the platform arg is used to pass (to the linux file descriptor
  * read/write functions) a pointer to the file descriptor of the current read client connection
  *
@@ -135,6 +129,40 @@ nmbs_error handle_write_file_record(uint16_t file_number, uint16_t record_number
     return NMBS_ERROR_NONE;
 }
 
+nmbs_error handle_read_device_identification_map(nmbs_bitfield_256 map) {
+    // We support basic object ID and a couple of extended ones
+    nmbs_bitfield_set(map, 0x00);
+    nmbs_bitfield_set(map, 0x01);
+    nmbs_bitfield_set(map, 0x02);
+    nmbs_bitfield_set(map, 0x90);
+    nmbs_bitfield_set(map, 0xA0);
+    return NMBS_ERROR_NONE;
+}
+
+nmbs_error handle_read_device_identification(uint8_t object_id, char buffer[NMBS_DEVICE_IDENTIFICATION_STRING_LENGTH]) {
+    switch (object_id) {
+        case 0x00:
+            strcpy(buffer, "VendorName");
+            break;
+        case 0x01:
+            strcpy(buffer, "ProductCode");
+            break;
+        case 0x02:
+            strcpy(buffer, "MajorMinorRevision");
+            break;
+        case 0x90:
+            strcpy(buffer, "Extended 1");
+            break;
+        case 0xA0:
+            strcpy(buffer, "Extended 2");
+            break;
+        default:
+            return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+    }
+
+    return NMBS_ERROR_NONE;
+}
+
 
 int main(int argc, char* argv[]) {
     signal(SIGTERM, sighandler);
@@ -167,6 +195,8 @@ int main(int argc, char* argv[]) {
     callbacks.write_multiple_registers = handle_write_multiple_registers;
     callbacks.read_file_record = handle_read_file_record;
     callbacks.write_file_record = handle_write_file_record;
+    callbacks.read_device_identification_map = handle_read_device_identification_map;
+    callbacks.read_device_identification = handle_read_device_identification;
 
     // Create the modbus server. It's ok to set address_rtu to 0 since we are on TCP
     nmbs_t nmbs;

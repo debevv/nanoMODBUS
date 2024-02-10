@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
     uint16_t file[4] = {0x0000, 0x00AA, 0x5500, 0xFFFF};
     err = nmbs_write_file_record(&nmbs, 1, 0, file, 4);
     if (err != NMBS_ERROR_NONE) {
-        fprintf(stderr, "Error writing file - %s", nmbs_strerror(err));
+        fprintf(stderr, "Error writing file - %s\n", nmbs_strerror(err));
         if (!nmbs_error_is_exception(err))
             return 1;
     }
@@ -106,12 +106,44 @@ int main(int argc, char* argv[]) {
     memset(file, 0, sizeof(file));
     err = nmbs_read_file_record(&nmbs, 1, 0, file, 4);
     if (err != NMBS_ERROR_NONE) {
-        fprintf(stderr, "Error writing file - %s", nmbs_strerror(err));
+        fprintf(stderr, "Error writing file - %s\n", nmbs_strerror(err));
         if (!nmbs_error_is_exception(err))
             return 1;
     }
     else {
         printf("Read file registers: 0x%04X 0x%04X 0x%04X 0x%04X\n", file[0], file[1], file[2], file[3]);
+    }
+
+    // Read basic device identification
+    char vendor_name[128], product_code[128], major_minor_revision[128];
+    err = nmbs_read_device_identification_basic(&nmbs, vendor_name, product_code, major_minor_revision, 128);
+    if (err != NMBS_ERROR_NONE) {
+        fprintf(stderr, "Error reading basic device identification - %s\n", nmbs_strerror(err));
+        if (!nmbs_error_is_exception(err))
+            return 1;
+    }
+    else {
+        printf("Read basic device identification: %s %s %s\n", vendor_name, product_code, major_minor_revision);
+    }
+
+    // Read basic extended device identification
+    char mem[8 * 128];
+    char* buffers[8];
+    for (int i = 0; i < 8; i++)
+        buffers[i] = &mem[i * 128];
+    uint8_t ids[8];
+    uint8_t objects_count = 0;
+    err = nmbs_read_device_identification_extended(&nmbs, 0x80, ids, buffers, 8, 128, &objects_count);
+    if (err != NMBS_ERROR_NONE) {
+        // If err == NMBS_INVALID_ARGUMENT, the length of the ids and buffers arrays (8 here)  is not enough for all
+        // the read objects from the server
+        fprintf(stderr, "Error reading extended device identification - %s\n", nmbs_strerror(err));
+        if (!nmbs_error_is_exception(err))
+            return 1;
+    }
+    else {
+        for (int i = 0; i < objects_count; i++)
+            printf("Read extended device identification: ID 0x%02x value %s\n", ids[i], buffers[i]);
     }
 
     // Close the TCP connection

@@ -1,6 +1,7 @@
 # nanoMODBUS - A compact MODBUS RTU/TCP C library for embedded/microcontrollers
 
-**If you found this library useful, buy me a coffee on** [<img src='https://storage.ko-fi.com/cdn/brandasset/logo_white_stroke.png' width='80'>](https://ko-fi.com/B0B2LK779)
+**If you found this library useful, buy me a coffee on
+** [<img src='https://storage.ko-fi.com/cdn/brandasset/logo_white_stroke.png' width='80'>](https://ko-fi.com/B0B2LK779)
 
 nanoMODBUS is a small C library that implements the Modbus protocol. It is especially useful in embedded and
 resource-constrained systems like microcontrollers.  
@@ -28,6 +29,7 @@ Its main features are:
     - 20 (0x14) Read File Record
     - 21 (0x15) Write File Record
     - 23 (0x17) Read/Write Multiple registers
+    - 43/14 (0x2B/0x0E) Read Device Identification
 - Platform-agnostic
     - Requires only C99 and its standard library
     - Data transport read/write function are implemented by the user
@@ -157,5 +159,6 @@ Please refer to `examples/arduino/README.md` for more info about building and ru
         - `NMBS_SERVER_READ_FILE_RECORD_DISABLED`
         - `NMBS_SERVER_WRITE_FILE_RECORD_DISABLED`
         - `NMBS_SERVER_READ_WRITE_REGISTERS_DISABLED`
+        - `NMBS_SERVER_READ_DEVICE_IDENTIFICATION_DISABLED`
     - `NMBS_STRERROR_DISABLED` to disable the code that converts `nmbs_error`s to strings
 - Debug prints about received and sent messages can be enabled by defining `NMBS_DEBUG`

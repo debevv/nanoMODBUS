@@ -71,18 +71,6 @@ typedef enum nmbs_error {
     NMBS_EXCEPTION_SERVER_DEVICE_FAILURE = 4, /**< Modbus exception 4 */
 } nmbs_error;
 
-/**
- * 43 / 14 (0x2B / 0x0E) Read Device Identification Object Id definitions
- */
-typedef enum nmbs_object_id {
-    NMBS_OBJECT_ID_VENDOR_NAME = 0,
-    NMBS_OBJECT_ID_PRODUCT_CODE = 1,
-    NMBS_OBJECT_ID_MAJOR_MINOR_REVISION = 2,
-    NMBS_OBJECT_ID_VENDOR_URL = 3,
-    NMBS_OBJECT_ID_PRODUCT_NAME = 4,
-    NMBS_OBJECT_ID_MODEL_NAME = 5,
-    NMBS_OBJECT_ID_USER_APPLICATION_NAME = 6,
-} nmbs_object_id;
 
 /**
  * Return whether the nmbs_error is a modbus exception
@@ -449,7 +437,6 @@ nmbs_error nmbs_read_write_registers(nmbs_t* nmbs, uint16_t read_address, uint16
 
 /** Send a FC 43 / 14 (0x2B / 0x0E) Read Device Identification to read all Basic Object Id values (Read Device ID code 1)
  * @param nmbs pointer to the nmbs_t instance
- * @param object_id requested Object Id
  * @param vendor_name char array where the read VendorName value will be stored
  * @param product_code char array where the read ProductCode value will be stored
  * @param major_minor_revision char array where the read MajorMinorRevision value will be stored
@@ -458,26 +445,24 @@ nmbs_error nmbs_read_write_registers(nmbs_t* nmbs, uint16_t read_address, uint16
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
 nmbs_error nmbs_read_device_identification_basic(nmbs_t* nmbs, char* vendor_name, char* product_code,
-                                                 char* major_minor_revision, uint8_t buffers_length);
+                                                 char* major_minor_revision, uint8_t buffer_length);
 
 /** Send a FC 43 / 14 (0x2B / 0x0E) Read Device Identification to read all Regular Object Id values (Read Device ID code 2)
  * @param nmbs pointer to the nmbs_t instance
- * @param object_id requested Object Id
  * @param vendor_url char array where the read VendorUrl value will be stored
  * @param product_name char array where the read ProductName value will be stored
  * @param model_name char array where the read ModelName value will be stored
  * @param user_application_name char array where the read UserApplicationName value will be stored
- *
  * @param buffer_length length of every char array
  *
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
 nmbs_error nmbs_read_device_identification_regular(nmbs_t* nmbs, char* vendor_url, char* product_name, char* model_name,
-                                                   char* user_application_name, uint8_t buffers_length);
+                                                   char* user_application_name, uint8_t buffer_length);
 
 /** Send a FC 43 / 14 (0x2B / 0x0E) Read Device Identification to read all Extended Object Id values (Read Device ID code 3)
  * @param nmbs pointer to the nmbs_t instance
- * @param object_id requested Object Id
+ * @param object_id_start Object Id to start reading from
  * @param ids array where the read Object Ids will be stored
  * @param buffers array of char arrays where the read values will be stored
  * @param ids_length length of the ids array and buffers array
@@ -500,7 +485,6 @@ nmbs_error nmbs_read_device_identification_extended(nmbs_t* nmbs, uint8_t object
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
 nmbs_error nmbs_read_device_identification(nmbs_t* nmbs, uint8_t object_id, char* buffer, uint8_t buffer_length);
-
 
 /** Send a raw Modbus PDU.
  * CRC on RTU will be calculated and sent by this function.

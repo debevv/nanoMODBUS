@@ -1072,13 +1072,13 @@ void test_fc23(nmbs_transport transport) {
 }
 
 nmbs_error read_device_identification_map(nmbs_bitfield_256 map) {
-    nmbs_bitfield_set(map, NMBS_OBJECT_ID_VENDOR_NAME);
-    nmbs_bitfield_set(map, NMBS_OBJECT_ID_PRODUCT_CODE);
-    nmbs_bitfield_set(map, NMBS_OBJECT_ID_MAJOR_MINOR_REVISION);
-    nmbs_bitfield_set(map, NMBS_OBJECT_ID_VENDOR_URL);
-    nmbs_bitfield_set(map, NMBS_OBJECT_ID_PRODUCT_NAME);
-    nmbs_bitfield_set(map, NMBS_OBJECT_ID_MODEL_NAME);
-    nmbs_bitfield_set(map, NMBS_OBJECT_ID_USER_APPLICATION_NAME);
+    nmbs_bitfield_set(map, 0x00);
+    nmbs_bitfield_set(map, 0x01);
+    nmbs_bitfield_set(map, 0x02);
+    nmbs_bitfield_set(map, 0x03);
+    nmbs_bitfield_set(map, 0x04);
+    nmbs_bitfield_set(map, 0x05);
+    nmbs_bitfield_set(map, 0x06);
     nmbs_bitfield_set(map, 0x80);
     nmbs_bitfield_set(map, 0x91);
     nmbs_bitfield_set(map, 0xA2);
@@ -1087,41 +1087,41 @@ nmbs_error read_device_identification_map(nmbs_bitfield_256 map) {
 }
 
 nmbs_error read_device_identification_map_incomplete(nmbs_bitfield_256 map) {
-    nmbs_bitfield_set(map, NMBS_OBJECT_ID_VENDOR_NAME);
-    nmbs_bitfield_set(map, NMBS_OBJECT_ID_MAJOR_MINOR_REVISION);
+    nmbs_bitfield_set(map, 0x00);
+    nmbs_bitfield_set(map, 0x02);
     return NMBS_ERROR_NONE;
 }
 
 nmbs_error read_device_identification(uint8_t object_id, char buffer[NMBS_DEVICE_IDENTIFICATION_STRING_LENGTH]) {
     switch (object_id) {
-        case NMBS_OBJECT_ID_VENDOR_NAME:
+        case 0x00:
             strcpy(buffer, "VendorName");
             break;
-        case NMBS_OBJECT_ID_PRODUCT_CODE:
+        case 0x01:
             strcpy(buffer, "ProductCode");
             break;
-        case NMBS_OBJECT_ID_MAJOR_MINOR_REVISION:
+        case 0x02:
             strcpy(buffer, "MajorMinorRevision");
             break;
-        case NMBS_OBJECT_ID_VENDOR_URL:
+        case 0x03:
             strncpy(buffer,
                     "VendorUrl90byteslongextendedobjectthatcombinedwithotheronesisdefinitelygonnaexceedthepdusiz"
                     "e0123456",
                     NMBS_DEVICE_IDENTIFICATION_STRING_LENGTH);
             break;
-        case NMBS_OBJECT_ID_PRODUCT_NAME:
+        case 0x04:
             strncpy(buffer,
                     "ProductName90byteslongextendedobjectthatcombinedwithotheronesisdefinitelygonnaexceedthepdus"
                     "ize0123456",
                     NMBS_DEVICE_IDENTIFICATION_STRING_LENGTH);
             break;
-        case NMBS_OBJECT_ID_MODEL_NAME:
+        case 0x05:
             strncpy(buffer,
                     "ModelName90byteslongextendedobjectthatcombinedwithotheronesisdefinitelygonnaexceedthepdusiz"
                     "e0123456",
                     NMBS_DEVICE_IDENTIFICATION_STRING_LENGTH);
             break;
-        case NMBS_OBJECT_ID_USER_APPLICATION_NAME:
+        case 0x06:
             strcpy(buffer, "UserApplicationName");
             break;
         case 0x80:
@@ -1264,8 +1264,6 @@ int main(int argc, char* argv[]) {
     UNUSED_PARAM(argc);
     UNUSED_PARAM(argv);
 
-    for_transports(test_fc43_14, "send and receive FC 43 / 14 (0x2B / 0x0E) Read Device Identification");
-
     for_transports(test_server_create, "create a modbus server");
 
     for_transports(test_server_receive_base, "receive no messages without failing");
@@ -1291,6 +1289,8 @@ int main(int argc, char* argv[]) {
     for_transports(test_fc21, "send and receive FC 21 (0x15) Write File Record");
 
     for_transports(test_fc23, "send and receive FC 23 (0x17) Read/Write Multiple Registers");
+
+    for_transports(test_fc43_14, "send and receive FC 43 / 14 (0x2B / 0x0E) Read Device Identification");
 
     return 0;
 }

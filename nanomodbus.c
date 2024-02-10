@@ -380,17 +380,6 @@ static nmbs_error send_msg(nmbs_t* nmbs) {
 }
 
 
-#ifndef NMBS_CLIENT_DISABLED
-static nmbs_error send_req(nmbs_t* nmbs) {
-    if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
-        // Flush the remaining data on the line before sending the request
-        // nmbs->platform.read(nmbs->msg.buf, sizeof(nmbs->msg.buf), 0, nmbs->platform.arg);
-    }
-    return send_msg(nmbs);
-}
-#endif
-
-
 #ifndef NMBS_SERVER_DISABLED
 static nmbs_error recv_req_header(nmbs_t* nmbs, bool* first_byte_received) {
     nmbs_error err = recv_msg_header(nmbs, first_byte_received);
@@ -1592,7 +1581,6 @@ static nmbs_error handle_read_write_registers(nmbs_t* nmbs) {
 #endif
 
 #ifndef NMBS_SERVER_READ_DEVICE_IDENTIFICATION_DISABLED
-
 static nmbs_error handle_read_device_identification(nmbs_t* nmbs) {
     nmbs_error err = recv(nmbs, 3);
     if (err != NMBS_ERROR_NONE)
@@ -1919,7 +1907,7 @@ static nmbs_error read_discrete(nmbs_t* nmbs, uint8_t fc, uint16_t address, uint
 
     NMBS_DEBUG_PRINT("a %d\tq %d", address, quantity);
 
-    nmbs_error err = send_req(nmbs);
+    nmbs_error err = send_msg(nmbs);
     if (err != NMBS_ERROR_NONE)
         return err;
 
@@ -1951,7 +1939,7 @@ static nmbs_error read_registers(nmbs_t* nmbs, uint8_t fc, uint16_t address, uin
 
     NMBS_DEBUG_PRINT("a %d\tq %d ", address, quantity);
 
-    nmbs_error err = send_req(nmbs);
+    nmbs_error err = send_msg(nmbs);
     if (err != NMBS_ERROR_NONE)
         return err;
 
@@ -1980,7 +1968,7 @@ nmbs_error nmbs_write_single_coil(nmbs_t* nmbs, uint16_t address, bool value) {
 
     NMBS_DEBUG_PRINT("a %d\tvalue %d ", address, value_req);
 
-    nmbs_error err = send_req(nmbs);
+    nmbs_error err = send_msg(nmbs);
     if (err != NMBS_ERROR_NONE)
         return err;
 
@@ -2000,7 +1988,7 @@ nmbs_error nmbs_write_single_register(nmbs_t* nmbs, uint16_t address, uint16_t v
 
     NMBS_DEBUG_PRINT("a %d\tvalue %d", address, value);
 
-    nmbs_error err = send_req(nmbs);
+    nmbs_error err = send_msg(nmbs);
     if (err != NMBS_ERROR_NONE)
         return err;
 
@@ -2034,7 +2022,7 @@ nmbs_error nmbs_write_multiple_coils(nmbs_t* nmbs, uint16_t address, uint16_t qu
         NMBS_DEBUG_PRINT("%d ", coils[i]);
     }
 
-    nmbs_error err = send_req(nmbs);
+    nmbs_error err = send_msg(nmbs);
     if (err != NMBS_ERROR_NONE)
         return err;
 
@@ -2068,7 +2056,7 @@ nmbs_error nmbs_write_multiple_registers(nmbs_t* nmbs, uint16_t address, uint16_
         NMBS_DEBUG_PRINT("%d ", registers[i]);
     }
 
-    nmbs_error err = send_req(nmbs);
+    nmbs_error err = send_msg(nmbs);
     if (err != NMBS_ERROR_NONE)
         return err;
 
@@ -2101,7 +2089,7 @@ nmbs_error nmbs_read_file_record(nmbs_t* nmbs, uint16_t file_number, uint16_t re
     put_2(nmbs, count);
     NMBS_DEBUG_PRINT("a %d\tr %d\tl %d\t fread ", file_number, record_number, count);
 
-    nmbs_error err = send_req(nmbs);
+    nmbs_error err = send_msg(nmbs);
     if (err != NMBS_ERROR_NONE)
         return err;
 
@@ -2133,7 +2121,7 @@ nmbs_error nmbs_write_file_record(nmbs_t* nmbs, uint16_t file_number, uint16_t r
     put_regs(nmbs, registers, count);
     NMBS_DEBUG_PRINT("a %d\tr %d\tl %d\t fwrite ", file_number, record_number, count);
 
-    nmbs_error err = send_req(nmbs);
+    nmbs_error err = send_msg(nmbs);
     if (err != NMBS_ERROR_NONE)
         return err;
 
@@ -2179,7 +2167,7 @@ nmbs_error nmbs_read_write_registers(nmbs_t* nmbs, uint16_t read_address, uint16
         NMBS_DEBUG_PRINT("%d ", registers[i]);
     }
 
-    nmbs_error err = send_req(nmbs);
+    nmbs_error err = send_msg(nmbs);
     if (err != NMBS_ERROR_NONE)
         return err;
 
@@ -2205,7 +2193,7 @@ nmbs_error nmbs_read_device_identification_basic(nmbs_t* nmbs, char* vendor_name
         put_1(nmbs, 1);
         put_1(nmbs, next_object_id);
 
-        nmbs_error err = send_req(nmbs);
+        nmbs_error err = send_msg(nmbs);
         if (err != NMBS_ERROR_NONE)
             return err;
 
@@ -2241,7 +2229,7 @@ nmbs_error nmbs_read_device_identification_regular(nmbs_t* nmbs, char* vendor_ur
         put_1(nmbs, 2);
         put_1(nmbs, next_object_id);
 
-        nmbs_error err = send_req(nmbs);
+        nmbs_error err = send_msg(nmbs);
         if (err != NMBS_ERROR_NONE)
             return err;
 
@@ -2266,29 +2254,6 @@ nmbs_error nmbs_read_device_identification_regular(nmbs_t* nmbs, char* vendor_ur
 nmbs_error nmbs_read_device_identification_extended(nmbs_t* nmbs, uint8_t object_id_start, uint8_t* ids, char** buffers,
                                                     uint8_t ids_length, uint8_t buffer_length,
                                                     uint8_t* objects_count_out) {
-    //    if (object_id_start < 0x80)
-    //        return NMBS_ERROR_INVALID_ARGUMENT;
-    //
-    //    msg_state_req(nmbs, 43);
-    //    put_msg_header(nmbs, 3);
-    //    put_1(nmbs, 0x0E);
-    //    put_1(nmbs, 3);
-    //    put_1(nmbs, object_id_start);
-    //
-    //    nmbs_error err = send_req(nmbs);
-    //    if (err != NMBS_ERROR_NONE)
-    //        return err;
-    //
-    //    err = recv_read_device_identification_res(nmbs, buffers_count, buffers, buffer_length, NULL, next_object_id_out,
-    //                                              objects_count_out);
-    //    if (err != NMBS_ERROR_NONE)
-    //        return err;
-    //
-    //    if (next_object_id_out && *next_object_id_out == 0x7F) {
-    //        *next_object_id_out = object_id_start;
-    //    }
-    //
-    //    return NMBS_ERROR_NONE;
     if (object_id_start < 0x80)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
@@ -2302,7 +2267,7 @@ nmbs_error nmbs_read_device_identification_extended(nmbs_t* nmbs, uint8_t object
         put_1(nmbs, 3);
         put_1(nmbs, next_object_id);
 
-        nmbs_error err = send_req(nmbs);
+        nmbs_error err = send_msg(nmbs);
         if (err != NMBS_ERROR_NONE)
             return err;
 
@@ -2332,7 +2297,7 @@ nmbs_error nmbs_read_device_identification(nmbs_t* nmbs, uint8_t object_id, char
     put_1(nmbs, 4);
     put_1(nmbs, object_id);
 
-    nmbs_error err = send_req(nmbs);
+    nmbs_error err = send_msg(nmbs);
     if (err != NMBS_ERROR_NONE)
         return err;
 
@@ -2340,107 +2305,6 @@ nmbs_error nmbs_read_device_identification(nmbs_t* nmbs, uint8_t object_id, char
     return recv_read_device_identification_res(nmbs, 1, buf, buffer_length, NULL, NULL, NULL, NULL);
 }
 
-
-//nmbs_error nmbs_read_device_identification(nmbs_t* nmbs, const nmbs_object_id* object_ids, uint8_t object_ids_len,
-//                                           char** buffers_out, uint8_t buffer_size) {
-//    if (object_ids_len == 0 || object_ids_len > 7) {
-//        return NMBS_ERROR_INVALID_ARGUMENT;
-//    }
-//
-//    if (buffers_out == NULL) {
-//        return NMBS_ERROR_INVALID_ARGUMENT;
-//    }
-//
-//    uint8_t cont_start = 0;
-//    uint8_t cont_length = 0;
-//    uint8_t last_id = 0;
-//    uint8_t indices[7] = {0};
-//
-//    for (int i = 0; i < object_ids_len; i++) {
-//        if (object_ids[i] > 0x06)
-//            return NMBS_ERROR_INVALID_ARGUMENT;
-//
-//        indices[object_ids[i]] = i;
-//        bool send = false;
-//
-//        if (cont_length == 0) {
-//            if (object_ids[i] == 0x00 || object_ids[i] == 0x03) {
-//                cont_start = i;
-//                cont_length = 1;
-//            }
-//        }
-//        else if (object_ids[i] - last_id == 1) {
-//            cont_length++;
-//        }
-//        else {
-//            cont_length = 0;
-//        }
-//
-//        if ((object_ids[cont_start] == 0x00 && cont_length == 3) ||
-//            (object_ids[cont_start] == 0x03 && cont_length == 5)) {
-//            send = true;
-//        }
-//
-//        if (object_ids_len - i > 3 && object_ids[i] == 0x00 && object_ids[i + 1] == 0x01 && object_ids[i + 2] == 0x02) {
-//
-//        }
-//
-//        if (send || i == object_ids_len - 1) {
-//            uint8_t next_id = 0;
-//            uint8_t objects_received = 0;
-//
-//            msg_state_req(nmbs, 43);
-//            put_msg_header(nmbs, 3);
-//            put_1(nmbs, 0x0E);
-//
-//            if (cont_length > 1) {
-//                // Stream access
-//                while (cont_length > 0) {
-//                    if (object_ids[cont_start] < 0x03)
-//                        put_1(nmbs, 1);
-//                    if (object_ids[cont_start] >= 0x03)
-//                        put_1(nmbs, 2);
-//
-//                    put_1(nmbs, next_id);
-//
-//                    nmbs_error err = send_req(nmbs);
-//                    if (err != NMBS_ERROR_NONE)
-//                        return err;
-//
-//                    err = recv_read_device_identification_res(nmbs, cont_length, buffers_out + cont_start, buffer_size,
-//                                                              indices + cont_start, &next_id, &objects_received);
-//                    if (err != NMBS_ERROR_NONE)
-//                        return err;
-//
-//                    cont_start += objects_received;
-//                    cont_length -= objects_received;
-//
-//                    for (int j = 0; j < objects_received; j++) {}
-//                }
-//            }
-//            else {
-//                // Individual access
-//                put_1(nmbs, 4);
-//                put_1(nmbs, object_ids[i]);
-//
-//                nmbs_error err = send_req(nmbs);
-//                if (err != NMBS_ERROR_NONE)
-//                    return err;
-//
-//                err = recv_read_device_identification_res(nmbs, 1, buffers_out + cont_start, buffer_size,
-//                                                          indices + cont_start, &next_id, &objects_received);
-//                if (err != NMBS_ERROR_NONE)
-//                    return err;
-//
-//                cont_length = 0;
-//            }
-//        }
-//
-//        last_id = object_ids[i];
-//    }
-//
-//    return NMBS_ERROR_NONE;
-//}
 
 nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const uint8_t* data, uint16_t data_len) {
     msg_state_req(nmbs, fc);
@@ -2452,7 +2316,7 @@ nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const uint8_t* data, uint
         NMBS_DEBUG_PRINT("%d ", data[i]);
     }
 
-    return send_req(nmbs);
+    return send_msg(nmbs);
 }
 
 
