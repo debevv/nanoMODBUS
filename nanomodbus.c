@@ -1710,7 +1710,7 @@ static nmbs_error handle_read_device_identification(nmbs_t* nmbs) {
 
                 int16_t str_len = (int16_t) strlen(str);
 
-                res_size_left = res_size_left - 2 - str_len;
+                res_size_left = (int16_t) (res_size_left - 2 - str_len);
                 if (res_size_left < 0) {
                     res_more_follows = 0xFF;
                     res_next_object_id = id;
@@ -2180,7 +2180,7 @@ nmbs_error nmbs_read_write_registers(nmbs_t* nmbs, uint16_t read_address, uint16
 
 
 nmbs_error nmbs_read_device_identification_basic(nmbs_t* nmbs, char* vendor_name, char* product_code,
-                                                 char* major_minor_revision, uint8_t buffers_length) {
+                                                 char* major_minor_revision, uint8_t buffer_length) {
     const uint8_t order[3] = {0, 1, 2};
     char* buffers[3] = {vendor_name, product_code, major_minor_revision};
     uint8_t total_received = 0;
@@ -2198,7 +2198,7 @@ nmbs_error nmbs_read_device_identification_basic(nmbs_t* nmbs, char* vendor_name
             return err;
 
         uint8_t objects_received = 0;
-        err = recv_read_device_identification_res(nmbs, 3, buffers, buffers_length, order, NULL, &next_object_id,
+        err = recv_read_device_identification_res(nmbs, 3, buffers, buffer_length, order, NULL, &next_object_id,
                                                   &objects_received);
         if (err != NMBS_ERROR_NONE)
             return err;
@@ -2216,7 +2216,7 @@ nmbs_error nmbs_read_device_identification_basic(nmbs_t* nmbs, char* vendor_name
 
 
 nmbs_error nmbs_read_device_identification_regular(nmbs_t* nmbs, char* vendor_url, char* product_name, char* model_name,
-                                                   char* user_application_name, uint8_t buffers_length) {
+                                                   char* user_application_name, uint8_t buffer_length) {
     const uint8_t order[7] = {0, 0, 0, 0, 1, 2, 3};
     char* buffers[4] = {vendor_url, product_name, model_name, user_application_name};
     uint8_t total_received = 0;
@@ -2234,7 +2234,7 @@ nmbs_error nmbs_read_device_identification_regular(nmbs_t* nmbs, char* vendor_ur
             return err;
 
         uint8_t objects_received = 0;
-        err = recv_read_device_identification_res(nmbs, 4, buffers, buffers_length, order, NULL, &next_object_id,
+        err = recv_read_device_identification_res(nmbs, 4, buffers, buffer_length, order, NULL, &next_object_id,
                                                   &objects_received);
         if (err != NMBS_ERROR_NONE)
             return err;
