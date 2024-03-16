@@ -93,8 +93,8 @@ bool InitCommPort(HANDLE* hComm, int PortNumber) {
 }
 
 bool CloseCommPort(HANDLE* hComm) {
-    if (hComm != INVALID_HANDLE_VALUE)
-        CloseHandle(hComm);
+    if (*hComm != INVALID_HANDLE_VALUE)
+        CloseHandle(*hComm);
     else
         return false;
 
@@ -104,7 +104,6 @@ bool CloseCommPort(HANDLE* hComm) {
 int32_t ReadCommPort(HANDLE hComm, uint8_t* buf, uint16_t count, int32_t byte_timeout_ms) {
     int TotalBytesRead = 0;
     bool Status = false;
-    bool TimedOut = false;
     ULONGLONG StartTime = 0;
     uint8_t b;
     int tmpByteCount;
@@ -126,7 +125,6 @@ int32_t ReadCommPort(HANDLE hComm, uint8_t* buf, uint16_t count, int32_t byte_ti
 
         // did we time out yet??
         if (GetTickCount64() - StartTime > byte_timeout_ms) {
-            TimedOut = true;
             break;
         }
 
