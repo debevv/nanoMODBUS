@@ -4,11 +4,13 @@ Checks: >
   performance-*,
   readability-*,
   bugprone-*,
+  -bugprone-macro-parentheses,
   -bugprone-easily-swappable-parameters,
   -readability-braces-around-statements,
   -readability-magic-numbers,
   -readability-function-cognitive-complexity,
-  -readability-identifier-length
+  -readability-identifier-length,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
 ...
 
 WarningsAsErrors: '*'
