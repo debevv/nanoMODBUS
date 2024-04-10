@@ -83,7 +83,6 @@ static void set_1(nmbs_t* nmbs, uint8_t data, uint8_t index) {
 }
 
 
-
 static void set_2(nmbs_t* nmbs, uint16_t data, uint8_t index) {
     nmbs->msg.buf[index] = (uint8_t) ((data >> 8) & 0xFFU);
     nmbs->msg.buf[index + 1] = (uint8_t) data;
@@ -97,12 +96,12 @@ static uint8_t* get_n(nmbs_t* nmbs, uint16_t n) {
     return msg_buf_ptr;
 }
 
+
 #ifndef NMBS_SERVER_DISABLED
 static void put_n(nmbs_t* nmbs, const uint8_t* data, uint8_t size) {
     memcpy(&nmbs->msg.buf[nmbs->msg.buf_idx], data, size);
     nmbs->msg.buf_idx += size;
 }
-
 
 
 static uint16_t* get_regs(nmbs_t* nmbs, uint16_t n) {
