@@ -3,7 +3,7 @@
 
     MIT License
 
-    Copyright (c) 2022 Valerio De Benedetto (@debevv)
+    Copyright (c) 2024 Valerio De Benedetto (@debevv)
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -440,12 +439,12 @@ nmbs_error nmbs_read_write_registers(nmbs_t* nmbs, uint16_t read_address, uint16
  * @param vendor_name char array where the read VendorName value will be stored
  * @param product_code char array where the read ProductCode value will be stored
  * @param major_minor_revision char array where the read MajorMinorRevision value will be stored
- * @param buffer_length length of every char array
+ * @param buffers_length length of every char array
  *
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
 nmbs_error nmbs_read_device_identification_basic(nmbs_t* nmbs, char* vendor_name, char* product_code,
-                                                 char* major_minor_revision, uint8_t buffer_length);
+                                                 char* major_minor_revision, uint8_t buffers_length);
 
 /** Send a FC 43 / 14 (0x2B / 0x0E) Read Device Identification to read all Regular Object Id values (Read Device ID code 2)
  * @param nmbs pointer to the nmbs_t instance
@@ -453,12 +452,12 @@ nmbs_error nmbs_read_device_identification_basic(nmbs_t* nmbs, char* vendor_name
  * @param product_name char array where the read ProductName value will be stored
  * @param model_name char array where the read ModelName value will be stored
  * @param user_application_name char array where the read UserApplicationName value will be stored
- * @param buffer_length length of every char array
+ * @param buffers_length length of every char array
  *
  * @return NMBS_ERROR_NONE if successful, other errors otherwise.
  */
 nmbs_error nmbs_read_device_identification_regular(nmbs_t* nmbs, char* vendor_url, char* product_name, char* model_name,
-                                                   char* user_application_name, uint8_t buffer_length);
+                                                   char* user_application_name, uint8_t buffers_length);
 
 /** Send a FC 43 / 14 (0x2B / 0x0E) Read Device Identification to read all Extended Object Id values (Read Device ID code 3)
  * @param nmbs pointer to the nmbs_t instance

@@ -3,7 +3,7 @@
 
     MIT License
 
-    Copyright (c) 2022 Valerio De Benedetto (@debevv)
+    Copyright (c) 2024 Valerio De Benedetto (@debevv)
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@
 #include "nanomodbus.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 
 #ifdef NMBS_DEBUG
@@ -423,7 +424,7 @@ static nmbs_error recv_res_header(nmbs_t* nmbs) {
     uint8_t req_unit_id = nmbs->msg.unit_id;
     uint8_t req_fc = nmbs->msg.fc;
 
-    bool first_byte_received;
+    bool first_byte_received = false;
     nmbs_error err = recv_msg_header(nmbs, &first_byte_received);
     if (err != NMBS_ERROR_NONE)
         return err;
@@ -1710,7 +1711,7 @@ static nmbs_error handle_read_device_identification(nmbs_t* nmbs) {
 
                 int16_t str_len = (int16_t) strlen(str);
 
-                res_size_left = res_size_left - 2 - str_len;
+                res_size_left = (int16_t) (res_size_left - 2 - str_len);
                 if (res_size_left < 0) {
                     res_more_follows = 0xFF;
                     res_next_object_id = id;
@@ -1747,7 +1748,7 @@ static nmbs_error handle_read_device_identification(nmbs_t* nmbs) {
 static nmbs_error handle_req_fc(nmbs_t* nmbs) {
     NMBS_DEBUG_PRINT("fc %d\t", nmbs->msg.fc);
 
-    nmbs_error err;
+    nmbs_error err = NMBS_ERROR_NONE;
     switch (nmbs->msg.fc) {
 #ifndef NMBS_SERVER_WRITE_MULTIPLE_COILS_DISABLED
         case 1:

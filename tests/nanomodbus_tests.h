@@ -2,6 +2,7 @@
 #undef NDEBUG
 #include <assert.h>
 #include <pthread.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/select.h>
@@ -40,14 +41,14 @@ nmbs_t CLIENT, SERVER;
     printf("Should %s\n", (s))
 
 
-uint64_t now_ms() {
+uint64_t now_ms(void) {
     struct timespec ts = {0, 0};
     clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
     return (uint64_t) (ts.tv_sec) * 1000 + (uint64_t) (ts.tv_nsec) / 1000000;
 }
 
 
-void reset_sockets() {
+void reset_sockets(void) {
     if (sockets[0] != -1)
         close(sockets[0]);
 
@@ -70,20 +71,20 @@ int32_t read_fd(int fd, uint8_t* buf, uint16_t count, int32_t timeout_ms) {
         if (timeout_ms >= 0) {
             tv_p = &tv;
             tv.tv_sec = timeout_ms / 1000;
-            tv.tv_usec = (timeout_ms % 1000) * 1000;
+            tv.tv_usec = ((__suseconds_t) timeout_ms % 1000) * 1000;
         }
 
         int ret = select(fd + 1, &rfds, NULL, NULL, tv_p);
         if (ret == 0) {
             return total;
         }
-        else if (ret == 1) {
+
+        if (ret == 1) {
             ssize_t r = read(fd, buf + total, 1);
             if (r <= 0)
                 return -1;
-            else {
-                total += r;
-            }
+
+            total += r;
         }
         else
             return -1;
@@ -105,20 +106,20 @@ int32_t write_fd(int fd, const uint8_t* buf, uint16_t count, int32_t timeout_ms)
         if (timeout_ms >= 0) {
             tv_p = &tv;
             tv.tv_sec = timeout_ms / 1000;
-            tv.tv_usec = (timeout_ms % 1000) * 1000;
+            tv.tv_usec = ((__suseconds_t) timeout_ms % 1000) * 1000;
         }
 
         int ret = select(fd + 1, NULL, &wfds, NULL, tv_p);
         if (ret == 0) {
             return 0;
         }
-        else if (ret == 1) {
+
+        if (ret == 1) {
             ssize_t w = write(fd, buf + total, count);
             if (w <= 0)
                 return -1;
-            else {
-                total += w;
-            }
+
+            total += w;
         }
         else
             return -1;
@@ -170,7 +171,7 @@ nmbs_platform_conf* platform_conf_socket_client(nmbs_transport transport) {
 }
 
 
-bool is_server_listen_thread_stopped() {
+bool is_server_listen_thread_stopped(void) {
     bool stopped = false;
     expect(pthread_mutex_lock(&server_stopped_m) == 0);
     stopped = server_stopped;
@@ -179,7 +180,8 @@ bool is_server_listen_thread_stopped() {
 }
 
 
-void* server_listen_thread() {
+void* server_listen_thread(void* arg) {
+    UNUSED_PARAM(arg);
     while (true) {
         if (is_server_listen_thread_stopped())
             break;
@@ -190,8 +192,7 @@ void* server_listen_thread() {
     return NULL;
 }
 
-
-void stop_client_and_server() {
+void stop_client_and_server(void) {
     if (!is_server_listen_thread_stopped()) {
         expect(pthread_mutex_lock(&server_stopped_m) == 0);
         server_stopped = true;

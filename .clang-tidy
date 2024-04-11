@@ -1,16 +1,18 @@
 ---
 Checks: >
-  modernize-*,
-  performance-*,
-  readability-*,
-  bugprone-*,
+  *,
+  -altera-*,
   -bugprone-easily-swappable-parameters,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -google-readability-braces-around-statements,
+  -hicpp-braces-around-statements,
+  -hicpp-signed-bitwise,
+  -llvmlibc-restrict-system-libc-headers,
   -readability-braces-around-statements,
   -readability-magic-numbers,
   -readability-function-cognitive-complexity,
-  -readability-identifier-length
+  -readability-identifier-length,
 ...
-
 WarningsAsErrors: '*'
-HeaderFilterRegex: ''
 FormatStyle: none
