@@ -1,0 +1,6 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+       // Use the CMake panel to launch/debug
+    ]
+}
