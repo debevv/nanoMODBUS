@@ -1760,7 +1760,7 @@ static nmbs_error handle_req_fc(nmbs_t* nmbs) {
 
     nmbs_error err = NMBS_ERROR_NONE;
     switch (nmbs->msg.fc) {
-#ifndef NMBS_SERVER_WRITE_MULTIPLE_COILS_DISABLED
+#ifndef NMBS_SERVER_READ_COILS_DISABLED
         case 1:
             err = handle_read_coils(nmbs);
             break;
