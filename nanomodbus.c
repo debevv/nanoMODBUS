@@ -1832,7 +1832,7 @@ static nmbs_error handle_req_fc(nmbs_t* nmbs) {
             break;
 #endif
         default:
-            err = NMBS_EXCEPTION_ILLEGAL_FUNCTION;
+            err = send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
     }
 
     return err;
