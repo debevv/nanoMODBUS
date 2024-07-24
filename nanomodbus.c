@@ -30,6 +30,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#define NMBS_UNUSED_PARAM(x) ((x) = (x))
+
 #ifdef NMBS_DEBUG
 #include <stdio.h>
 #define NMBS_DEBUG_PRINT(...) printf(__VA_ARGS__)
@@ -178,7 +180,7 @@ nmbs_error nmbs_create(nmbs_t* nmbs, const nmbs_platform_conf* platform_conf) {
     nmbs->byte_timeout_ms = -1;
     nmbs->read_timeout_ms = -1;
 
-    if (!platform_conf)
+    if (!platform_conf || platform_conf->initialized != 0xFFFFDEBE)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
     if (platform_conf->transport != NMBS_TRANSPORT_RTU && platform_conf->transport != NMBS_TRANSPORT_TCP)
@@ -203,6 +205,14 @@ void nmbs_set_byte_timeout(nmbs_t* nmbs, int32_t timeout_ms) {
 }
 
 
+void nmbs_platform_conf_create(nmbs_platform_conf* platform_conf) {
+    memset(platform_conf, 0, sizeof(nmbs_platform_conf));
+    platform_conf->crc_calc = nmbs_crc_calc;
+    // Workaround for older user code not calling nmbs_platform_conf_create()
+    platform_conf->initialized = 0xFFFFDEBE;
+}
+
+
 void nmbs_set_destination_rtu_address(nmbs_t* nmbs, uint8_t address) {
     nmbs->dest_address_rtu = address;
 }
@@ -213,7 +223,8 @@ void nmbs_set_platform_arg(nmbs_t* nmbs, void* arg) {
 }
 
 
-uint16_t nmbs_crc_calc(const uint8_t* data, uint32_t length) {
+uint16_t nmbs_crc_calc(const uint8_t* data, uint32_t length, void* arg) {
+    NMBS_UNUSED_PARAM(arg);
     uint16_t crc = 0xFFFF;
     for (uint32_t i = 0; i < length; i++) {
         crc ^= (uint16_t) data[i];
@@ -270,7 +281,7 @@ static nmbs_error recv_msg_footer(nmbs_t* nmbs) {
     NMBS_DEBUG_PRINT("\n");
 
     if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
-        uint16_t crc = nmbs_crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx);
+        uint16_t crc = nmbs->platform.crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx, nmbs->platform.arg);
 
         nmbs_error err = recv(nmbs, 2);
         if (err != NMBS_ERROR_NONE)
@@ -381,7 +392,7 @@ static nmbs_error send_msg(nmbs_t* nmbs) {
     NMBS_DEBUG_PRINT("\n");
 
     if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
-        uint16_t crc = nmbs_crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx);
+        uint16_t crc = nmbs->platform.crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx, nmbs->platform.arg);
         put_2(nmbs, crc);
     }
 
@@ -1839,9 +1850,18 @@ static nmbs_error handle_req_fc(nmbs_t* nmbs) {
 }
 
 
+void nmbs_callbacks_create(nmbs_callbacks* callbacks) {
+    memset(callbacks, 0, sizeof(nmbs_callbacks));
+    callbacks->initialized = 0xFFFFDEBE;
+}
+
+
 nmbs_error nmbs_server_create(nmbs_t* nmbs, uint8_t address_rtu, const nmbs_platform_conf* platform_conf,
                               const nmbs_callbacks* callbacks) {
     if (platform_conf->transport == NMBS_TRANSPORT_RTU && address_rtu == 0)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    if (!callbacks || callbacks->initialized != 0xFFFFDEBE)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
     nmbs_error ret = nmbs_create(nmbs, platform_conf);

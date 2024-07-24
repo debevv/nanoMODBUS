@@ -103,12 +103,14 @@ void setup() {
 
 void loop() {
   nmbs_platform_conf platform_conf;
+  nmbs_platform_conf_create(&platform_conf);
   platform_conf.transport = NMBS_TRANSPORT_RTU;
   platform_conf.read = read_serial;
   platform_conf.write = write_serial;
   platform_conf.arg = NULL;
 
-  nmbs_callbacks callbacks = {0};
+  nmbs_callbacks callbacks;
+  nmbs_callbacks_create(&callbacks);
   callbacks.read_coils = handle_read_coils;
   callbacks.write_multiple_coils = handle_write_multiple_coils;
   callbacks.read_holding_registers = handler_read_holding_registers;

@@ -31,16 +31,16 @@ int32_t write_empty(const uint8_t* data, uint16_t count, int32_t timeout, void* 
 
 void test_server_create(nmbs_transport transport) {
     nmbs_t nmbs;
-    nmbs_error err;
+    nmbs_error err = NMBS_ERROR_NONE;
 
-    nmbs_platform_conf platform_conf_empty = {
-            .transport = transport,
-            .read = read_empty,
-            .write = write_empty,
-    };
-
+    nmbs_platform_conf platform_conf_empty;
+    nmbs_platform_conf_create(&platform_conf_empty);
+    platform_conf_empty.transport = transport;
+    platform_conf_empty.read = read_empty;
+    platform_conf_empty.write = write_empty;
 
     nmbs_callbacks callbacks_empty;
+    nmbs_callbacks_create(&callbacks_empty);
 
     should("create a modbus server");
     reset(nmbs);
@@ -112,13 +112,15 @@ int32_t read_timeout_second(uint8_t* buf, uint16_t count, int32_t timeout, void*
 
 void test_server_receive_base(nmbs_transport transport) {
     nmbs_t server;
-    nmbs_error err;
+    nmbs_error err = NMBS_ERROR_NONE;
     nmbs_platform_conf platform_conf;
     nmbs_callbacks callbacks_empty;
-
+    nmbs_callbacks_create(&callbacks_empty);
 
     should("honor read_timeout and return normally");
     reset(server);
+
+    nmbs_platform_conf_create(&platform_conf);
     platform_conf.transport = transport;
     platform_conf.read = read_timeout;
     platform_conf.write = write_empty;
@@ -204,7 +206,8 @@ nmbs_error read_discrete(uint16_t address, uint16_t quantity, nmbs_bitfield coil
 void test_fc1(nmbs_transport transport) {
     const uint8_t fc = 1;
     uint8_t raw_res[260];
-    nmbs_callbacks callbacks_empty = {0};
+    nmbs_callbacks callbacks_empty;
+    nmbs_callbacks_create(&callbacks_empty);
 
     start_client_and_server(transport, &callbacks_empty);
 
@@ -213,7 +216,11 @@ void test_fc1(nmbs_transport transport) {
 
     stop_client_and_server();
 
-    start_client_and_server(transport, &(nmbs_callbacks){.read_coils = read_discrete});
+    nmbs_callbacks callbacks;
+    nmbs_callbacks_create(&callbacks);
+    callbacks.read_coils = read_discrete;
+
+    start_client_and_server(transport, &callbacks);
     nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
 
     should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with quantity 0");
@@ -272,7 +279,8 @@ void test_fc1(nmbs_transport transport) {
 void test_fc2(nmbs_transport transport) {
     const uint8_t fc = 2;
     uint8_t raw_res[260];
-    nmbs_callbacks callbacks_empty = {0};
+    nmbs_callbacks callbacks_empty;
+    nmbs_callbacks_create(&callbacks_empty);
 
     start_client_and_server(transport, &callbacks_empty);
 
@@ -281,7 +289,10 @@ void test_fc2(nmbs_transport transport) {
 
     stop_client_and_server();
 
-    start_client_and_server(transport, &(nmbs_callbacks){.read_discrete_inputs = read_discrete});
+    nmbs_callbacks callbacks;
+    nmbs_callbacks_create(&callbacks);
+    callbacks.read_discrete_inputs = read_discrete;
+    start_client_and_server(transport, &callbacks);
     nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
 
     should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with quantity 0");
@@ -378,7 +389,8 @@ nmbs_error read_registers(uint16_t address, uint16_t quantity, uint16_t* registe
 void test_fc3(nmbs_transport transport) {
     const uint8_t fc = 3;
     uint8_t raw_res[260];
-    nmbs_callbacks callbacks_empty = {0};
+    nmbs_callbacks callbacks_empty;
+    nmbs_callbacks_create(&callbacks_empty);
 
     start_client_and_server(transport, &callbacks_empty);
 
@@ -387,7 +399,10 @@ void test_fc3(nmbs_transport transport) {
 
     stop_client_and_server();
 
-    start_client_and_server(transport, &(nmbs_callbacks){.read_holding_registers = read_registers});
+    nmbs_callbacks callbacks;
+    nmbs_callbacks_create(&callbacks);
+    callbacks.read_holding_registers = read_registers;
+    start_client_and_server(transport, &callbacks);
     nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
 
     should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with quantity 0");
@@ -434,7 +449,8 @@ void test_fc3(nmbs_transport transport) {
 void test_fc4(nmbs_transport transport) {
     const uint8_t fc = 4;
     uint8_t raw_res[260];
-    nmbs_callbacks callbacks_empty = {0};
+    nmbs_callbacks callbacks_empty;
+    nmbs_callbacks_create(&callbacks_empty);
 
     start_client_and_server(transport, &callbacks_empty);
 
@@ -443,7 +459,10 @@ void test_fc4(nmbs_transport transport) {
 
     stop_client_and_server();
 
-    start_client_and_server(transport, &(nmbs_callbacks){.read_input_registers = read_registers});
+    nmbs_callbacks callbacks;
+    nmbs_callbacks_create(&callbacks);
+    callbacks.read_input_registers = read_registers;
+    start_client_and_server(transport, &callbacks);
     nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
 
     should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with quantity 0");
@@ -516,7 +535,8 @@ nmbs_error write_coil(uint16_t address, bool value, uint8_t unit_id, void* arg) 
 void test_fc5(nmbs_transport transport) {
     const uint8_t fc = 5;
     uint8_t raw_res[260];
-    nmbs_callbacks callbacks_empty = {0};
+    nmbs_callbacks callbacks_empty;
+    nmbs_callbacks_create(&callbacks_empty);
 
     start_client_and_server(transport, &callbacks_empty);
 
@@ -525,7 +545,10 @@ void test_fc5(nmbs_transport transport) {
 
     stop_client_and_server();
 
-    start_client_and_server(transport, &(nmbs_callbacks){.write_single_coil = write_coil});
+    nmbs_callbacks callbacks;
+    nmbs_callbacks_create(&callbacks);
+    callbacks.write_single_coil = write_coil;
+    start_client_and_server(transport, &callbacks);
     nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE when calling with value !0x0000 or 0xFF000");
@@ -588,7 +611,8 @@ nmbs_error write_register(uint16_t address, uint16_t value, uint8_t unit_id, voi
 void test_fc6(nmbs_transport transport) {
     const uint8_t fc = 6;
     uint8_t raw_res[260];
-    nmbs_callbacks callbacks_empty = {0};
+    nmbs_callbacks callbacks_empty;
+    nmbs_callbacks_create(&callbacks_empty);
 
     start_client_and_server(transport, &callbacks_empty);
 
@@ -597,7 +621,10 @@ void test_fc6(nmbs_transport transport) {
 
     stop_client_and_server();
 
-    start_client_and_server(transport, &(nmbs_callbacks){.write_single_register = write_register});
+    nmbs_callbacks callbacks;
+    nmbs_callbacks_create(&callbacks);
+    callbacks.write_single_register = write_register;
+    start_client_and_server(transport, &callbacks);
     nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
 
     should("return NMBS_EXCEPTION_SERVER_DEVICE_FAILURE when server handler returns any non-exception error");
@@ -676,7 +703,8 @@ void test_fc15(nmbs_transport transport) {
     const uint8_t fc = 15;
     uint8_t raw_res[260];
     nmbs_bitfield bf = {0};
-    nmbs_callbacks callbacks_empty = {0};
+    nmbs_callbacks callbacks_empty;
+    nmbs_callbacks_create(&callbacks_empty);
 
     start_client_and_server(transport, &callbacks_empty);
 
@@ -685,7 +713,10 @@ void test_fc15(nmbs_transport transport) {
 
     stop_client_and_server();
 
-    start_client_and_server(transport, &(nmbs_callbacks){.write_multiple_coils = write_coils});
+    nmbs_callbacks callbacks;
+    nmbs_callbacks_create(&callbacks);
+    callbacks.write_multiple_coils = write_coils;
+    start_client_and_server(transport, &callbacks);
     nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
 
     should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with quantity 0");
@@ -797,7 +828,8 @@ void test_fc16(nmbs_transport transport) {
     const uint8_t fc = 16;
     uint8_t raw_res[260];
     uint16_t registers[125];
-    nmbs_callbacks callbacks_empty = {0};
+    nmbs_callbacks callbacks_empty;
+    nmbs_callbacks_create(&callbacks_empty);
 
     start_client_and_server(transport, &callbacks_empty);
 
@@ -806,7 +838,10 @@ void test_fc16(nmbs_transport transport) {
 
     stop_client_and_server();
 
-    start_client_and_server(transport, &(nmbs_callbacks){.write_multiple_registers = write_registers});
+    nmbs_callbacks callbacks;
+    nmbs_callbacks_create(&callbacks);
+    callbacks.write_multiple_registers = write_registers;
+    start_client_and_server(transport, &callbacks);
     nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
 
     should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with quantity 0");
@@ -899,7 +934,8 @@ nmbs_error read_file(uint16_t file_number, uint16_t record_number, uint16_t* reg
 
 void test_fc20(nmbs_transport transport) {
     uint16_t registers[128];
-    nmbs_callbacks callbacks_empty = {0};
+    nmbs_callbacks callbacks_empty;
+    nmbs_callbacks_create(&callbacks_empty);
 
     start_client_and_server(transport, &callbacks_empty);
 
@@ -908,7 +944,10 @@ void test_fc20(nmbs_transport transport) {
 
     stop_client_and_server();
 
-    start_client_and_server(transport, &(nmbs_callbacks){.read_file_record = read_file});
+    nmbs_callbacks callbacks;
+    nmbs_callbacks_create(&callbacks);
+    callbacks.read_file_record = read_file;
+    start_client_and_server(transport, &callbacks);
     nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
 
     should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with file_number 0");
@@ -978,7 +1017,8 @@ nmbs_error write_file(uint16_t file_number, uint16_t record_number, const uint16
 
 void test_fc21(nmbs_transport transport) {
     uint16_t registers[128];
-    nmbs_callbacks callbacks_empty = {0};
+    nmbs_callbacks callbacks_empty;
+    nmbs_callbacks_create(&callbacks_empty);
 
     start_client_and_server(transport, &callbacks_empty);
 
@@ -987,7 +1027,10 @@ void test_fc21(nmbs_transport transport) {
 
     stop_client_and_server();
 
-    start_client_and_server(transport, &(nmbs_callbacks){.write_file_record = write_file});
+    nmbs_callbacks callbacks;
+    nmbs_callbacks_create(&callbacks);
+    callbacks.write_file_record = write_file;
+    start_client_and_server(transport, &callbacks);
     nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
 
     should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with file_number 0");
@@ -1024,7 +1067,8 @@ void test_fc21(nmbs_transport transport) {
 void test_fc23(nmbs_transport transport) {
     uint16_t registers[125];
     uint16_t registers_write[125];
-    nmbs_callbacks callbacks_empty = {0};
+    nmbs_callbacks callbacks_empty;
+    nmbs_callbacks_create(&callbacks_empty);
 
     start_client_and_server(transport, &callbacks_empty);
 
@@ -1034,8 +1078,11 @@ void test_fc23(nmbs_transport transport) {
 
     stop_client_and_server();
 
-    start_client_and_server(transport, &(nmbs_callbacks){.read_holding_registers = read_registers,
-                                                         .write_multiple_registers = write_registers});
+    nmbs_callbacks callbacks;
+    nmbs_callbacks_create(&callbacks);
+    callbacks.read_holding_registers = read_registers;
+    callbacks.write_multiple_registers = write_registers;
+    start_client_and_server(transport, &callbacks);
     nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
 
     should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with quantity 0");
@@ -1150,25 +1197,31 @@ void test_fc43_14(nmbs_transport transport) {
         buffers[i] = &mem[i * buf_size];
     }
 
-    nmbs_callbacks callbacks_empty = {0};
+    nmbs_callbacks callbacks_empty;
+    nmbs_callbacks_create(&callbacks_empty);
     start_client_and_server(transport, &callbacks_empty);
 
     should("return NMBS_EXCEPTION_ILLEGAL_FUNCTION when callback is not registered server-side");
     expect(nmbs_read_device_identification(&CLIENT, 0x00, buffers[0], buf_size) == NMBS_EXCEPTION_ILLEGAL_FUNCTION);
 
     stop_client_and_server();
-    start_client_and_server(transport,
-                            &(nmbs_callbacks){.read_device_identification = read_device_identification,
-                                              .read_device_identification_map = read_device_identification_map});
+
+    nmbs_callbacks callbacks;
+    nmbs_callbacks_create(&callbacks);
+    callbacks.read_device_identification = read_device_identification;
+    callbacks.read_device_identification_map = read_device_identification_map;
+    start_client_and_server(transport, &callbacks);
     nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
 
     should("immediately return NMBS_ERROR_INVALID_ARGUMENT when calling with an invalid Object Id");
     expect(nmbs_read_device_identification(&CLIENT, 0x07, buffers[0], buf_size) == NMBS_ERROR_INVALID_ARGUMENT);
 
     stop_client_and_server();
-    start_client_and_server(
-            transport, &(nmbs_callbacks){.read_device_identification = read_device_identification,
-                                         .read_device_identification_map = read_device_identification_map_incomplete});
+
+    nmbs_callbacks_create(&callbacks);
+    callbacks.read_device_identification = read_device_identification;
+    callbacks.read_device_identification_map = read_device_identification_map_incomplete;
+    start_client_and_server(transport, &callbacks);
     nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
 
     should("return NMBS_ERROR_SERVER_DEVICE_FAILURE when not exposing Basic object IDs");
@@ -1176,9 +1229,10 @@ void test_fc43_14(nmbs_transport transport) {
            NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
 
     stop_client_and_server();
-    start_client_and_server(transport,
-                            &(nmbs_callbacks){.read_device_identification = read_device_identification,
-                                              .read_device_identification_map = read_device_identification_map});
+
+    callbacks.read_device_identification = read_device_identification;
+    callbacks.read_device_identification_map = read_device_identification_map;
+    start_client_and_server(transport, &callbacks);
     nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
 
     should("return NMBS_EXCEPTION_ILLEGAL_FUNCTION with wrong MEI type");

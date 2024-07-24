@@ -1,6 +1,7 @@
 # nanoMODBUS - A compact MODBUS RTU/TCP C library for embedded/microcontrollers
 
-**If you found this library useful, buy me a coffee on** [<img src='https://storage.ko-fi.com/cdn/brandasset/logo_white_stroke.png' width='80'>](https://ko-fi.com/B0B2LK779)
+**If you found this library useful, buy me a coffee on
+** [<img src='https://storage.ko-fi.com/cdn/brandasset/logo_white_stroke.png' width='80'>](https://ko-fi.com/B0B2LK779)
 
 nanoMODBUS is a small C library that implements the Modbus protocol. It is especially useful in embedded and
 resource-constrained systems like microcontrollers.  
@@ -52,6 +53,7 @@ int main(int argc, char* argv[]) {
 
     // my_transport_read() and my_transport_write() are implemented by the user 
     nmbs_platform_conf platform_conf;
+    nmbs_platform_conf_create(&platform_conf);
     platform_conf.transport = NMBS_TRANSPORT_TCP;
     platform_conf.read = my_transport_read;
     platform_conf.write = my_transport_write;

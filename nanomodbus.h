@@ -139,6 +139,8 @@ typedef enum nmbs_transport {
  * A return value between `0` and `count - 1` will be treated as if a timeout occurred on the transport side. All other
  * values will be treated as transport errors.
  *
+ * Additionally, an optional crc_calc() function can be defined to override the default nanoMODBUS CRC calculation function.
+ *
  * These methods accept a pointer to arbitrary user-data, which is the arg member of this struct.
  * After the creation of an instance it can be changed with nmbs_set_platform_arg().
  */
@@ -148,7 +150,10 @@ typedef struct nmbs_platform_conf {
                     void* arg); /*!< Bytes read transport function pointer */
     int32_t (*write)(const uint8_t* buf, uint16_t count, int32_t byte_timeout_ms,
                      void* arg); /*!< Bytes write transport function pointer */
-    void* arg;                   /*!< User data, will be passed to functions above */
+    uint16_t (*crc_calc)(const uint8_t* data, uint32_t length,
+                         void* arg); /*!< CRC calculation function pointer. Optional */
+    void* arg;                       /*!< User data, will be passed to functions above */
+    uint32_t initialized; /*!< Reserved, workaround for older user code not calling nmbs_platform_conf_create() */
 } nmbs_platform_conf;
 
 
@@ -216,7 +221,8 @@ typedef struct nmbs_callbacks {
 #endif
 #endif
 
-    void* arg;    // User data, will be passed to functions above
+    void* arg;               // User data, will be passed to functions above
+    uint32_t initialized;    // Reserved, workaround for older user code not calling nmbs_callbacks_create()
 } nmbs_callbacks;
 
 
@@ -268,6 +274,11 @@ void nmbs_set_read_timeout(nmbs_t* nmbs, int32_t timeout_ms);
  */
 void nmbs_set_byte_timeout(nmbs_t* nmbs, int32_t timeout_ms);
 
+/** Create a new nmbs_platform_conf struct.
+ * @param platform_conf pointer to the nmbs_platform_conf instance
+ */
+void nmbs_platform_conf_create(nmbs_platform_conf* platform_conf);
+
 /** Set the pointer to user data argument passed to platform functions.
  * @param nmbs pointer to the nmbs_t instance
  * @param arg user data argument
@@ -275,6 +286,11 @@ void nmbs_set_byte_timeout(nmbs_t* nmbs, int32_t timeout_ms);
 void nmbs_set_platform_arg(nmbs_t* nmbs, void* arg);
 
 #ifndef NMBS_SERVER_DISABLED
+/** Create a new nmbs_callbacks struct.
+ * @param callbacks pointer to the nmbs_callbacks instance
+ */
+void nmbs_callbacks_create(nmbs_callbacks* callbacks);
+
 /** Create a new Modbus server.
  * @param nmbs pointer to the nmbs_t instance where the client will be created.
  * @param address_rtu RTU address of this server. Can be 0 if transport is not RTU.
@@ -510,7 +526,7 @@ nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, uint8_t* data_out, uint8_
  * @param data Data
  * @param length Length of the data
  */
-uint16_t nmbs_crc_calc(const uint8_t* data, uint32_t length);
+uint16_t nmbs_crc_calc(const uint8_t* data, uint32_t length, void* arg);
 
 #ifndef NMBS_STRERROR_DISABLED
 /** Convert a nmbs_error to string

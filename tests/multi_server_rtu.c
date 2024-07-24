@@ -122,7 +122,8 @@ int main(int argc, char* argv[]) {
     nmbs_set_read_timeout(&client, 5000);
     nmbs_set_byte_timeout(&client, 100);
 
-    nmbs_callbacks callbacks = {0};
+    nmbs_callbacks callbacks;
+    nmbs_callbacks_create(&callbacks);
     callbacks.read_coils = read_coils;
 
     err = nmbs_server_create(&server1, 33, &s1_conf, &callbacks);

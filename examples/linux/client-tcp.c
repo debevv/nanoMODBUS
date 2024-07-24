@@ -26,6 +26,7 @@ int main(int argc, char* argv[]) {
     }
 
     nmbs_platform_conf platform_conf;
+    nmbs_platform_conf_create(&platform_conf);
     platform_conf.transport = NMBS_TRANSPORT_TCP;
     platform_conf.read = read_fd_linux;
     platform_conf.write = write_fd_linux;
