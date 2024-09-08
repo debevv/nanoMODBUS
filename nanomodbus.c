@@ -146,6 +146,7 @@ static void msg_state_reset(nmbs_t* nmbs) {
     nmbs->msg.transaction_id = 0;
     nmbs->msg.broadcast = false;
     nmbs->msg.ignored = false;
+    nmbs->platform.ResetDE_pin();//-----------------added by PM------------------------//
 }
 
 
@@ -250,10 +251,12 @@ static nmbs_error recv(nmbs_t* nmbs, uint16_t count) {
 
 
 static nmbs_error send(nmbs_t* nmbs, uint16_t count) {
+    nmbs->platform.SetDE_pin();//-----------------added by PM------------------------//
     int32_t ret = nmbs->platform.write(nmbs->msg.buf, count, nmbs->byte_timeout_ms, nmbs->platform.arg);
 
-    if (ret == count)
+    if (ret == count){
         return NMBS_ERROR_NONE;
+    }
 
     if (ret < count) {
         if (ret < 0)

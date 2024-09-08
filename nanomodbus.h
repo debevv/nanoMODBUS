@@ -149,6 +149,8 @@ typedef struct nmbs_platform_conf {
     int32_t (*write)(const uint8_t* buf, uint16_t count, int32_t byte_timeout_ms,
                      void* arg); /*!< Bytes write transport function pointer */
     void* arg;                   /*!< User data, will be passed to functions above */
+    void (*ResetDE_pin)(void);//-----------------added by PM------------------------//
+    void (*SetDE_pin)(void);//-----------------added by PM------------------------//
 } nmbs_platform_conf;
 
 
