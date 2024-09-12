@@ -218,6 +218,8 @@ int main(int argc, char* argv[]) {
         if (conn) {
             // Set the next connection handler used by the read/write platform functions
             nmbs_set_platform_arg(&nmbs, conn);
+        }else{
+            continue;
         }
 
         err = nmbs_server_poll(&nmbs);
