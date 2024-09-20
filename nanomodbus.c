@@ -59,8 +59,7 @@ static void discard_1(nmbs_t* nmbs) {
 
 
 #ifndef NMBS_SERVER_DISABLED
-#if !defined(NMBS_SERVER_READ_FILE_RECORD_DISABLED)  || \
-    !defined(NMBS_SERVER_WRITE_FILE_RECORD_DISABLED)
+#if !defined(NMBS_SERVER_READ_FILE_RECORD_DISABLED) || !defined(NMBS_SERVER_WRITE_FILE_RECORD_DISABLED)
 static void discard_n(nmbs_t* nmbs, uint16_t n) {
     nmbs->msg.buf_idx += n;
 }
@@ -516,11 +515,9 @@ static void put_req_header(nmbs_t* nmbs, uint16_t data_length) {
 #endif
 
 
-#if !defined(NMBS_CLIENT_DISABLED) ||                        \
-   (!defined(NMBS_SERVER_DISABLED) && (                      \
-      !defined(NMBS_SERVER_READ_COILS_DISABLED)           || \
-      !defined(NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED)    \
-   ))
+#if !defined(NMBS_CLIENT_DISABLED) ||                                                                                  \
+        (!defined(NMBS_SERVER_DISABLED) &&                                                                             \
+         (!defined(NMBS_SERVER_READ_COILS_DISABLED) || !defined(NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED)))
 static nmbs_error recv_read_discrete_res(nmbs_t* nmbs, nmbs_bitfield values) {
     nmbs_error err = recv_res_header(nmbs);
     if (err != NMBS_ERROR_NONE)
@@ -558,11 +555,9 @@ static nmbs_error recv_read_discrete_res(nmbs_t* nmbs, nmbs_bitfield values) {
 #endif
 
 
-#if !defined(NMBS_CLIENT_DISABLED) ||                          \
-   (!defined(NMBS_SERVER_DISABLED) && (                        \
-      !defined(NMBS_SERVER_READ_HOLDING_REGISTERS_DISABLED) || \
-      !defined(NMBS_SERVER_READ_INPUT_REGISTERS_DISABLED)      \
-   ))
+#if !defined(NMBS_CLIENT_DISABLED) ||                                                                                  \
+        (!defined(NMBS_SERVER_DISABLED) && (!defined(NMBS_SERVER_READ_HOLDING_REGISTERS_DISABLED) ||                   \
+                                            !defined(NMBS_SERVER_READ_INPUT_REGISTERS_DISABLED)))
 static nmbs_error recv_read_registers_res(nmbs_t* nmbs, uint16_t quantity, uint16_t* registers) {
     nmbs_error err = recv_res_header(nmbs);
     if (err != NMBS_ERROR_NONE)
