@@ -57,9 +57,12 @@ static void discard_1(nmbs_t* nmbs) {
 
 
 #ifndef NMBS_SERVER_DISABLED
+#if !defined(NMBS_SERVER_READ_FILE_RECORD_DISABLED)  || \
+    !defined(NMBS_SERVER_WRITE_FILE_RECORD_DISABLED)
 static void discard_n(nmbs_t* nmbs, uint16_t n) {
     nmbs->msg.buf_idx += n;
 }
+#endif
 #endif
 
 
@@ -79,6 +82,7 @@ static void put_2(nmbs_t* nmbs, uint16_t data) {
 
 
 #ifndef NMBS_SERVER_DISABLED
+#if !defined(NMBS_SERVER_READ_DEVICE_IDENTIFICATION_DISABLED)
 static void set_1(nmbs_t* nmbs, uint8_t data, uint8_t index) {
     nmbs->msg.buf[index] = data;
 }
@@ -88,6 +92,7 @@ static void set_2(nmbs_t* nmbs, uint16_t data, uint8_t index) {
     nmbs->msg.buf[index] = (uint8_t) ((data >> 8) & 0xFFU);
     nmbs->msg.buf[index + 1] = (uint8_t) data;
 }
+#endif
 #endif
 
 
@@ -99,12 +104,15 @@ static uint8_t* get_n(nmbs_t* nmbs, uint16_t n) {
 
 
 #ifndef NMBS_SERVER_DISABLED
+#if !defined(NMBS_SERVER_READ_DEVICE_IDENTIFICATION_DISABLED)
 static void put_n(nmbs_t* nmbs, const uint8_t* data, uint8_t size) {
     memcpy(&nmbs->msg.buf[nmbs->msg.buf_idx], data, size);
     nmbs->msg.buf_idx += size;
 }
+#endif
 
 
+#if !defined(NMBS_SERVER_WRITE_FILE_RECORD_DISABLED)
 static uint16_t* get_regs(nmbs_t* nmbs, uint16_t n) {
     uint16_t* msg_buf_ptr = (uint16_t*) (nmbs->msg.buf + nmbs->msg.buf_idx);
     nmbs->msg.buf_idx += n * 2;
@@ -113,6 +121,7 @@ static uint16_t* get_regs(nmbs_t* nmbs, uint16_t n) {
     }
     return msg_buf_ptr;
 }
+#endif
 #endif
 
 
@@ -368,12 +377,14 @@ static void put_msg_header(nmbs_t* nmbs, uint16_t data_length) {
 
 
 #ifndef NMBS_SERVER_DISABLED
+#if !defined(NMBS_SERVER_READ_DEVICE_IDENTIFICATION_DISABLED)
 static void set_msg_header_size(nmbs_t* nmbs, uint16_t data_length) {
     if (nmbs->platform.transport == NMBS_TRANSPORT_TCP) {
         data_length += 2;
         set_2(nmbs, data_length, 4);
     }
 }
+#endif
 #endif
 
 
@@ -494,6 +505,11 @@ static void put_req_header(nmbs_t* nmbs, uint16_t data_length) {
 #endif
 
 
+#if !defined(NMBS_CLIENT_DISABLED) ||                        \
+   (!defined(NMBS_SERVER_DISABLED) && (                      \
+      !defined(NMBS_SERVER_READ_COILS_DISABLED)           || \
+      !defined(NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED)    \
+   ))
 static nmbs_error recv_read_discrete_res(nmbs_t* nmbs, nmbs_bitfield values) {
     nmbs_error err = recv_res_header(nmbs);
     if (err != NMBS_ERROR_NONE)
@@ -528,8 +544,14 @@ static nmbs_error recv_read_discrete_res(nmbs_t* nmbs, nmbs_bitfield values) {
 
     return NMBS_ERROR_NONE;
 }
+#endif
 
 
+#if !defined(NMBS_CLIENT_DISABLED) ||                          \
+   (!defined(NMBS_SERVER_DISABLED) && (                        \
+      !defined(NMBS_SERVER_READ_HOLDING_REGISTERS_DISABLED) || \
+      !defined(NMBS_SERVER_READ_INPUT_REGISTERS_DISABLED)      \
+   ))
 static nmbs_error recv_read_registers_res(nmbs_t* nmbs, uint16_t quantity, uint16_t* registers) {
     nmbs_error err = recv_res_header(nmbs);
     if (err != NMBS_ERROR_NONE)
@@ -566,6 +588,7 @@ static nmbs_error recv_read_registers_res(nmbs_t* nmbs, uint16_t quantity, uint1
 
     return NMBS_ERROR_NONE;
 }
+#endif
 
 
 nmbs_error recv_write_single_coil_res(nmbs_t* nmbs, uint16_t address, uint16_t value_req) {
