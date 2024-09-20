@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -164,10 +165,13 @@ void disconnect(void* conn) {
 }
 
 
-// Read/write/sleep platform functions
+// Read/write platform functions
 
 int32_t read_fd_linux(uint8_t* buf, uint16_t count, int32_t timeout_ms, void* arg) {
-    if(!arg) return -1;
+    if (!arg) {
+        return -1;
+    }
+
     int fd = *(int*) arg;
 
     uint16_t total = 0;

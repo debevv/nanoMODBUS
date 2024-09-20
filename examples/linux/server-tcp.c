@@ -220,14 +220,12 @@ int main(int argc, char* argv[]) {
         if (conn) {
             // Set the next connection handler used by the read/write platform functions
             nmbs_set_platform_arg(&nmbs, conn);
-        }else{
-            continue;
-        }
 
-        err = nmbs_server_poll(&nmbs);
-        if (err != NMBS_ERROR_NONE) {
-            printf("Error on modbus connection - %s\n", nmbs_strerror(err));
-            // In a more complete example, we would handle this error by checking its nmbs_error value
+            err = nmbs_server_poll(&nmbs);
+            if (err != NMBS_ERROR_NONE) {
+                printf("Error on modbus connection - %s\n", nmbs_strerror(err));
+                // In a more complete example, we would handle this error by checking its nmbs_error value
+            }
         }
     }
 
