@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['transport_92',['transport',['../structnmbs__platform__conf.html#ac00f49dfda553972d54f8f54a2499e8b',1,'nmbs_platform_conf']]]
+  ['initialized_0',['initialized',['../structnmbs__platform__conf.html#a48d6473dcf7162acbf25666643ca2d6e',1,'nmbs_platform_conf']]]
 ];

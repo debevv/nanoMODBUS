@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['write_93',['write',['../structnmbs__platform__conf.html#af83e58b5dcc0c84ea861fd9e78cadcaf',1,'nmbs_platform_conf']]]
+  ['read_0',['read',['../structnmbs__platform__conf.html#a374e2ee742c43e5c97159af2876e8d02',1,'nmbs_platform_conf']]]
 ];
