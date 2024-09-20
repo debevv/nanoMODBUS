@@ -176,7 +176,8 @@ typedef struct nmbs_callbacks {
                                        void* arg);
 #endif
 
-#ifndef NMBS_SERVER_READ_HOLDING_REGISTERS_DISABLED
+#if !defined(NMBS_SERVER_READ_HOLDING_REGISTERS_DISABLED) || \
+    !defined(NMBS_SERVER_READ_WRITE_REGISTERS_DISABLED)
     nmbs_error (*read_holding_registers)(uint16_t address, uint16_t quantity, uint16_t* registers_out, uint8_t unit_id,
                                          void* arg);
 #endif
@@ -199,7 +200,8 @@ typedef struct nmbs_callbacks {
                                        void* arg);
 #endif
 
-#ifndef NMBS_SERVER_WRITE_MULTIPLE_REGISTERS_DISABLED
+#if !defined(NMBS_SERVER_WRITE_MULTIPLE_REGISTERS_DISABLED) || \
+    !defined(NMBS_SERVER_READ_WRITE_REGISTERS_DISABLED)
     nmbs_error (*write_multiple_registers)(uint16_t address, uint16_t quantity, const uint16_t* registers,
                                            uint8_t unit_id, void* arg);
 #endif
