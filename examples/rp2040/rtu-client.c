@@ -1,9 +1,9 @@
-#include <stdio.h>
-#include "pico/stdlib.h"
-#include "hardware/uart.h"
 #include "hardware/gpio.h"
 #include "hardware/timer.h"
+#include "hardware/uart.h"
 #include "nanomodbus.h"
+#include "pico/stdlib.h"
+#include <stdio.h>
 
 // Define UART pins and settings
 #define UART_ID uart0
@@ -16,26 +16,24 @@
 // datasheet for information on which other pins can be used.
 #define UART_TX_PIN 0
 #define UART_RX_PIN 1
-#define UART_DE_PIN 2 // Data Enable pin for RS485
+#define UART_DE_PIN 2    // Data Enable pin for RS485
 
-#define PICO_LED_PIN 25 // Onboard LED pin for the Pico
+#define PICO_LED_PIN 25    // Onboard LED pin for the Pico
 
 // The server address
 #define RTU_SERVER_ADDRESS 1
 
 // Function prototypes
 void onError();
-int32_t read_serial(uint8_t *buf, uint16_t count, int32_t byte_timeout_ms, void *arg);
-int32_t write_serial(const uint8_t *buf, uint16_t count, int32_t byte_timeout_ms, void *arg);
+int32_t read_serial(uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg);
+int32_t write_serial(const uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg);
 
-void onError()
-{
+void onError() {
     // Make the LED blink on error
     const uint LED_PIN = PICO_LED_PIN;
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
-    while (true)
-    {
+    while (true) {
         gpio_put(LED_PIN, 1);
         sleep_ms(1000);
         gpio_put(LED_PIN, 0);
@@ -43,32 +41,27 @@ void onError()
     }
 }
 
-int32_t read_serial(uint8_t *buf, uint16_t count, int32_t byte_timeout_ms, void *arg)
-{
+int32_t read_serial(uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg) {
     uint64_t start_time = time_us_64();
     int32_t bytes_read = 0;
-    uint64_t timeout_us = (uint64_t)byte_timeout_ms * 1000;
+    uint64_t timeout_us = (uint64_t) byte_timeout_ms * 1000;
 
-    while (time_us_64() - start_time < timeout_us && bytes_read < count)
-    {
-        if (uart_is_readable(UART_ID))
-        {
+    while (time_us_64() - start_time < timeout_us && bytes_read < count) {
+        if (uart_is_readable(UART_ID)) {
             buf[bytes_read++] = uart_getc(UART_ID);
-            start_time = time_us_64(); // Reset start time after a successful read
+            start_time = time_us_64();    // Reset start time after a successful read
         }
     }
 
     return bytes_read;
 }
 
-int32_t write_serial(const uint8_t *buf, uint16_t count, int32_t byte_timeout_ms, void *arg)
-{
+int32_t write_serial(const uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg) {
     uart_write_blocking(UART_ID, buf, count);
     return count;
 }
 
-void pico_setup()
-{
+void pico_setup() {
     printf("Initializing UART...\n");
     // Initialize the UART
     uart_init(UART_ID, BAUD_RATE);
@@ -86,7 +79,7 @@ void pico_setup()
     // Initialize the DE pin as output for RS485
     gpio_init(UART_DE_PIN);
     gpio_set_dir(UART_DE_PIN, GPIO_OUT);
-    gpio_put(UART_DE_PIN, 0); // Set DE low to enable receiving initially
+    gpio_put(UART_DE_PIN, 0);    // Set DE low to enable receiving initially
 
     // Initialize the onboard LED
     const uint LED_PIN = PICO_LED_PIN;
@@ -95,16 +88,16 @@ void pico_setup()
     gpio_put(LED_PIN, 0);
 }
 
-int main()
-{
+int main() {
     stdio_init_all();
-    sleep_ms(5000); // Initial pause to catch prints
+    sleep_ms(5000);    // Initial pause to catch prints
 
     printf("Starting Pico setup...\n");
     pico_setup();
 
     printf("Setting up Modbus platform configuration...\n");
     nmbs_platform_conf platform_conf;
+    nmbs_platform_conf_create(&platform_conf);
     platform_conf.transport = NMBS_TRANSPORT_RTU;
     platform_conf.read = read_serial;
     platform_conf.write = write_serial;
@@ -112,8 +105,7 @@ int main()
     printf("Creating Modbus client...\n");
     nmbs_t nmbs;
     nmbs_error err = nmbs_client_create(&nmbs, &platform_conf);
-    if (err != NMBS_ERROR_NONE)
-    {
+    if (err != NMBS_ERROR_NONE) {
         printf("Error creating Modbus client: %d\n", err);
         onError();
     }
@@ -130,17 +122,15 @@ int main()
     nmbs_bitfield_write(coils, 0, 1);
     nmbs_bitfield_write(coils, 1, 1);
     err = nmbs_write_multiple_coils(&nmbs, 64, 2, coils);
-    if (err != NMBS_ERROR_NONE)
-    {
+    if (err != NMBS_ERROR_NONE) {
         printf("Error writing multiple coils: %d\n", err);
         onError();
     }
 
     printf("Reading 3 coils from address 64...\n");
-    nmbs_bitfield_reset(coils); // Reset whole bitfield to zero
+    nmbs_bitfield_reset(coils);    // Reset whole bitfield to zero
     err = nmbs_read_coils(&nmbs, 64, 3, coils);
-    if (err != NMBS_ERROR_NONE)
-    {
+    if (err != NMBS_ERROR_NONE) {
         printf("Error reading coils: %d\n", err);
         onError();
     }
@@ -148,8 +138,7 @@ int main()
     printf("Writing 2 holding registers at address 26...\n");
     uint16_t w_regs[2] = {123, 124};
     err = nmbs_write_multiple_registers(&nmbs, 26, 2, w_regs);
-    if (err != NMBS_ERROR_NONE)
-    {
+    if (err != NMBS_ERROR_NONE) {
         printf("Error writing multiple registers: %d\n", err);
         onError();
     }
@@ -157,8 +146,7 @@ int main()
     printf("Reading 2 holding registers from address 26...\n");
     uint16_t r_regs[2];
     err = nmbs_read_holding_registers(&nmbs, 26, 2, r_regs);
-    if (err != NMBS_ERROR_NONE)
-    {
+    if (err != NMBS_ERROR_NONE) {
         printf("Error reading holding registers: %d\n", err);
         onError();
     }
