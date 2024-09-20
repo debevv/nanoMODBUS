@@ -1,6 +1,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "nanomodbus.h"
@@ -100,6 +101,7 @@ int main(int argc, char* argv[]) {
     UNUSED_PARAM(argv);
 
     nmbs_platform_conf c_conf;
+    nmbs_platform_conf_create(&c_conf);
     c_conf.arg = wire;
     c_conf.transport = NMBS_TRANSPORT_RTU;
     c_conf.read = read_wire;
