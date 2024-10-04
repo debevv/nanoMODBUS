@@ -19,7 +19,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Set the project name
-set(CMAKE_PROJECT_NAME stm32f401ceux)
+set(CMAKE_PROJECT_NAME stm32f401ccux)
 
 # Include toolchain file
 include("cmake/gcc-arm-none-eabi.cmake")
