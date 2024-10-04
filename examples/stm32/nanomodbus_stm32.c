@@ -15,18 +15,72 @@ typedef struct tRingBuf {
 
 static ringBuf rb;
 static void ringbuf_init(ringBuf* rb, void (*overflow_callback)(struct tRingBuf* rq));
-static void ring_buf_overflow_error(ringBuf* rb);
+static void ringbuf_overflow_error(ringBuf* rb);
 
-void nanomodbus_rtu_init(nmbs_t* nmbs)
+uint8_t  coil_buf[COIL_BUF_SIZE];
+uint16_t reg_buf [REG_BUF_SIZE];
+
+static nmbs_error server_read_coils(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, uint8_t unit_id, void* arg);
+static nmbs_error server_read_holding_registers(uint16_t address, uint16_t quantity, uint16_t* registers_out, uint8_t unit_id, void* arg);
+static nmbs_error server_write_single_coil(uint16_t address, bool value, uint8_t unit_id, void* arg);
+static nmbs_error server_write_multiple_coils(uint16_t address, uint16_t quantity, const nmbs_bitfield coils, uint8_t unit_id, void* arg);
+static nmbs_error server_write_single_register(uint16_t address, uint16_t value, uint8_t unit_id, void* arg);
+static nmbs_error server_write_multiple_resisters(uint16_t address, uint16_t quantity, const uint16_t* registers, uint8_t unit_id, void* arg);
+
+void nanomodbus_server_init(nmbs_t* nmbs)
 {
-    ring_buf_init(&rb, ring_buf_overflow_error);
+    ringbuf_init(&rb, ringbuf_overflow_error);
 
     nmbs_platform_conf pf_conf;
+    nmbs_callbacks     cb;
 
     nmbs_platform_conf_create(&pf_conf);
     pf_conf.transport = NMBS_TRANSPORT_RTU; 
     pf_conf.read = read_serial;   
     pf_conf.write = write_serial;
+
+    nmbs_callbacks_create(&cb);
+    cb.read_coils                = server_read_coils;
+    cb.read_holding_registers    = server_read_holding_registers;
+    cb.write_single_coil         = server_write_single_coil;
+    cb.write_multiple_coils      = server_write_multiple_coils;
+    cb.write_single_register     = server_write_single_register;
+    cb.write_multiple_registers  = server_write_multiple_resisters;
+}
+
+void nanomodbus_server_add(nmbs_server_t* server)
+{
+
+}
+
+static nmbs_error server_read_coils(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, uint8_t unit_id, void* arg)
+{
+
+}
+
+static nmbs_error server_read_holding_registers(uint16_t address, uint16_t quantity, uint16_t* registers_out, uint8_t unit_id, void* arg)
+{
+
+}
+
+static nmbs_error server_write_single_coil(uint16_t address, bool value, uint8_t unit_id, void* arg)
+{
+
+}
+
+static nmbs_error server_write_multiple_coils(uint16_t address, uint16_t quantity, const nmbs_bitfield coils, uint8_t unit_id, void* arg)
+{
+
+
+}
+static nmbs_error server_write_single_register(uint16_t address, uint16_t value, uint8_t unit_id, void* arg)
+{
+
+}
+
+static nmbs_error server_write_multiple_registers(uint16_t address, uint16_t quantity, const uint16_t* registers, uint8_t unit_id, void* arg)
+{
+
 }
 
 // Function to initialize the ring buffer
@@ -98,7 +152,7 @@ uint16_t ringbuf_size(ringBuf* rb) {
 }
 
 // Example callback function to handle buffer overflow
-static void ring_buf_overflow_error(ringBuf* rb)
+static void ringbuf_overflow_error(ringBuf* rb)
 {
     //In here we may check the overflow situation
     while(true){}
