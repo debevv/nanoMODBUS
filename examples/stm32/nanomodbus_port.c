@@ -1,8 +1,12 @@
 #include <string.h>
-#include "nanomodbus_stm32.h"
+#include "nanomodbus_port.h"
 
 static int32_t read_serial(uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg);
 static int32_t write_serial(const uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg);
+
+// Dual buffer setting to isolate dma implementation and ring buffer. 
+// You may integrate this feature with dma counter register to minimize memory footprint
+static uint8_t rx_dma_buf[RX_BUF_SIZE];
 
 // Ring buffer structure definition
 typedef struct tRingBuf {
@@ -58,6 +62,11 @@ nmbs_error nanomodbus_server_init(nmbs_t* nmbs, nmbs_server_t* _servers, uint8_t
             return status;
         }
     }
+
+    nmbs_set_byte_timeout(nmbs, 100);
+    nmbs_set_read_timeout(nmbs, 1000);
+
+    HAL_UARTEx_ReceiveToIdle_DMA(&NANOMB_UART, rx_dma_buf, RX_BUF_SIZE);
     return NMBS_ERROR_NONE;
 }
 
@@ -221,10 +230,6 @@ static void ringbuf_overflow_error(ringBuf* rb)
     while(true){}
 }
 
-// Dual buffer setting to isolate dma implementation and ring buffer. 
-// You may integrate this feature with dma counter register to minimize memory footprint
-static uint8_t rx_dma_buf[RX_BUF_SIZE];
-
 // RX event callback from dma
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
@@ -241,42 +246,27 @@ static int32_t read_serial(uint8_t* buf, uint16_t count, int32_t byte_timeout_ms
     uint32_t tick_start = HAL_GetTick();
     while(ringbuf_size(&rb) < count)
     {
-        if(HAL_GetTick() - tick_start >= byte_timeout_ms)
+        if(HAL_GetTick() - tick_start >= (uint32_t)byte_timeout_ms)
         {
-            return NMBS_ERROR_TIMEOUT;
+            uint16_t size_to_read = ringbuf_size(&rb);
+            ringbuf_get(&rb, buf, size_to_read);
+            return size_to_read;
         }
     }
     // Read from ring buffer
     if(ringbuf_get(&rb, buf, count))
     {
-        return NMBS_ERROR_NONE;
+        return count;
     }
     else
     {
-        return NMBS_ERROR_TRANSPORT;
+        return 0;
     }
 }
-
 
 static int32_t write_serial(const uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg)
 {
     HAL_StatusTypeDef status = HAL_UART_Transmit_DMA(&NANOMB_UART, buf, count);
-
-    switch (status)
-    {
-    case HAL_OK:
-        return NMBS_ERROR_NONE;
-        break;
-    case HAL_ERROR:
-        return NMBS_ERROR_TRANSPORT;
-        break;
-    case HAL_BUSY:
-        return NMBS_ERROR_TRANSPORT;
-        break;
-    case HAL_TIMEOUT:
-        return NMBS_ERROR_TIMEOUT;
-        break;
-    }
-    return NMBS_ERROR_INVALID_ARGUMENT;
+    return count;
 }
 

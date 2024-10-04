@@ -48,7 +48,7 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
-    nanomodbus_stm32.c
+    nanomodbus_port.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../nanomodbus.c
 )
 
