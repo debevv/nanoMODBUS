@@ -113,6 +113,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+    // If you use rtos, this polling can processed in a task
     nmbs_server_poll(&nmbs);
   }
   /* USER CODE END 3 */
