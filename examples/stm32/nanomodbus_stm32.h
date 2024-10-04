@@ -19,14 +19,13 @@ extern "C" {
 // NanoModbus include
 #include "nanomodbus.h"
 
-void nanomodbus_server_init(nmbs_t* nmbs);
-void nanomodbus_server_add(nmbs_server_t* server);
-
-struct tNmbsServer{
+typedef struct tNmbsServer{
     uint8_t  id;
     uint8_t  coils[COIL_BUF_SIZE];
     uint16_t regs[REG_BUF_SIZE];
-}typedef nmbs_server_t;
+}nmbs_server_t;
+
+nmbs_error nanomodbus_server_init(nmbs_t* nmbs, nmbs_server_t* servers, uint8_t server_num);
 
 extern UART_HandleTypeDef NANOMB_UART;
 
