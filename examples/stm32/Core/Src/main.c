@@ -31,7 +31,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define TEST_SERVER 1
+#define TEST_CLIENT 0
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -101,7 +102,15 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
+#if TEST_SERVER
   nmbs_server_init(&nmbs, &nmbs_server);
+#endif
+
+#if TEST_CLIENT
+  uint8_t coils_test[32];
+  uint16_t regs_test[32];
+  nmbs_client_init(&nmbs);
+#endif
 
   /* USER CODE END 2 */
 
@@ -114,7 +123,19 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
     // If you use rtos, this polling can processed in a task
+    #if TEST_SERVER
     nmbs_server_poll(&nmbs);
+    #endif
+
+    #if TEST_CLIENT
+    nmbs_set_destination_rtu_address(&nmbs, 0x01);
+    nmbs_error status = nmbs_read_holding_registers(&nmbs, 0, 32, regs_test);
+    status = nmbs_write_multiple_registers(&nmbs, 0, 32, regs_test);
+    if(status != NMBS_ERROR_NONE)
+    {
+      while(true){}
+    }
+    #endif
   }
   /* USER CODE END 3 */
 }
