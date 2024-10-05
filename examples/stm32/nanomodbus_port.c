@@ -66,6 +66,31 @@ nmbs_error nmbs_server_init(nmbs_t* nmbs, nmbs_server_t* _server)
     return NMBS_ERROR_NONE;
 }
 
+nmbs_error nmbs_client_init(nmbs_t* nmbs)
+{
+    ringbuf_init(&rb, ringbuf_overflow_error);
+
+    nmbs_platform_conf conf;
+
+    nmbs_platform_conf_create(&conf);
+    conf.transport = NMBS_TRANSPORT_RTU; 
+    conf.read = read_serial;   
+    conf.write = write_serial;
+
+    nmbs_error status = nmbs_client_create(nmbs, &conf);
+    if(status != NMBS_ERROR_NONE)
+    {
+        return status;
+    }
+    
+    nmbs_set_byte_timeout(nmbs, 100);
+    nmbs_set_read_timeout(nmbs, 1000);
+
+    HAL_UARTEx_ReceiveToIdle_DMA(&NANOMB_UART, rx_dma_buf, RX_BUF_SIZE);
+    return NMBS_ERROR_NONE;
+}
+
+
 static nmbs_server_t* get_server(uint8_t id)
 {
     if(id == server->id)

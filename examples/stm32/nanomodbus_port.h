@@ -26,6 +26,7 @@ typedef struct tNmbsServer{
 }nmbs_server_t;
 
 nmbs_error nmbs_server_init(nmbs_t* nmbs, nmbs_server_t* server);
+nmbs_error nmbs_client_init(nmbs_t* nmbs);
 
 extern UART_HandleTypeDef NANOMB_UART;
 
