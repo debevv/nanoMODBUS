@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "nanomodbus_stm32.h"
+#include "nanomodbus_port.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,12 +46,11 @@ DMA_HandleTypeDef hdma_usart1_tx;
 
 /* USER CODE BEGIN PV */
 nmbs_t nmbs;
-nmbs_server_t nmbs_servers[] = {
-  {
+nmbs_server_t nmbs_server = 
+{
   .id = 0x01,
   .coils = {0,},
   .regs  = {0,},
-  },
 };
 /* USER CODE END PV */
 
@@ -102,7 +101,7 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  nanomodbus_server_init(&nmbs, nmbs_servers, sizeof(nmbs_servers)/sizeof(*nmbs_servers));
+  nmbs_server_init(&nmbs, &nmbs_server);
 
   /* USER CODE END 2 */
 

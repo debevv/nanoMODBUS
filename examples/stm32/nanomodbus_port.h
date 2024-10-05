@@ -25,7 +25,7 @@ typedef struct tNmbsServer{
     uint16_t regs[REG_BUF_SIZE];
 }nmbs_server_t;
 
-nmbs_error nanomodbus_server_init(nmbs_t* nmbs, nmbs_server_t* servers, uint8_t server_num);
+nmbs_error nmbs_server_init(nmbs_t* nmbs, nmbs_server_t* server);
 
 extern UART_HandleTypeDef NANOMB_UART;
 
