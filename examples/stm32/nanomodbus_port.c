@@ -21,8 +21,7 @@ static ringBuf rb;
 static void ringbuf_init(ringBuf* rb, void (*overflow_callback)(struct tRingBuf* rq));
 static void ringbuf_overflow_error(ringBuf* rb);
 
-static nmbs_server_t* servers;
-static uint8_t        server_num;
+static nmbs_server_t* server;
 
 static nmbs_error server_read_coils(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, uint8_t unit_id, void* arg);
 static nmbs_error server_read_holding_registers(uint16_t address, uint16_t quantity, uint16_t* registers_out, uint8_t unit_id, void* arg);
@@ -31,7 +30,7 @@ static nmbs_error server_write_multiple_coils(uint16_t address, uint16_t quantit
 static nmbs_error server_write_single_register(uint16_t address, uint16_t value, uint8_t unit_id, void* arg);
 static nmbs_error server_write_multiple_registers(uint16_t address, uint16_t quantity, const uint16_t* registers, uint8_t unit_id, void* arg);
 
-nmbs_error nanomodbus_server_init(nmbs_t* nmbs, nmbs_server_t* _servers, uint8_t _server_num)
+nmbs_error nmbs_server_init(nmbs_t* nmbs, nmbs_server_t* _server)
 {
     ringbuf_init(&rb, ringbuf_overflow_error);
 
@@ -43,6 +42,8 @@ nmbs_error nanomodbus_server_init(nmbs_t* nmbs, nmbs_server_t* _servers, uint8_t
     conf.read = read_serial;   
     conf.write = write_serial;
 
+    server = _server;
+
     nmbs_callbacks_create(&cb);
     cb.read_coils                = server_read_coils;
     cb.read_holding_registers    = server_read_holding_registers;
@@ -51,18 +52,13 @@ nmbs_error nanomodbus_server_init(nmbs_t* nmbs, nmbs_server_t* _servers, uint8_t
     cb.write_single_register     = server_write_single_register;
     cb.write_multiple_registers  = server_write_multiple_registers;
 
-    servers = _servers;
-    server_num = _server_num;
 
-    for(size_t i = 0; i < server_num; i++)
+    nmbs_error status = nmbs_server_create(nmbs, server->id, &conf, &cb);
+    if(status != NMBS_ERROR_NONE)
     {
-        nmbs_error status = nmbs_server_create(nmbs, servers[i].id, &conf, &cb);
-        if(status != NMBS_ERROR_NONE)
-        {
-            return status;
-        }
+        return status;
     }
-
+    
     nmbs_set_byte_timeout(nmbs, 100);
     nmbs_set_read_timeout(nmbs, 1000);
 
@@ -72,14 +68,15 @@ nmbs_error nanomodbus_server_init(nmbs_t* nmbs, nmbs_server_t* _servers, uint8_t
 
 static nmbs_server_t* get_server(uint8_t id)
 {
-    for(size_t i = 0; i < server_num; i++)
+    if(id == server->id)
     {
-        if(servers[i].id == id)
-        {
-            return &servers[i];
-        }
+        return server;
     }
-    return (nmbs_server_t*)(NULL);
+    else
+    {
+        return NULL;
+    }
+        
 }
 
 static nmbs_error server_read_coils(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out, uint8_t unit_id, void* arg)

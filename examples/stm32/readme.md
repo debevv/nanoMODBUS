@@ -7,6 +7,8 @@
 - Blackpill board
 - STM32F401CCUx 
 - USART1 with DMA
+  - PA9 : TX1
+  - PA10 : RX1
 
 ## Toolchain and environment
 
