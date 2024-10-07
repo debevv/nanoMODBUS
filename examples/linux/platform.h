@@ -236,7 +236,7 @@ int32_t write_fd_linux(const uint8_t* buf, uint16_t count, int32_t timeout_ms, v
         }
 
         if (ret == 1) {
-            ssize_t w = write(fd, buf + total, count);
+            ssize_t w = write(fd, buf + total, count - total);
             if (w == 0) {
                 disconnect(arg);
                 return -1;

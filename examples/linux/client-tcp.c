@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
     uint16_t w_regs[2] = {123, 124};
     err = nmbs_write_multiple_registers(&nmbs, 26, 2, w_regs);
     if (err != NMBS_ERROR_NONE) {
-        fprintf(stderr, "Error writing register at address 26 - %s", nmbs_strerror(err));
+        fprintf(stderr, "Error writing register at address 26 - %s\n", nmbs_strerror(err));
         if (!nmbs_error_is_exception(err))
             return 1;
     }
