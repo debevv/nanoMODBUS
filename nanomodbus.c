@@ -254,8 +254,12 @@ static nmbs_error recv(nmbs_t* nmbs, uint16_t count) {
     int32_t ret =
             nmbs->platform.read(nmbs->msg.buf + nmbs->msg.buf_idx, count, nmbs->byte_timeout_ms, nmbs->platform.arg);
 
-    if (ret == count)
+    if (ret == count) {
+        if (nmbs->platform.transport == NMBS_TRANSPORT_TCP)
+          nmbs->msg.length -= count;
+
         return NMBS_ERROR_NONE;
+    }
 
     if (ret < count) {
         if (ret < 0)
@@ -355,14 +359,18 @@ static nmbs_error recv_msg_header(nmbs_t* nmbs, bool* first_byte_received) {
         nmbs->msg.transaction_id = get_2(nmbs);
         uint16_t protocol_id = get_2(nmbs);
         uint16_t length = get_2(nmbs);    // We should actually check the length of the request against this value
+        // length includes all message bytes from here
         nmbs->msg.unit_id = get_1(nmbs);
         nmbs->msg.fc = get_1(nmbs);
 
         if (protocol_id != 0)
             return NMBS_ERROR_INVALID_TCP_MBAP;
 
-        if (length > 255)
+        if ((length < 2) || (length > 255))
             return NMBS_ERROR_INVALID_TCP_MBAP;
+
+        // remaining bytes in socket buffer: unit_id & fc already processed
+        nmbs->msg.length = length - 1 - 1;
     }
 
     return NMBS_ERROR_NONE;
@@ -445,7 +453,13 @@ static nmbs_error send_exception_msg(nmbs_t* nmbs, uint8_t exception) {
 
     NMBS_DEBUG_PRINT("%d NMBS res -> address_rtu %d\texception %d", nmbs->address_rtu, nmbs->address_rtu, exception);
 
-    return send_msg(nmbs);
+    nmbs_error err = send_msg(nmbs);
+
+    if (err == NMBS_ERROR_NONE && nmbs->platform.transport == NMBS_TRANSPORT_TCP && nmbs->msg.length > 0)
+      // Flush the remaining data in the socket buffer
+      nmbs->platform.read(nmbs->msg.buf, nmbs->msg.length, nmbs->read_timeout_ms, nmbs->platform.arg);
+
+    return err;
 }
 #endif
 

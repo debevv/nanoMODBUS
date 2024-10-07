@@ -239,6 +239,7 @@ typedef struct nmbs_t {
         uint8_t unit_id;
         uint8_t fc;
         uint16_t transaction_id;
+        uint16_t length;         // only valid for NMBS_TRANSPORT_TCP
         bool broadcast;
         bool ignored;
     } msg;
