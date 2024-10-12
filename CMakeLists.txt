@@ -19,6 +19,7 @@ target_compile_definitions(client_disabled PUBLIC NMBS_CLIENT_DISABLED)
 
 add_executable(multi_server_rtu nanomodbus.c tests/multi_server_rtu.c)
 target_compile_definitions(multi_server_rtu PUBLIC NMBS_DEBUG)
+target_link_libraries(multi_server_rtu pthread)
 
 add_custom_target(tests DEPENDS nanomodbus_tests server_disabled client_disabled multi_server_rtu)
 
