@@ -13,20 +13,6 @@ set(CMAKE_TOOLCHAIN_FILE ${stm32_cmake_SOURCE_DIR}/cmake/stm32_gcc.cmake)
 project(${PROJ_NAME} CXX C ASM)
 set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 
-set(TARGET_NAME ${PROJ_NAME})
-
-add_executable(${TARGET_NAME} 
-    main.c 
-    bsp/blackpill/blackpill.c
-    nmbs/port.c
-    )
-
-target_include_directories(
-    ${TARGET_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/bsp
-    ${CMAKE_CURRENT_SOURCE_DIR}/nmbs
-)
-
 stm32_fetch_cmsis(F4)
 stm32_fetch_hal(F4)
 
@@ -81,30 +67,60 @@ endif()
 add_library(nanomodbus ${nanomodbus_SOURCE_DIR}/nanomodbus.c)
 target_include_directories(nanomodbus PUBLIC ${nanomodbus_SOURCE_DIR})
 
-target_link_libraries(
-    ${TARGET_NAME} 
-    STM32::NoSys 
-    CMSIS::STM32::F401CC
-    HAL::STM32::F4::CORTEX
-    HAL::STM32::F4::RCC
-    HAL::STM32::F4::PWR
-    HAL::STM32::F4::GPIO
-    HAL::STM32::F4::TIM
-    HAL::STM32::F4::UART
-    HAL::STM32::F4::USART
-    HAL::STM32::F4::SPI
-    HAL::STM32::F4::DMA
-    wizchip
-    freertos_kernel
-    nanomodbus
-)
+set(TARGET_NAMES modbus_rtu modbus_tcp)
 
-add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-    COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${TARGET_NAME}>
-)
-add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${TARGET_NAME}> ${TARGET_NAME}.hex
-)
-add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${TARGET_NAME}> ${TARGET_NAME}.bin
-)
+foreach(TARGET_NAME ${TARGET_NAMES})
+
+  add_executable(${TARGET_NAME} 
+      ${TARGET_NAME}.c 
+      bsp/blackpill/blackpill.c
+      nmbs/port.c
+      )
+
+  target_include_directories(
+      ${TARGET_NAME} PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/bsp
+      ${CMAKE_CURRENT_SOURCE_DIR}/nmbs
+  )
+
+  if(${TARGET_NAME} STREQUAL "modbus_rtu")
+    target_compile_definitions(
+        ${TARGET_NAME} PRIVATE
+        NMBS_RTU
+    )
+  elseif(${TARGET_NAME} STREQUAL "modbus_tcp")
+    target_compile_definitions(
+        ${TARGET_NAME} PRIVATE
+        NMBS_TCP
+    )
+  endif()
+
+  target_link_libraries(
+      ${TARGET_NAME} 
+      STM32::NoSys 
+      CMSIS::STM32::F401CC
+      HAL::STM32::F4::CORTEX
+      HAL::STM32::F4::RCC
+      HAL::STM32::F4::PWR
+      HAL::STM32::F4::GPIO
+      HAL::STM32::F4::TIM
+      HAL::STM32::F4::UART
+      HAL::STM32::F4::USART
+      HAL::STM32::F4::SPI
+      HAL::STM32::F4::DMA
+      wizchip
+      freertos_kernel
+      nanomodbus
+  )
+
+  add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+      COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${TARGET_NAME}>
+  )
+  add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+  COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${TARGET_NAME}> ${TARGET_NAME}.hex
+  )
+  add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+  COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${TARGET_NAME}> ${TARGET_NAME}.bin
+  )
+
+endforeach()
