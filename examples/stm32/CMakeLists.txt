@@ -1,72 +1,110 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.16)
+set(PROJ_NAME stm32-blackpill)
 
-#
-# This file is generated only once,
-# and is not re-generated if converter is called multiple times.
-#
-# User is free to modify the file as much as necessary
-#
+include(FetchContent)
+FetchContent_Declare( stm32_cmake
+  GIT_REPOSITORY https://github.com/ObKo/stm32-cmake
+  GIT_TAG        v2.1.0
+  GIT_SHALLOW    TRUE
+)
+FetchContent_Populate(stm32_cmake)
+set(CMAKE_TOOLCHAIN_FILE ${stm32_cmake_SOURCE_DIR}/cmake/stm32_gcc.cmake)
 
-# Setup compiler settings
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS ON)
+project(${PROJ_NAME} CXX C ASM)
+set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 
+set(TARGET_NAME ${PROJ_NAME})
 
-# Define the build type
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Debug")
+add_executable(${TARGET_NAME} 
+    main.c 
+    bsp/blackpill/blackpill.c
+    nmbs/port.c
+    )
+
+target_include_directories(
+    ${TARGET_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsp
+    ${CMAKE_CURRENT_SOURCE_DIR}/nmbs
+)
+
+stm32_fetch_cmsis(F4)
+stm32_fetch_hal(F4)
+
+find_package(CMSIS COMPONENTS STM32F401CC REQUIRED)
+find_package(HAL COMPONENTS STM32F4 REQUIRED)
+
+add_compile_options(
+    -mcpu=cortex-m4 
+    -mfpu=fpv4-sp-d16 
+    -mfloat-abi=hard
+    )
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set( FREERTOS_HEAP "4")
+set( FREERTOS_PORT "GCC_ARM_CM4F")
+
+add_library(freertos_config INTERFACE)
+target_include_directories(freertos_config SYSTEM
+    INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+FetchContent_Declare( freertos_kernel
+  GIT_REPOSITORY https://github.com/FreeRTOS/FreeRTOS-Kernel.git
+  GIT_TAG        V11.1.0
+  GIT_SHALLOW    TRUE
+)
+
+FetchContent_MakeAvailable(freertos_kernel)
+
+set(WIZ_CHIP W5500)
+
+FetchContent_Declare(
+  wizchip
+  GIT_REPOSITORY https://github.com/donghoonpark/wizchip-cmake
+  GIT_SHALLOW TRUE
+)
+
+FetchContent_MakeAvailable(wizchip)
+
+FetchContent_Declare(
+  nanomodbus
+  GIT_REPOSITORY https://github.com/debevv/nanoMODBUS
+  GIT_TAG        v1.18.1
+  GIT_SHALLOW TRUE
+)
+
+FetchContent_GetProperties(nanomodbus)
+if(NOT nanomodbus_POPULATED)
+  FetchContent_Populate(nanomodbus)
 endif()
 
-# Set the project name
-set(CMAKE_PROJECT_NAME stm32f401ccux)
+add_library(nanomodbus ${nanomodbus_SOURCE_DIR}/nanomodbus.c)
+target_include_directories(nanomodbus PUBLIC ${nanomodbus_SOURCE_DIR})
 
-# Include toolchain file
-include("cmake/gcc-arm-none-eabi.cmake")
-
-# Enable compile command to ease indexing with e.g. clangd
-set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
-
-# Enable CMake support for ASM and C languages
-enable_language(C ASM)
-
-# Core project settings
-project(${CMAKE_PROJECT_NAME})
-message("Build type: " ${CMAKE_BUILD_TYPE})
-
-# Create an executable object type
-add_executable(${CMAKE_PROJECT_NAME})
-
-# Add STM32CubeMX generated sources
-add_subdirectory(cmake/stm32cubemx)
-
-# Link directories setup
-target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user defined library search paths
+target_link_libraries(
+    ${TARGET_NAME} 
+    STM32::NoSys 
+    CMSIS::STM32::F401CC
+    HAL::STM32::F4::CORTEX
+    HAL::STM32::F4::RCC
+    HAL::STM32::F4::PWR
+    HAL::STM32::F4::GPIO
+    HAL::STM32::F4::TIM
+    HAL::STM32::F4::UART
+    HAL::STM32::F4::USART
+    HAL::STM32::F4::SPI
+    HAL::STM32::F4::DMA
+    wizchip
+    freertos_kernel
+    nanomodbus
 )
 
-# Add sources to executable
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user sources here
-    nanomodbus_port.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../nanomodbus.c
+add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+    COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${TARGET_NAME}>
 )
-
-# Add include paths
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user defined include paths
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../
+add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${TARGET_NAME}> ${TARGET_NAME}.hex
 )
-
-# Add project symbols (macros)
-target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user defined symbols
-)
-
-# Add linked libraries
-target_link_libraries(${CMAKE_PROJECT_NAME}
-    stm32cubemx
-
-    # Add user defined libraries
+add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${TARGET_NAME}> ${TARGET_NAME}.bin
 )

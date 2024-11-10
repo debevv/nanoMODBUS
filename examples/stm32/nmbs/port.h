@@ -5,19 +5,25 @@
 extern "C" {
 #endif
 
-#define NANOMB_UART huart1
-#define RX_BUF_SIZE 256
-
 // Max size of coil and register area
 #define COIL_BUF_SIZE 1024 
 #define REG_BUF_SIZE  2048
 
-// Other hardware configuration have done in *.ioc file
-
-// Core name may vary with your hardware
-#include "stm32f4xx_hal.h"
 // NanoModbus include
 #include "nanomodbus.h"
+#include "stm32f4xx_hal.h"
+
+#ifdef NMBS_TCP
+// modbus tcp 
+#define MB_SOCKET 1
+#include <socket.h>
+#endif
+
+#ifdef NMBS_RTU
+// modbus rtu
+#define MB_UART huart1
+#define RX_BUF_SIZE 256
+#endif
 
 typedef struct tNmbsServer{
     uint8_t  id;
@@ -27,8 +33,6 @@ typedef struct tNmbsServer{
 
 nmbs_error nmbs_server_init(nmbs_t* nmbs, nmbs_server_t* server);
 nmbs_error nmbs_client_init(nmbs_t* nmbs);
-
-extern UART_HandleTypeDef NANOMB_UART;
 
 #ifdef __cplusplus
 }

@@ -11,7 +11,7 @@
             "executable": "${command:cmake.launchTargetPath}", //or fixed file path: build/stm32h735g-dk-led.elf
             "request": "launch",                //Use "attach" to connect to target w/o elf download
             "servertype": "openocd",
-            "device": "STM32F401CE",                       //MCU used, ex. "STM32H735IG"
+            "device": "STM32F401",                       //MCU used, ex. "STM32H735IG"
             "interface": "swd",
             "serialNumber": "",                 //Set ST-Link ID if you use multiple at the same time
             "runToEntryPoint": "main",
@@ -21,12 +21,9 @@
                 "interface/stlink.cfg",
                 "target/stm32f4x.cfg"
             ],
-            "postLaunchCommands": [
-                "monitor arm semihosting enable",
-            ],
             "liveWatch": {
                 "enabled": true,
-                "samplesPerSecond": 1
+                "samplesPerSecond": 4
             }
         }
     ]
