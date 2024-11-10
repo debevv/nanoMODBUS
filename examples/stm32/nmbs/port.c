@@ -198,3 +198,30 @@ int32_t write_socket(const uint8_t *buf, uint16_t count, int32_t byte_timeout_ms
     return send(MB_SOCKET, buf, count);
 }
 #endif
+
+#ifdef NMBS_RTU
+static int32_t read_serial(uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg)
+{
+    HAL_StatusTypeDef status = HAL_UART_Receive(&MB_UART, buf, count, byte_timeout_ms);
+    if(status == HAL_OK)
+    {
+        return count;
+    }
+    else
+    {
+        return 0;
+    }
+}
+static int32_t write_serial(const uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg)
+{
+    HAL_StatusTypeDef status = HAL_UART_Transmit(&MB_UART, buf, count, byte_timeout_ms);
+    if(status == HAL_OK)
+    {
+        return count;
+    }
+    else
+    {
+        return 0;
+    }
+}
+#endif

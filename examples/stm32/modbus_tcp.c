@@ -76,7 +76,6 @@ int main(void)
     }
 }
 
-
 static void blink(void* args)
 {
     for(;;)
