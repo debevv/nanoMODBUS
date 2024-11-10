@@ -21,8 +21,9 @@ extern "C" {
 
 #ifdef NMBS_RTU
 // modbus rtu
-#define MB_UART huart1
-#define RX_BUF_SIZE 256
+#define MB_UART         huart1
+#define MB_UART_DMA     1
+#define MB_RX_BUF_SIZE  256
 extern UART_HandleTypeDef MB_UART;
 #endif
 
