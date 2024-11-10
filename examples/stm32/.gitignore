@@ -1,11 +1,8 @@
-# Auto-generated from *.ioc file
-cmake/*
+build/*
 Core/*
 Drivers/*
+.cproject
 .mxproject
-*.s
+.project
 *.ld
-CMakePresets.json
-
-# Editor setting
 .vscode/*
