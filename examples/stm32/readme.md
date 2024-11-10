@@ -6,15 +6,19 @@
 
 - Blackpill board
 - STM32F401CCUx 
-- USART1 with DMA
+- USART1 (with/without) DMA
   - PA9 : TX1
   - PA10 : RX1
+- SPI1 with DMA (connected to W5500)
+  - PB3 : SCK1
+  - PB4 : MISO1
+  - PB5 : MOSI1
+  - PA15 : NSS (Software select)
 
 ## Toolchain and environment
 
-Tested on Mac OS Sonoma(Apple Silicon M1) but other os having same toolchain should have no problem.
+Tested on Mac OS Sonoma(Apple Silicon) & Windows 10 but other os having same toolchain should have no problem.
 
-- STM32CubeMX 6.11.1
 - arm-none-eabi-gcc 
 - cmake
 - ninja
@@ -23,8 +27,3 @@ Tested on Mac OS Sonoma(Apple Silicon M1) but other os having same toolchain sho
   - CMake
   - cortex-debug
 
-## How to run
-
-1. Generate driver code from stm32f401ccux.ioc using STM32CubeMX
-2. Configure with CMake
-3. Launch with elf file or flash it

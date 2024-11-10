@@ -194,6 +194,11 @@ static void MX_USART1_UART_Init(void)
     Error_Handler();
   }
 
+  // Enable USART1 interrupt
+  // It must higher or equal than 5
+  HAL_NVIC_SetPriority(USART1_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(USART1_IRQn);
+  
   // USART1 Pin configuration: TX (PA9), RX (PA10)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
@@ -207,6 +212,8 @@ static void MX_USART1_UART_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+
 }
 
 static void MX_SPI1_Init(void)
@@ -321,11 +328,14 @@ static void MX_DMA_Init(void)
   hdma_usart1_rx.Init.Mode = DMA_NORMAL;
   hdma_usart1_rx.Init.Priority = DMA_PRIORITY_HIGH;
   hdma_usart1_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+
   if (HAL_DMA_Init(&hdma_usart1_rx) != HAL_OK)
   {
     // Initialization error handling
     Error_Handler();
   }
+
+  __HAL_LINKDMA(&huart1, hdmarx, hdma_usart1_rx);
 
     // DMA2_Stream3 (SPI1_TX) Interrupt Configuration
   HAL_NVIC_SetPriority(DMA2_Stream3_IRQn, 0, 0);
@@ -368,4 +378,9 @@ void DMA2_Stream7_IRQHandler(void)
 void DMA2_Stream2_IRQHandler(void)
 {
     HAL_DMA_IRQHandler(&hdma_usart1_rx);
+}
+
+void USART1_IRQHandler(void)
+{
+    HAL_UART_IRQHandler(&huart1);
 }
