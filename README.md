@@ -119,7 +119,9 @@ Both methods should block until either:
 - `count` bytes of data are read/written
 - the byte timeout, with `byte_timeout_ms >= 0`, expires
 
-A value `< 0` for `byte_timeout_ms` means no timeout.
+A value `< 0` for `byte_timeout_ms` means infinite timeout.  
+With a value `== 0` for `byte_timeout_ms`, the method should read/write once in a non-blocking fashion and return
+immediately.
 
 Their return value should be the number of bytes actually read/written, or `< 0` in case of error.  
 A return value between `0` and `count - 1` will be treated as if a timeout occurred on the transport side. All other
