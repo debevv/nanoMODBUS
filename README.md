@@ -33,6 +33,7 @@ Its main features are:
 - Platform-agnostic
     - Requires only C99 and its standard library
     - Data transport read/write function are implemented by the user
+- User-definable CRC function for better performance
 - Broadcast requests and responses
 
 ## At a glance
