@@ -21,7 +21,7 @@
 // A single nmbs_bitfield variable can keep 2000 coils
 bool terminate = false;
 nmbs_bitfield server_coils = {0};
-uint16_t server_registers[REGS_ADDR_MAX] = {0};
+uint16_t server_registers[REGS_ADDR_MAX + 1] = {0};
 uint16_t server_file[FILE_SIZE_MAX];
 
 
