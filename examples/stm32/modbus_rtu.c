@@ -11,27 +11,23 @@
 static void blink(void* args);
 static void modbus(void* args);
 
-uint32_t HAL_GetTick(void)
-{
+uint32_t HAL_GetTick(void) {
     return xTaskGetTickCount();
 }
 
-int main(void)
-{
+int main(void) {
     BSP_Init();
 
-    xTaskCreate(blink,  "blink",  128,      NULL, 4, NULL);
+    xTaskCreate(blink, "blink", 128, NULL, 4, NULL);
     xTaskCreate(modbus, "modbus", 128 * 16, NULL, 2, NULL);
 
     vTaskStartScheduler();
 
-    for(;;){}
+    for (;;) {}
 }
 
-static void blink(void* args)
-{
-    for(;;)
-    {
+static void blink(void* args) {
+    for (;;) {
         HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
         vTaskDelay(500);
         HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
@@ -40,15 +36,19 @@ static void blink(void* args)
 }
 
 nmbs_t nmbs;
-nmbs_server_t nmbs_server = 
-{
-  .id = 0x01,
-  .coils = {0,},
-  .regs  = {0,},
+nmbs_server_t nmbs_server = {
+        .id = 0x01,
+        .coils =
+                {
+                        0,
+                },
+        .regs =
+                {
+                        0,
+                },
 };
 
-static void modbus(void* args)
-{
+static void modbus(void* args) {
 #if TEST_SERVER
     nmbs_server_init(&nmbs, &nmbs_server);
 #endif
@@ -59,7 +59,7 @@ static void modbus(void* args)
     nmbs_client_init(&nmbs);
 #endif
 
-    for(;;){
+    for (;;) {
 #if TEST_SERVER
         nmbs_server_poll(&nmbs);
         taskYIELD();
@@ -68,9 +68,8 @@ static void modbus(void* args)
         nmbs_set_destination_rtu_address(&nmbs, 0x01);
         nmbs_error status = nmbs_read_holding_registers(&nmbs, 0, 32, regs_test);
         status = nmbs_write_multiple_registers(&nmbs, 0, 32, regs_test);
-        if(status != NMBS_ERROR_NONE)
-        {
-        while(true){}
+        if (status != NMBS_ERROR_NONE) {
+            while (true) {}
         }
 #endif
     }
