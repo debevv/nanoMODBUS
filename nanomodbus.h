@@ -243,6 +243,7 @@ typedef struct nmbs_t {
         uint16_t transaction_id;
         bool broadcast;
         bool ignored;
+        bool complete;
     } msg;
 
     nmbs_callbacks callbacks;

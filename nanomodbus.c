@@ -144,6 +144,50 @@ static void swap_regs(uint16_t* data, uint16_t n) {
 }
 
 
+static nmbs_error recv(nmbs_t* nmbs, uint16_t count) {
+    if (nmbs->msg.complete) {
+        return NMBS_ERROR_NONE;
+    }
+
+    int32_t ret =
+            nmbs->platform.read(nmbs->msg.buf + nmbs->msg.buf_idx, count, nmbs->byte_timeout_ms, nmbs->platform.arg);
+
+    if (ret == count)
+        return NMBS_ERROR_NONE;
+
+    if (ret < count) {
+        if (ret < 0)
+            return NMBS_ERROR_TRANSPORT;
+
+        return NMBS_ERROR_TIMEOUT;
+    }
+
+    return NMBS_ERROR_TRANSPORT;
+}
+
+
+static nmbs_error send(nmbs_t* nmbs, uint16_t count) {
+    int32_t ret = nmbs->platform.write(nmbs->msg.buf, count, nmbs->byte_timeout_ms, nmbs->platform.arg);
+
+    if (ret == count)
+        return NMBS_ERROR_NONE;
+
+    if (ret < count) {
+        if (ret < 0)
+            return NMBS_ERROR_TRANSPORT;
+
+        return NMBS_ERROR_TIMEOUT;
+    }
+
+    return NMBS_ERROR_TRANSPORT;
+}
+
+
+static void flush(nmbs_t* nmbs) {
+    nmbs->platform.read(nmbs->msg.buf, sizeof(nmbs->msg.buf), 0, nmbs->platform.arg);
+}
+
+
 static void msg_buf_reset(nmbs_t* nmbs) {
     nmbs->msg.buf_idx = 0;
 }
@@ -156,6 +200,7 @@ static void msg_state_reset(nmbs_t* nmbs) {
     nmbs->msg.transaction_id = 0;
     nmbs->msg.broadcast = false;
     nmbs->msg.ignored = false;
+    nmbs->msg.complete = false;
 }
 
 
@@ -167,7 +212,7 @@ static void msg_state_req(nmbs_t* nmbs, uint8_t fc) {
         nmbs->current_tid++;
 
     // Flush the remaining data on the line before sending the request
-    nmbs->platform.read(nmbs->msg.buf, sizeof(nmbs->msg.buf), 0, nmbs->platform.arg);
+    flush(nmbs);
 
     msg_state_reset(nmbs);
     nmbs->msg.unit_id = nmbs->dest_address_rtu;
@@ -249,42 +294,6 @@ uint16_t nmbs_crc_calc(const uint8_t* data, uint32_t length, void* arg) {
     return (uint16_t) (crc << 8) | (uint16_t) (crc >> 8);
 }
 
-
-static nmbs_error recv(nmbs_t* nmbs, uint16_t count) {
-    int32_t ret =
-            nmbs->platform.read(nmbs->msg.buf + nmbs->msg.buf_idx, count, nmbs->byte_timeout_ms, nmbs->platform.arg);
-
-    if (ret == count)
-        return NMBS_ERROR_NONE;
-
-    if (ret < count) {
-        if (ret < 0)
-            return NMBS_ERROR_TRANSPORT;
-
-        return NMBS_ERROR_TIMEOUT;
-    }
-
-    return NMBS_ERROR_TRANSPORT;
-}
-
-
-static nmbs_error send(nmbs_t* nmbs, uint16_t count) {
-    int32_t ret = nmbs->platform.write(nmbs->msg.buf, count, nmbs->byte_timeout_ms, nmbs->platform.arg);
-
-    if (ret == count)
-        return NMBS_ERROR_NONE;
-
-    if (ret < count) {
-        if (ret < 0)
-            return NMBS_ERROR_TRANSPORT;
-
-        return NMBS_ERROR_TIMEOUT;
-    }
-
-    return NMBS_ERROR_TRANSPORT;
-}
-
-
 static nmbs_error recv_msg_footer(nmbs_t* nmbs) {
     NMBS_DEBUG_PRINT("\n");
 
@@ -354,15 +363,22 @@ static nmbs_error recv_msg_header(nmbs_t* nmbs, bool* first_byte_received) {
 
         nmbs->msg.transaction_id = get_2(nmbs);
         uint16_t protocol_id = get_2(nmbs);
-        uint16_t length = get_2(nmbs);    // We should actually check the length of the request against this value
+        uint16_t length = get_2(nmbs);
         nmbs->msg.unit_id = get_1(nmbs);
         nmbs->msg.fc = get_1(nmbs);
+
+        if (length < 2 || length > 255)
+            return NMBS_ERROR_INVALID_TCP_MBAP;
+
+        // Receive the rest of the message
+        err = recv(nmbs, length - 2);
+        if (err != NMBS_ERROR_NONE)
+            return err;
 
         if (protocol_id != 0)
             return NMBS_ERROR_INVALID_TCP_MBAP;
 
-        if (length > 255)
-            return NMBS_ERROR_INVALID_TCP_MBAP;
+        nmbs->msg.complete = true;
     }
 
     return NMBS_ERROR_NONE;
@@ -1861,6 +1877,7 @@ static nmbs_error handle_req_fc(nmbs_t* nmbs) {
             break;
 #endif
         default:
+            flush(nmbs);
             err = send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
     }
 
@@ -1917,11 +1934,9 @@ nmbs_error nmbs_server_poll(nmbs_t* nmbs) {
 #endif
 
     err = handle_req_fc(nmbs);
-    if (err != NMBS_ERROR_NONE && !nmbs_error_is_exception(err)) {
-        if (nmbs->platform.transport == NMBS_TRANSPORT_RTU && err != NMBS_ERROR_TIMEOUT && nmbs->msg.ignored) {
-            // Flush the remaining data on the line
-            nmbs->platform.read(nmbs->msg.buf, sizeof(nmbs->msg.buf), 0, nmbs->platform.arg);
-        }
+    if (err != NMBS_ERROR_NONE) {
+        if (err != NMBS_ERROR_TIMEOUT)
+            flush(nmbs);
 
         return err;
     }
