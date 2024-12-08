@@ -1366,7 +1366,7 @@ static nmbs_error handle_read_file_record(nmbs_t* nmbs) {
                              subreq[i].record_length);
         }
 
-        put_res_header(nmbs, response_data_size);
+        put_res_header(nmbs, 1 + response_data_size);
         put_1(nmbs, response_data_size);
 
         if (nmbs->callbacks.read_file_record) {
