@@ -1335,7 +1335,7 @@ static nmbs_error handle_read_file_record(nmbs_t* nmbs) {
         uint16_t record_number;
         uint16_t record_length;
     }
-#ifdef __STDC_NO_VLA__
+#if defined(__STDC_NO_VLA__) || defined(_MSC_VER)
     subreq[35];    // 245 / subreq_header_size
 #else
     subreq[subreq_count];
@@ -1553,7 +1553,7 @@ static nmbs_error handle_read_write_registers(nmbs_t* nmbs) {
     if (err != NMBS_ERROR_NONE)
         return err;
 
-#ifdef __STDC_NO_VLA__
+#if defined(__STDC_NO_VLA__) || defined(_MSC_VER)
     uint16_t registers[0x007B];
 #else
     uint16_t registers[byte_count_write / 2];
@@ -1596,7 +1596,7 @@ static nmbs_error handle_read_write_registers(nmbs_t* nmbs) {
         }
 
         if (!nmbs->msg.broadcast) {
-#ifdef __STDC_NO_VLA__
+#if defined(__STDC_NO_VLA__) || defined(_MSC_VER)
             uint16_t regs[125];
 #else
             uint16_t regs[read_quantity];
