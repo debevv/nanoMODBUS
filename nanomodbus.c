@@ -213,7 +213,7 @@ void nmbs_set_platform_arg(nmbs_t* nmbs, void* arg) {
 }
 
 
-__weak uint16_t nmbs_crc_calc(const uint8_t* data, uint32_t length) {
+uint16_t nmbs_crc_calc(const uint8_t* data, uint32_t length) {
     uint16_t crc = 0xFFFF;
     for (uint32_t i = 0; i < length; i++) {
         crc ^= (uint16_t) data[i];
