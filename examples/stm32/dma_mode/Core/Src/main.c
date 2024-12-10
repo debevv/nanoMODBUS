@@ -261,6 +261,7 @@ nmbs_error handle_write_multiple_registers(uint16_t address, uint16_t quantity,
 }
 
 void modbus_init() {
+    nmbs_platform_conf_create(&platform_conf);
 	platform_conf.transport = NMBS_TRANSPORT_RTU;
 	platform_conf.read = read_from_buf;
 	platform_conf.write = modbus_send_DMA;
