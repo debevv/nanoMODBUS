@@ -57,8 +57,12 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define LED1_SYS_AL_Pin GPIO_PIN_11
+#define LED1_SYS_AL_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
+//invert the red LED
+#define RED_TOGGLE()    HAL_GPIO_TogglePin(LED1_SYS_AL_GPIO_Port, LED1_SYS_AL_Pin);
 
 /* USER CODE END Private defines */
 
