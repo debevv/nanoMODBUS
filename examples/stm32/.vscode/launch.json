@@ -1,0 +1,30 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Microcontroller - OpenOCD",
+            "cwd": "${workspaceFolder}",
+            "type": "cortex-debug",
+            "executable": "${command:cmake.launchTargetPath}", //or fixed file path: build/stm32h735g-dk-led.elf
+            "request": "launch",                //Use "attach" to connect to target w/o elf download
+            "servertype": "openocd",
+            "device": "STM32F401",                       //MCU used, ex. "STM32H735IG"
+            "interface": "swd",
+            "serialNumber": "",                 //Set ST-Link ID if you use multiple at the same time
+            "runToEntryPoint": "main",
+            "v1": false,
+            "showDevDebugOutput": "both",
+            "configFiles": [
+                "interface/stlink.cfg",
+                "target/stm32f4x.cfg"
+            ],
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            }
+        }
+    ]
+}

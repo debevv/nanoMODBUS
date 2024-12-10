@@ -155,6 +155,7 @@ int32_t write_socket_client(const uint8_t* buf, uint16_t count, int32_t timeout_
 
 nmbs_platform_conf nmbs_platform_conf_server;
 nmbs_platform_conf* platform_conf_socket_server(nmbs_transport transport) {
+    nmbs_platform_conf_create(&nmbs_platform_conf_server);
     nmbs_platform_conf_server.transport = transport;
     nmbs_platform_conf_server.read = read_socket_server;
     nmbs_platform_conf_server.write = write_socket_server;
@@ -164,6 +165,7 @@ nmbs_platform_conf* platform_conf_socket_server(nmbs_transport transport) {
 
 nmbs_platform_conf nmbs_platform_conf_client;
 nmbs_platform_conf* platform_conf_socket_client(nmbs_transport transport) {
+    nmbs_platform_conf_create(&nmbs_platform_conf_client);
     nmbs_platform_conf_client.transport = transport;
     nmbs_platform_conf_client.read = read_socket_client;
     nmbs_platform_conf_client.write = write_socket_client;

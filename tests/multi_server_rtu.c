@@ -1,6 +1,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "nanomodbus.h"
@@ -100,6 +101,7 @@ int main(int argc, char* argv[]) {
     UNUSED_PARAM(argv);
 
     nmbs_platform_conf c_conf;
+    nmbs_platform_conf_create(&c_conf);
     c_conf.arg = wire;
     c_conf.transport = NMBS_TRANSPORT_RTU;
     c_conf.read = read_wire;
@@ -122,7 +124,8 @@ int main(int argc, char* argv[]) {
     nmbs_set_read_timeout(&client, 5000);
     nmbs_set_byte_timeout(&client, 100);
 
-    nmbs_callbacks callbacks = {0};
+    nmbs_callbacks callbacks;
+    nmbs_callbacks_create(&callbacks);
     callbacks.read_coils = read_coils;
 
     err = nmbs_server_create(&server1, 33, &s1_conf, &callbacks);
