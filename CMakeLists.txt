@@ -8,6 +8,9 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -g0")
 
 include_directories(tests examples/linux .)
 
+# Define BUILD_SHARED_LIBS=ON to build a dynamic library instead
+add_library(nanomodbus nanomodbus.c)
+
 add_executable(nanomodbus_tests nanomodbus.c tests/nanomodbus_tests.c)
 target_link_libraries(nanomodbus_tests pthread)
 
