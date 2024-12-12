@@ -1450,7 +1450,7 @@ static nmbs_error handle_write_file_record(nmbs_t* nmbs) {
         uint16_t size = request_size;
         nmbs->msg.buf_idx = msg_buf_idx;    // restore context
 
-        if (request_size < 0x07 || request_size > 0xFB)
+        if (request_size < 7)
             return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
         do {
