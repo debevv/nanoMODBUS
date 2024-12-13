@@ -1878,7 +1878,8 @@ static nmbs_error handle_req_fc(nmbs_t* nmbs) {
 #endif
         default:
             flush(nmbs);
-            err = send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+            if (!nmbs->msg.ignored && !nmbs->msg.broadcast)
+                err = send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
     }
 
     return err;
