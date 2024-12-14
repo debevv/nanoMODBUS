@@ -10,6 +10,7 @@ include_directories(tests examples/linux .)
 
 # Define BUILD_SHARED_LIBS=ON to build a dynamic library instead
 add_library(nanomodbus nanomodbus.c)
+target_include_directories(nanomodbus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(BUILD_EXAMPLES)
     add_executable(client-tcp examples/linux/client-tcp.c)
