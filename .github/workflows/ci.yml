@@ -14,7 +14,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake ..
+          cmake .. -DBUILD_TESTS=ON
           make
           ./nanomodbus_tests
       - name: Compile Arduino examples
