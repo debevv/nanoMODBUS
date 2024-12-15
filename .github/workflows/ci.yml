@@ -16,7 +16,9 @@ jobs:
           cd build
           cmake .. -DBUILD_TESTS=ON
           make
-          ./nanomodbus_tests
+      - name: test
+        run: |
+          ctest --test-dir bulid/Testing
       - name: Compile Arduino examples
         run: |
           pushd build
