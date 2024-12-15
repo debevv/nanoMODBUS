@@ -16,15 +16,13 @@ jobs:
       - name: build
         run: |
           cmake --build build --config Debug
+      - name: Compress Build Directory
+        run: tar -czf build.tar.gz build/
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
           name: build
-          path: build/  
-          exclude: |
-            build/**/*.o
-            build/**/*.internal
-            build/**/*.txt
+          path: build.tar.gz
       - name: Compile Arduino examples
         run: |
           pushd build
@@ -37,15 +35,14 @@ jobs:
     needs: Build  # run after Build job
     steps:
       - uses: actions/checkout@v3
-
       - name: Download Build Directory
         uses: actions/download-artifact@v3
         with:
           name: build  
-  
+      - name: Extract Build Directory
+        run: tar -xzf build.tar.gz -C build/
       - name: List Build Files
-        run: ls -R build  
-
+        run: ls -R .  
       - name: test
         run: |
           cd build
