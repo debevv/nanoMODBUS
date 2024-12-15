@@ -20,15 +20,6 @@ if(BUILD_EXAMPLES)
 endif()
 
 if(BUILD_TESTS)
-    include(FetchContent)
-
-    FetchContent_Declare(
-        criterion
-        GIT_REPOSITORY https://github.com/Snaipe/Criterion.git
-        GIT_TAG v2.4.1 
-    )
-    FetchContent_MakeAvailable(criterion)
-    
     add_executable(nanomodbus_tests nanomodbus.c tests/nanomodbus_tests.c)
     target_link_libraries(nanomodbus_tests pthread)
 
