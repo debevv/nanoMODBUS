@@ -42,7 +42,7 @@ jobs:
       - name: Extract Build Directory
         run: |
           mkdir -p build
-          tar -xzf build.tar.gz -C build/
+          tar -xzf build.tar.gz -C .
       - name: List Build Files
         run: ls -R .  
       - name: test
