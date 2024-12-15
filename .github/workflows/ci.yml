@@ -10,15 +10,16 @@ jobs:
     steps:
       - name: Clone repo
         uses: actions/checkout@v2
+      - name: configure
+        run: |
+          cmake -S . -B build -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Debug
       - name: build
         run: |
-          mkdir build
-          cd build
-          cmake .. -DBUILD_TESTS=ON
-          make
+          cmake --build build --config Debug
       - name: test
         run: |
-          ctest --test-dir bulid/Testing
+          cd build
+          ctest
       - name: Compile Arduino examples
         run: |
           pushd build
