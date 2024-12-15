@@ -48,6 +48,12 @@ jobs:
           cmake -S . -B build -DPICO_SDK_PATH=$PWD/pico-sdk
           cmake --build build --config Debug
           popd
+      - name: Build stm32 examples
+        run: |
+          pushd examples/stm32
+          cmake -S . -B build
+          cmake --build build --config Debug
+          popd
   Test:
     runs-on: ubuntu-latest
     needs: Build  # run after Build job

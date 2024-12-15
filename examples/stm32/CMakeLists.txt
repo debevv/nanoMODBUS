@@ -59,7 +59,15 @@ FetchContent_Declare(
         GIT_SHALLOW TRUE
 )
 
-FetchContent_MakeAvailable(nanomodbus)
+FetchContent_GetProperties(nanomodbus)
+if (NOT nanomodbus_POPULATED)
+    FetchContent_Populate(nanomodbus)
+endif ()
+
+add_library(nanomodbus ${nanomodbus_SOURCE_DIR}/nanomodbus.c)
+target_include_directories(nanomodbus PUBLIC ${nanomodbus_SOURCE_DIR})
+
+# FetchContent_MakeAvailable(nanomodbus)
 
 set(TARGET_NAMES modbus_rtu modbus_tcp)
 
