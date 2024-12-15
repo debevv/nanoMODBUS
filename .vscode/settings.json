@@ -1,10 +1,16 @@
 {
   "cmake.configureOnOpen": true,
+  "cmake.configureArgs": [
+    "-DBUILD_TESTS=ON",
+    "-DBUILD_EXAMPLES=ON"
+  ],
   "cmake.copyCompileCommands": "${workspaceFolder}/compile_commands.json",
   "C_Cpp.intelliSenseEngine": "disabled",
   "clangd.path": "clangd",
   "editor.formatOnSave": true,
-  "editor.rulers": [120],
+  "editor.rulers": [
+    120
+  ],
   "[c]": {
     "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
   },
