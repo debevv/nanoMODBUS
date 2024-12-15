@@ -16,10 +16,15 @@ jobs:
       - name: build
         run: |
           cmake --build build --config Debug
-      - name: test
-        run: |
-          cd build
-          ctest
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: build/  
+          exclude: |
+            build/**/*.o
+            build/**/*.internal
+            build/**/*.txt
       - name: Compile Arduino examples
         run: |
           pushd build
@@ -27,3 +32,11 @@ jobs:
           popd
           export PATH="build/bin:$PATH"
           ./examples/arduino/compile-examples.sh
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: test
+        run: |
+          cd build
+          ctest
+
