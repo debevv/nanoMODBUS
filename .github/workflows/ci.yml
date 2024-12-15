@@ -40,7 +40,9 @@ jobs:
         with:
           name: build  
       - name: Extract Build Directory
-        run: tar -xzf build.tar.gz -C build/
+        run: |
+          mkdir -p build
+          tar -xzf build.tar.gz -C build/
       - name: List Build Files
         run: ls -R .  
       - name: test
