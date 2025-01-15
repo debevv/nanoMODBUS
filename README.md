@@ -96,7 +96,29 @@ int main(int argc, char* argv[]) {
 
 ## Installation
 
+### Integrate source code to your project
+
 Just copy `nanomodbus.c` and `nanomodbus.h` inside your application codebase.
+
+### CMake project
+
+nanomodbus supports library linking by using cmake.
+
+```cmake
+FetchContent_Declare(
+        nanomodbus
+        GIT_REPOSITORY https://github.com/debevv/nanoMODBUS
+        GIT_TAG master # or the version you want
+        GIT_SHALLOW TRUE
+)
+
+FetchContent_MakeAvailable(nanomodbus)
+
+...
+
+add_executable(your_program source_codes)
+target_link_libraries(your_program nanomodbus)
+```
 
 ## API reference
 
