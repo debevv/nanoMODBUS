@@ -68,7 +68,7 @@ static void discard_n(nmbs_t* nmbs, uint16_t n) {
 
 
 static uint16_t get_2(nmbs_t* nmbs) {
-    uint16_t result =
+    const uint16_t result =
             ((uint16_t) nmbs->msg.buf[nmbs->msg.buf_idx]) << 8 | (uint16_t) nmbs->msg.buf[nmbs->msg.buf_idx + 1];
     nmbs->msg.buf_idx += 2;
     return result;
@@ -166,7 +166,7 @@ static nmbs_error recv(nmbs_t* nmbs, uint16_t count) {
 }
 
 
-static nmbs_error send(nmbs_t* nmbs, uint16_t count) {
+static nmbs_error send(const nmbs_t* nmbs, uint16_t count) {
     int32_t ret = nmbs->platform.write(nmbs->msg.buf, count, nmbs->byte_timeout_ms, nmbs->platform.arg);
 
     if (ret == count)
@@ -430,7 +430,7 @@ static nmbs_error send_msg(nmbs_t* nmbs) {
 
 #ifndef NMBS_SERVER_DISABLED
 static nmbs_error recv_req_header(nmbs_t* nmbs, bool* first_byte_received) {
-    nmbs_error err = recv_msg_header(nmbs, first_byte_received);
+    const nmbs_error err = recv_msg_header(nmbs, first_byte_received);
     if (err != NMBS_ERROR_NONE)
         return err;
 
@@ -996,7 +996,7 @@ static nmbs_error handle_read_registers(nmbs_t* nmbs,
 
             // TODO check all these read request broadcast use cases
             if (!nmbs->msg.broadcast) {
-                uint8_t regs_bytes = quantity * 2;
+                const uint8_t regs_bytes = quantity * 2;
                 put_res_header(nmbs, 1 + regs_bytes);
 
                 put_1(nmbs, regs_bytes);
