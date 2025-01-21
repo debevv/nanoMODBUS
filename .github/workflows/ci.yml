@@ -10,17 +10,67 @@ jobs:
     steps:
       - name: Clone repo
         uses: actions/checkout@v2
+      - name: configure
+        run: |
+          cmake -S . -B build -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Debug
       - name: build
         run: |
-          mkdir build
-          cd build
-          cmake ..
-          make
-          ./nanomodbus_tests
-      - name: Compile Arduino examples
+          cmake --build build --config Debug
+      - name: Compress Build Directory
+        run: tar -czf build.tar.gz build/
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: build.tar.gz
+  Embedded:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v2
+      - name: Build Arduino examples
         run: |
+          mkdir -p build
           pushd build
           curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
           popd
           export PATH="build/bin:$PATH"
           ./examples/arduino/compile-examples.sh
+      - name: Install ARM dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential
+      - name: Build rp2040 examples
+        run: |
+          pushd examples/rp2040
+          git clone --depth=1 https://github.com/raspberrypi/pico-sdk.git
+          export PICO_SDK_PATH=$PWD/pico-sdk
+          cmake -S . -B build -DPICO_SDK_PATH=$PWD/pico-sdk
+          cmake --build build --config Debug
+          popd
+      - name: Build stm32 examples
+        run: |
+          pushd examples/stm32
+          cmake -S . -B build
+          cmake --build build --config Debug
+          popd
+  Test:
+    runs-on: ubuntu-latest
+    needs: Build  # run after Build job
+    steps:
+      - uses: actions/checkout@v3
+      - name: Download Build Directory
+        uses: actions/download-artifact@v3
+        with:
+          name: build  
+      - name: Extract Build Directory
+        run: |
+          mkdir -p build
+          tar -xzf build.tar.gz -C .
+      - name: List Build Files
+        run: ls -R .  
+      - name: test
+        run: |
+          cd build
+          ctest
+

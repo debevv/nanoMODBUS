@@ -27,13 +27,15 @@ int main(int argc, char* argv[]) {
 
     nmbs_t nmbs;
 
-    nmbs_platform_conf platform_conf_empty = {
-            .transport = NMBS_TRANSPORT_TCP,
-            .read = read_empty,
-            .write = write_empty,
-    };
 
-    nmbs_callbacks callbacks_empty = {0};
+    nmbs_platform_conf platform_conf_empty;
+    nmbs_platform_conf_create(&platform_conf_empty);
+    platform_conf_empty.transport = NMBS_TRANSPORT_TCP;
+    platform_conf_empty.read = read_empty;
+    platform_conf_empty.write = write_empty;
+
+    nmbs_callbacks callbacks_empty;
+    nmbs_callbacks_create(&callbacks_empty);
 
     nmbs_error err = nmbs_server_create(&nmbs, 1, &platform_conf_empty, &callbacks_empty);
     if (err != 0)

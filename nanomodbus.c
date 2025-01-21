@@ -30,6 +30,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#define NMBS_UNUSED_PARAM(x) ((x) = (x))
+
 #ifdef NMBS_DEBUG
 #include <stdio.h>
 #define NMBS_DEBUG_PRINT(...) printf(__VA_ARGS__)
@@ -57,14 +59,16 @@ static void discard_1(nmbs_t* nmbs) {
 
 
 #ifndef NMBS_SERVER_DISABLED
+#if !defined(NMBS_SERVER_READ_FILE_RECORD_DISABLED) || !defined(NMBS_SERVER_WRITE_FILE_RECORD_DISABLED)
 static void discard_n(nmbs_t* nmbs, uint16_t n) {
     nmbs->msg.buf_idx += n;
 }
 #endif
+#endif
 
 
 static uint16_t get_2(nmbs_t* nmbs) {
-    uint16_t result =
+    const uint16_t result =
             ((uint16_t) nmbs->msg.buf[nmbs->msg.buf_idx]) << 8 | (uint16_t) nmbs->msg.buf[nmbs->msg.buf_idx + 1];
     nmbs->msg.buf_idx += 2;
     return result;
@@ -79,6 +83,7 @@ static void put_2(nmbs_t* nmbs, uint16_t data) {
 
 
 #ifndef NMBS_SERVER_DISABLED
+#if !defined(NMBS_SERVER_READ_DEVICE_IDENTIFICATION_DISABLED)
 static void set_1(nmbs_t* nmbs, uint8_t data, uint8_t index) {
     nmbs->msg.buf[index] = data;
 }
@@ -88,6 +93,7 @@ static void set_2(nmbs_t* nmbs, uint16_t data, uint8_t index) {
     nmbs->msg.buf[index] = (uint8_t) ((data >> 8) & 0xFFU);
     nmbs->msg.buf[index + 1] = (uint8_t) data;
 }
+#endif
 #endif
 
 
@@ -99,12 +105,15 @@ static uint8_t* get_n(nmbs_t* nmbs, uint16_t n) {
 
 
 #ifndef NMBS_SERVER_DISABLED
+#if !defined(NMBS_SERVER_READ_DEVICE_IDENTIFICATION_DISABLED)
 static void put_n(nmbs_t* nmbs, const uint8_t* data, uint8_t size) {
     memcpy(&nmbs->msg.buf[nmbs->msg.buf_idx], data, size);
     nmbs->msg.buf_idx += size;
 }
+#endif
 
 
+#if !defined(NMBS_SERVER_WRITE_FILE_RECORD_DISABLED)
 static uint16_t* get_regs(nmbs_t* nmbs, uint16_t n) {
     uint16_t* msg_buf_ptr = (uint16_t*) (nmbs->msg.buf + nmbs->msg.buf_idx);
     nmbs->msg.buf_idx += n * 2;
@@ -113,6 +122,7 @@ static uint16_t* get_regs(nmbs_t* nmbs, uint16_t n) {
     }
     return msg_buf_ptr;
 }
+#endif
 #endif
 
 
@@ -134,6 +144,50 @@ static void swap_regs(uint16_t* data, uint16_t n) {
 }
 
 
+static nmbs_error recv(nmbs_t* nmbs, uint16_t count) {
+    if (nmbs->msg.complete) {
+        return NMBS_ERROR_NONE;
+    }
+
+    int32_t ret =
+            nmbs->platform.read(nmbs->msg.buf + nmbs->msg.buf_idx, count, nmbs->byte_timeout_ms, nmbs->platform.arg);
+
+    if (ret == count)
+        return NMBS_ERROR_NONE;
+
+    if (ret < count) {
+        if (ret < 0)
+            return NMBS_ERROR_TRANSPORT;
+
+        return NMBS_ERROR_TIMEOUT;
+    }
+
+    return NMBS_ERROR_TRANSPORT;
+}
+
+
+static nmbs_error send(const nmbs_t* nmbs, uint16_t count) {
+    int32_t ret = nmbs->platform.write(nmbs->msg.buf, count, nmbs->byte_timeout_ms, nmbs->platform.arg);
+
+    if (ret == count)
+        return NMBS_ERROR_NONE;
+
+    if (ret < count) {
+        if (ret < 0)
+            return NMBS_ERROR_TRANSPORT;
+
+        return NMBS_ERROR_TIMEOUT;
+    }
+
+    return NMBS_ERROR_TRANSPORT;
+}
+
+
+static void flush(nmbs_t* nmbs) {
+    nmbs->platform.read(nmbs->msg.buf, sizeof(nmbs->msg.buf), 0, nmbs->platform.arg);
+}
+
+
 static void msg_buf_reset(nmbs_t* nmbs) {
     nmbs->msg.buf_idx = 0;
 }
@@ -146,6 +200,7 @@ static void msg_state_reset(nmbs_t* nmbs) {
     nmbs->msg.transaction_id = 0;
     nmbs->msg.broadcast = false;
     nmbs->msg.ignored = false;
+    nmbs->msg.complete = false;
 }
 
 
@@ -157,7 +212,7 @@ static void msg_state_req(nmbs_t* nmbs, uint8_t fc) {
         nmbs->current_tid++;
 
     // Flush the remaining data on the line before sending the request
-    nmbs->platform.read(nmbs->msg.buf, sizeof(nmbs->msg.buf), 0, nmbs->platform.arg);
+    flush(nmbs);
 
     msg_state_reset(nmbs);
     nmbs->msg.unit_id = nmbs->dest_address_rtu;
@@ -178,7 +233,7 @@ nmbs_error nmbs_create(nmbs_t* nmbs, const nmbs_platform_conf* platform_conf) {
     nmbs->byte_timeout_ms = -1;
     nmbs->read_timeout_ms = -1;
 
-    if (!platform_conf)
+    if (!platform_conf || platform_conf->initialized != 0xFFFFDEBE)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
     if (platform_conf->transport != NMBS_TRANSPORT_RTU && platform_conf->transport != NMBS_TRANSPORT_TCP)
@@ -203,6 +258,14 @@ void nmbs_set_byte_timeout(nmbs_t* nmbs, int32_t timeout_ms) {
 }
 
 
+void nmbs_platform_conf_create(nmbs_platform_conf* platform_conf) {
+    memset(platform_conf, 0, sizeof(nmbs_platform_conf));
+    platform_conf->crc_calc = nmbs_crc_calc;
+    // Workaround for older user code not calling nmbs_platform_conf_create()
+    platform_conf->initialized = 0xFFFFDEBE;
+}
+
+
 void nmbs_set_destination_rtu_address(nmbs_t* nmbs, uint8_t address) {
     nmbs->dest_address_rtu = address;
 }
@@ -213,7 +276,8 @@ void nmbs_set_platform_arg(nmbs_t* nmbs, void* arg) {
 }
 
 
-uint16_t nmbs_crc_calc(const uint8_t* data, uint32_t length) {
+uint16_t nmbs_crc_calc(const uint8_t* data, uint32_t length, void* arg) {
+    NMBS_UNUSED_PARAM(arg);
     uint16_t crc = 0xFFFF;
     for (uint32_t i = 0; i < length; i++) {
         crc ^= (uint16_t) data[i];
@@ -230,47 +294,11 @@ uint16_t nmbs_crc_calc(const uint8_t* data, uint32_t length) {
     return (uint16_t) (crc << 8) | (uint16_t) (crc >> 8);
 }
 
-
-static nmbs_error recv(nmbs_t* nmbs, uint16_t count) {
-    int32_t ret =
-            nmbs->platform.read(nmbs->msg.buf + nmbs->msg.buf_idx, count, nmbs->byte_timeout_ms, nmbs->platform.arg);
-
-    if (ret == count)
-        return NMBS_ERROR_NONE;
-
-    if (ret < count) {
-        if (ret < 0)
-            return NMBS_ERROR_TRANSPORT;
-
-        return NMBS_ERROR_TIMEOUT;
-    }
-
-    return NMBS_ERROR_TRANSPORT;
-}
-
-
-static nmbs_error send(nmbs_t* nmbs, uint16_t count) {
-    int32_t ret = nmbs->platform.write(nmbs->msg.buf, count, nmbs->byte_timeout_ms, nmbs->platform.arg);
-
-    if (ret == count)
-        return NMBS_ERROR_NONE;
-
-    if (ret < count) {
-        if (ret < 0)
-            return NMBS_ERROR_TRANSPORT;
-
-        return NMBS_ERROR_TIMEOUT;
-    }
-
-    return NMBS_ERROR_TRANSPORT;
-}
-
-
 static nmbs_error recv_msg_footer(nmbs_t* nmbs) {
     NMBS_DEBUG_PRINT("\n");
 
     if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
-        uint16_t crc = nmbs_crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx);
+        uint16_t crc = nmbs->platform.crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx, nmbs->platform.arg);
 
         nmbs_error err = recv(nmbs, 2);
         if (err != NMBS_ERROR_NONE)
@@ -335,15 +363,22 @@ static nmbs_error recv_msg_header(nmbs_t* nmbs, bool* first_byte_received) {
 
         nmbs->msg.transaction_id = get_2(nmbs);
         uint16_t protocol_id = get_2(nmbs);
-        uint16_t length = get_2(nmbs);    // We should actually check the length of the request against this value
+        uint16_t length = get_2(nmbs);
         nmbs->msg.unit_id = get_1(nmbs);
         nmbs->msg.fc = get_1(nmbs);
+
+        if (length < 2 || length > 255)
+            return NMBS_ERROR_INVALID_TCP_MBAP;
+
+        // Receive the rest of the message
+        err = recv(nmbs, length - 2);
+        if (err != NMBS_ERROR_NONE)
+            return err;
 
         if (protocol_id != 0)
             return NMBS_ERROR_INVALID_TCP_MBAP;
 
-        if (length > 255)
-            return NMBS_ERROR_INVALID_TCP_MBAP;
+        nmbs->msg.complete = true;
     }
 
     return NMBS_ERROR_NONE;
@@ -368,6 +403,7 @@ static void put_msg_header(nmbs_t* nmbs, uint16_t data_length) {
 
 
 #ifndef NMBS_SERVER_DISABLED
+#if !defined(NMBS_SERVER_READ_DEVICE_IDENTIFICATION_DISABLED)
 static void set_msg_header_size(nmbs_t* nmbs, uint16_t data_length) {
     if (nmbs->platform.transport == NMBS_TRANSPORT_TCP) {
         data_length += 2;
@@ -375,13 +411,14 @@ static void set_msg_header_size(nmbs_t* nmbs, uint16_t data_length) {
     }
 }
 #endif
+#endif
 
 
 static nmbs_error send_msg(nmbs_t* nmbs) {
     NMBS_DEBUG_PRINT("\n");
 
     if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
-        uint16_t crc = nmbs_crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx);
+        uint16_t crc = nmbs->platform.crc_calc(nmbs->msg.buf, nmbs->msg.buf_idx, nmbs->platform.arg);
         put_2(nmbs, crc);
     }
 
@@ -393,7 +430,7 @@ static nmbs_error send_msg(nmbs_t* nmbs) {
 
 #ifndef NMBS_SERVER_DISABLED
 static nmbs_error recv_req_header(nmbs_t* nmbs, bool* first_byte_received) {
-    nmbs_error err = recv_msg_header(nmbs, first_byte_received);
+    const nmbs_error err = recv_msg_header(nmbs, first_byte_received);
     if (err != NMBS_ERROR_NONE)
         return err;
 
@@ -494,6 +531,9 @@ static void put_req_header(nmbs_t* nmbs, uint16_t data_length) {
 #endif
 
 
+#if !defined(NMBS_CLIENT_DISABLED) ||                                                                                  \
+        (!defined(NMBS_SERVER_DISABLED) &&                                                                             \
+         (!defined(NMBS_SERVER_READ_COILS_DISABLED) || !defined(NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED)))
 static nmbs_error recv_read_discrete_res(nmbs_t* nmbs, nmbs_bitfield values) {
     nmbs_error err = recv_res_header(nmbs);
     if (err != NMBS_ERROR_NONE)
@@ -528,8 +568,12 @@ static nmbs_error recv_read_discrete_res(nmbs_t* nmbs, nmbs_bitfield values) {
 
     return NMBS_ERROR_NONE;
 }
+#endif
 
 
+#if !defined(NMBS_CLIENT_DISABLED) ||                                                                                  \
+        (!defined(NMBS_SERVER_DISABLED) && (!defined(NMBS_SERVER_READ_HOLDING_REGISTERS_DISABLED) ||                   \
+                                            !defined(NMBS_SERVER_READ_INPUT_REGISTERS_DISABLED)))
 static nmbs_error recv_read_registers_res(nmbs_t* nmbs, uint16_t quantity, uint16_t* registers) {
     nmbs_error err = recv_res_header(nmbs);
     if (err != NMBS_ERROR_NONE)
@@ -566,6 +610,7 @@ static nmbs_error recv_read_registers_res(nmbs_t* nmbs, uint16_t quantity, uint1
 
     return NMBS_ERROR_NONE;
 }
+#endif
 
 
 nmbs_error recv_write_single_coil_res(nmbs_t* nmbs, uint16_t address, uint16_t value_req) {
@@ -951,7 +996,7 @@ static nmbs_error handle_read_registers(nmbs_t* nmbs,
 
             // TODO check all these read request broadcast use cases
             if (!nmbs->msg.broadcast) {
-                uint8_t regs_bytes = quantity * 2;
+                const uint8_t regs_bytes = quantity * 2;
                 put_res_header(nmbs, 1 + regs_bytes);
 
                 put_1(nmbs, regs_bytes);
@@ -1290,7 +1335,7 @@ static nmbs_error handle_read_file_record(nmbs_t* nmbs) {
         uint16_t record_number;
         uint16_t record_length;
     }
-#ifdef __STDC_NO_VLA__
+#if defined(__STDC_NO_VLA__) || defined(_MSC_VER)
     subreq[35];    // 245 / subreq_header_size
 #else
     subreq[subreq_count];
@@ -1337,7 +1382,7 @@ static nmbs_error handle_read_file_record(nmbs_t* nmbs) {
                              subreq[i].record_length);
         }
 
-        put_res_header(nmbs, response_data_size);
+        put_res_header(nmbs, 1 + response_data_size);
         put_1(nmbs, response_data_size);
 
         if (nmbs->callbacks.read_file_record) {
@@ -1405,7 +1450,7 @@ static nmbs_error handle_write_file_record(nmbs_t* nmbs) {
         uint16_t size = request_size;
         nmbs->msg.buf_idx = msg_buf_idx;    // restore context
 
-        if (request_size < 0x07 || request_size > 0xFB)
+        if (request_size < 7)
             return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
         do {
@@ -1508,7 +1553,7 @@ static nmbs_error handle_read_write_registers(nmbs_t* nmbs) {
     if (err != NMBS_ERROR_NONE)
         return err;
 
-#ifdef __STDC_NO_VLA__
+#if defined(__STDC_NO_VLA__) || defined(_MSC_VER)
     uint16_t registers[0x007B];
 #else
     uint16_t registers[byte_count_write / 2];
@@ -1551,7 +1596,7 @@ static nmbs_error handle_read_write_registers(nmbs_t* nmbs) {
         }
 
         if (!nmbs->msg.broadcast) {
-#ifdef __STDC_NO_VLA__
+#if defined(__STDC_NO_VLA__) || defined(_MSC_VER)
             uint16_t regs[125];
 #else
             uint16_t regs[read_quantity];
@@ -1832,16 +1877,27 @@ static nmbs_error handle_req_fc(nmbs_t* nmbs) {
             break;
 #endif
         default:
-            err = send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+            flush(nmbs);
+            if (!nmbs->msg.ignored && !nmbs->msg.broadcast)
+                err = send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
     }
 
     return err;
 }
 
 
+void nmbs_callbacks_create(nmbs_callbacks* callbacks) {
+    memset(callbacks, 0, sizeof(nmbs_callbacks));
+    callbacks->initialized = 0xFFFFDEBE;
+}
+
+
 nmbs_error nmbs_server_create(nmbs_t* nmbs, uint8_t address_rtu, const nmbs_platform_conf* platform_conf,
                               const nmbs_callbacks* callbacks) {
     if (platform_conf->transport == NMBS_TRANSPORT_RTU && address_rtu == 0)
+        return NMBS_ERROR_INVALID_ARGUMENT;
+
+    if (!callbacks || callbacks->initialized != 0xFFFFDEBE)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
     nmbs_error ret = nmbs_create(nmbs, platform_conf);
@@ -1879,11 +1935,9 @@ nmbs_error nmbs_server_poll(nmbs_t* nmbs) {
 #endif
 
     err = handle_req_fc(nmbs);
-    if (err != NMBS_ERROR_NONE && !nmbs_error_is_exception(err)) {
-        if (nmbs->platform.transport == NMBS_TRANSPORT_RTU && err != NMBS_ERROR_TIMEOUT && nmbs->msg.ignored) {
-            // Flush the remaining data on the line
-            nmbs->platform.read(nmbs->msg.buf, sizeof(nmbs->msg.buf), 0, nmbs->platform.arg);
-        }
+    if (err != NMBS_ERROR_NONE) {
+        if (err != NMBS_ERROR_TIMEOUT)
+            flush(nmbs);
 
         return err;
     }

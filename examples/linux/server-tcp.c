@@ -21,7 +21,7 @@
 // A single nmbs_bitfield variable can keep 2000 coils
 bool terminate = false;
 nmbs_bitfield server_coils = {0};
-uint16_t server_registers[REGS_ADDR_MAX] = {0};
+uint16_t server_registers[REGS_ADDR_MAX + 1] = {0};
 uint16_t server_file[FILE_SIZE_MAX];
 
 
@@ -182,13 +182,15 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    nmbs_platform_conf platform_conf = {0};
+    nmbs_platform_conf platform_conf;
+    nmbs_platform_conf_create(&platform_conf);
     platform_conf.transport = NMBS_TRANSPORT_TCP;
     platform_conf.read = read_fd_linux;
     platform_conf.write = write_fd_linux;
     platform_conf.arg = NULL;    // We will set the arg (socket fd) later
 
-    nmbs_callbacks callbacks = {0};
+    nmbs_callbacks callbacks;
+    nmbs_callbacks_create(&callbacks);
     callbacks.read_coils = handle_read_coils;
     callbacks.write_multiple_coils = handle_write_multiple_coils;
     callbacks.read_holding_registers = handler_read_holding_registers;
@@ -218,12 +220,12 @@ int main(int argc, char* argv[]) {
         if (conn) {
             // Set the next connection handler used by the read/write platform functions
             nmbs_set_platform_arg(&nmbs, conn);
-        }
 
-        err = nmbs_server_poll(&nmbs);
-        if (err != NMBS_ERROR_NONE) {
-            printf("Error on modbus connection - %s\n", nmbs_strerror(err));
-            // In a more complete example, we would handle this error by checking its nmbs_error value
+            err = nmbs_server_poll(&nmbs);
+            if (err != NMBS_ERROR_NONE) {
+                printf("Error on modbus connection - %s\n", nmbs_strerror(err));
+                // In a more complete example, we would handle this error by checking its nmbs_error value
+            }
         }
     }
 

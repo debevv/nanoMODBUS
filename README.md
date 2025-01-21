@@ -1,6 +1,7 @@
 # nanoMODBUS - A compact MODBUS RTU/TCP C library for embedded/microcontrollers
 
-**If you found this library useful, buy me a coffee on** [<img src='https://storage.ko-fi.com/cdn/brandasset/logo_white_stroke.png' width='80'>](https://ko-fi.com/B0B2LK779)
+**If you found this library useful, buy me a coffee on**
+[<img src='https://storage.ko-fi.com/cdn/brandasset/logo_white_stroke.png' width='80'>](https://ko-fi.com/B0B2LK779)
 
 nanoMODBUS is a small C library that implements the Modbus protocol. It is especially useful in embedded and
 resource-constrained systems like microcontrollers.  
@@ -32,6 +33,7 @@ Its main features are:
 - Platform-agnostic
     - Requires only C99 and its standard library
     - Data transport read/write function are implemented by the user
+- User-definable CRC function for better performance
 - Broadcast requests and responses
 
 ## At a glance
@@ -52,6 +54,7 @@ int main(int argc, char* argv[]) {
 
     // my_transport_read() and my_transport_write() are implemented by the user 
     nmbs_platform_conf platform_conf;
+    nmbs_platform_conf_create(&platform_conf);
     platform_conf.transport = NMBS_TRANSPORT_TCP;
     platform_conf.read = my_transport_read;
     platform_conf.write = my_transport_write;
@@ -93,7 +96,29 @@ int main(int argc, char* argv[]) {
 
 ## Installation
 
+### Integrate source code to your project
+
 Just copy `nanomodbus.c` and `nanomodbus.h` inside your application codebase.
+
+### CMake project
+
+nanomodbus supports library linking by using cmake.
+
+```cmake
+FetchContent_Declare(
+        nanomodbus
+        GIT_REPOSITORY https://github.com/debevv/nanoMODBUS
+        GIT_TAG master # or the version you want
+        GIT_SHALLOW TRUE
+)
+
+FetchContent_MakeAvailable(nanomodbus)
+
+...
+
+add_executable(your_program source_codes)
+target_link_libraries(your_program nanomodbus)
+```
 
 ## API reference
 
@@ -117,7 +142,9 @@ Both methods should block until either:
 - `count` bytes of data are read/written
 - the byte timeout, with `byte_timeout_ms >= 0`, expires
 
-A value `< 0` for `byte_timeout_ms` means no timeout.
+A value `< 0` for `byte_timeout_ms` means infinite timeout.  
+With a value `== 0` for `byte_timeout_ms`, the method should read/write once in a non-blocking fashion and return
+immediately.
 
 Their return value should be the number of bytes actually read/written, or `< 0` in case of error.  
 A return value between `0` and `count - 1` will be treated as if a timeout occurred on the transport side. All other
