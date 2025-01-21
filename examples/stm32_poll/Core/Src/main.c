@@ -1,20 +1,20 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -24,15 +24,25 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "..\..\..\..\nanomodbus.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
+extern UART_HandleTypeDef huart2;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+#define NMBS_DEBUG 1
+#define RTU_SERVER_ADDRESS 84
+
+#define SetRS485Receive() HAL_GPIO_WritePin(USART2_RTS_GPIO_Port, USART2_RTS_Pin, GPIO_PIN_RESET)
+#define SetRS485Transmit() HAL_GPIO_WritePin(USART2_RTS_GPIO_Port, USART2_RTS_Pin, GPIO_PIN_SET)
 
 /* USER CODE END PD */
 
@@ -56,35 +66,71 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+int32_t read_serial(uint8_t *buf, uint16_t count, int32_t byte_timeout_ms,
+		void *arg) {
+	uint16_t received = 0;
+	do {
+		switch (HAL_UART_Receive(&huart2, buf++, 1, byte_timeout_ms)) {
+		case HAL_TIMEOUT:
+			return received;
+			break;
+		case HAL_ERROR:
+		case HAL_BUSY:
+		default:
+			return -1;
+			break;
+		case HAL_OK:
+			received++;
+
+		}
+	} while (received < count);
+	return count;
+}
+
+int32_t write_serial(const uint8_t *buf, uint16_t count,
+		int32_t byte_timeout_ms, void *arg) {
+	SetRS485Transmit();
+	do {
+		if (HAL_UART_Transmit(&huart2, buf++, 1, byte_timeout_ms)==HAL_OK) {
+			count--;
+		} else{
+			SetRS485Receive();
+			return -1;
+		}
+	} while (count);
+	SetRS485Receive();
+	return count;
+}
+
 void onError(nmbs_error err) {
-    printf("error: %d\n", err);
-    exit(0);
+	printf("error: %d\n", err);
+	exit(0);
 }
 
 void ReadRegister(uint16_t reg) {
 
-    nmbs_platform_conf platform_conf;
-    nmbs_platform_conf_create(&platform_conf);
-    platform_conf.transport = NMBS_TRANSPORT_RTU;
-    platform_conf.read = read_serial;
-    platform_conf.write = write_serial;
+	nmbs_platform_conf platform_conf;
+	nmbs_platform_conf_create(&platform_conf);
+	platform_conf.transport = NMBS_TRANSPORT_RTU;
+	platform_conf.read = read_serial;
+	platform_conf.write = write_serial;
 
-    nmbs_t nmbs;
-    nmbs_error err = nmbs_client_create(&nmbs, &platform_conf);
-    if (err != NMBS_ERROR_NONE)
-        onError(err);
+	nmbs_t nmbs;
+	nmbs_error err = nmbs_client_create(&nmbs, &platform_conf);
+	if (err != NMBS_ERROR_NONE)
+		onError(err);
 
-    nmbs_set_read_timeout(&nmbs, 1000);
-    nmbs_set_byte_timeout(&nmbs, 100);
+	nmbs_set_read_timeout(&nmbs, 1000);
+	nmbs_set_byte_timeout(&nmbs, 100);
 
-    nmbs_set_destination_rtu_address(&nmbs, RTU_SERVER_ADDRESS);
+	nmbs_set_destination_rtu_address(&nmbs, RTU_SERVER_ADDRESS);
 
-    uint16_t r_regs[2];
-    err = nmbs_read_holding_registers(&nmbs, reg, 1, r_regs);
-    if (err != NMBS_ERROR_NONE)
-        onError(err);
+	uint16_t r_regs[2];
+	err = nmbs_read_holding_registers(&nmbs, reg, 1, r_regs);
+	if (err != NMBS_ERROR_NONE)
+		onError(err);
 
-    printf("register %d is set to: %d\n", reg, r_regs[0]);
+	printf("register %d is set to: %d\n", reg, r_regs[0]);
 }
 
 
@@ -126,12 +172,11 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+	while (1) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+	}
   /* USER CODE END 3 */
 }
 
@@ -183,11 +228,10 @@ void SystemClock_Config(void)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
+	/* User can add his own implementation to report the HAL error return state */
+	__disable_irq();
+	while (1) {
+	}
   /* USER CODE END Error_Handler_Debug */
 }
 
@@ -202,8 +246,8 @@ void Error_Handler(void)
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+	/* User can add his own implementation to report the file name and line number,
+	 ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
