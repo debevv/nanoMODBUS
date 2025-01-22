@@ -14,7 +14,7 @@ simple example how use stm32 with nanoMODBUS
     - PB6 :TX
 
 You can connect the console to the output of the pb6 uart (115200 8-N-1) and see the debugging of the program execution
-![pinout](hardware.png)
+![pinout](debug.png)
 
 
 ## Building
