@@ -74,7 +74,7 @@ void MX_USART2_UART_Init(void)
   huart2.Instance = USART2;
   huart2.Init.BaudRate = Speed;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_2;
+  huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
   huart2.Init.Mode = UART_MODE_TX_RX;
   huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
@@ -107,6 +107,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
       /* Enable GPIO TX/RX clock */
       USARTx_TX_GPIO_CLK_ENABLE();
       //USARTx_RX_GPIO_CLK_ENABLE();
+    __HAL_RCC_USART1_CLK_ENABLE();
 
       /* Enable USARTx clock */
       USARTx_CLK_ENABLE();
@@ -114,7 +115,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
       /*##-2- Configure peripheral GPIO ##########################################*/
       /* UART TX GPIO pin configuration  */
       GPIO_InitStruct.Pin = USARTx_TX_PIN;
-      GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
       GPIO_InitStruct.Pull = GPIO_PULLUP;
       //GPIO_InitStruct.Speed     = GPIO_SPEED_FAST; // also kown as GPIO_SPEED_FREQ_HIGH
       GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH; // also kown as GPIO_SPEED_FREQ_HIGH
@@ -122,11 +123,14 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 
       HAL_GPIO_Init(USARTx_TX_GPIO_PORT, &GPIO_InitStruct);
 
-      /* UART RX GPIO pin configuration РїРѕРєР° РЅРµ РЅСѓР¶РµРЅ РЅР° РїСЂРёС‘Рј РІ СЂРµР¶РёРјРµ РѕС‚Р»Р°РґРєРё  */
+      /* UART RX GPIO pin configuration пока не нужен на приём в режиме отладки  */
       //GPIO_InitStruct.Pin = USARTx_RX_PIN;
       //GPIO_InitStruct.Alternate = USARTx_RX_AF;
       //HAL_GPIO_Init(USARTx_RX_GPIO_PORT, &GPIO_InitStruct);
 
+    /* USART1 interrupt Init */
+    HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART1_IRQn);
   /* USER CODE BEGIN USART1_MspInit 1 */
 
   /* USER CODE END USART1_MspInit 1 */
@@ -151,9 +155,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     GPIO_InitStruct.Alternate = GPIO_AF1_USART2;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    /* USART2 interrupt Init */
-    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(USART2_IRQn);
   /* USER CODE BEGIN USART2_MspInit 1 */
 
   /* USER CODE END USART2_MspInit 1 */
@@ -168,7 +169,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
   /* USER CODE BEGIN USART1_MspDeInit 0 */
 
   /* USER CODE END USART1_MspDeInit 0 */
-      /* Peripheral clock disable */
+    /* Peripheral clock disable */
       USARTx_CLK_DISABLE();
 
       /* Peripheral clock disable */
@@ -178,6 +179,8 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
       HAL_GPIO_DeInit(USARTx_TX_GPIO_PORT, USARTx_TX_PIN);
       // HAL_GPIO_DeInit(USARTx_RX_GPIO_PORT, USARTx_RX_PIN);
 
+    /* USART1 interrupt Deinit */
+    HAL_NVIC_DisableIRQ(USART1_IRQn);
   /* USER CODE BEGIN USART1_MspDeInit 1 */
 
   /* USER CODE END USART1_MspDeInit 1 */
@@ -196,8 +199,6 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
     */
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_2|GPIO_PIN_3);
 
-    /* USART2 interrupt Deinit */
-    HAL_NVIC_DisableIRQ(USART2_IRQn);
   /* USER CODE BEGIN USART2_MspDeInit 1 */
 
   /* USER CODE END USART2_MspDeInit 1 */
