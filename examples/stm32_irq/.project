@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>stm32_dma_modbus</name>
+	<name>stm32_irq_modbus</name>
 	<comment></comment>
 	<projects>
 	</projects>
