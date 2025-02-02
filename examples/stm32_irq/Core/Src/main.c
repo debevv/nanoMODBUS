@@ -71,7 +71,6 @@
 /* USER CODE BEGIN PV */
 uint16_t Speed = 9600;
 nmbs_t nmbs;
-volatile uint8_t packet_sended = 0;
 
 // A single nmbs_bitfield variable can keep 2000 coils
 nmbs_bitfield server_coils = { 0 };
@@ -88,34 +87,33 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-// установка счётчика принятых байтов
+// set counter of received symbols
 void msg_buf_set(nmbs_t *nmbs, uint32_t length) {
 	nmbs->msg.buf_rec = length;
 }
-// чтение счётчика принятых байтов
-inline uint32_t msg_buf_get(nmbs_t *nmbs) {
+// read counter received symbols
+uint32_t msg_buf_get(nmbs_t *nmbs) {
 	return nmbs->msg.buf_rec;
 }
-// увеличение счётчика принятых байтов
-inline bool msg_buf_inc(nmbs_t *nmbs) {
+// incremet counter received symbols
+bool msg_buf_inc(nmbs_t *nmbs) {
 	if ((sizeof(nmbs->msg.buf) - nmbs->msg.buf_rec - 1) <= 0)
 		return false;
 	nmbs->msg.buf_rec++;
 	return true;
 }
 
-// сброс счётчика принятых байтов в буфере
+// reset counter received symbols
 void msg_rec_reset(nmbs_t *nmbs) {
-	nmbs->msg.buf_rec = 0;
+	msg_buf_set(nmbs, 0);
 }
 
 int32_t read_from_buf(uint8_t *buf, uint16_t count, int32_t byte_timeout_ms,
 		void *arg) {
 
-//buf_rec сколько DMA положило байтов в очередь nmbs
-//buf_idx это счётчик уже взятых протоколом байтов, и он автоматически инкрементируется,
-//поэтому в буфер ничего складывать/переносить не надо - всё и так лежит на своём месте
-//процедура симулянт
+//in zero-copy mode buf_rec used for receive symbols in irq(interrupt) mode
+//buf_idx increases with each read operation
+//there is no need to create two receive buffers - for hardware reception and further reading
 	return ((nmbs.msg.buf_rec - nmbs.msg.buf_idx - count) >= 0 ?
 			count : (nmbs.msg.buf_rec - nmbs.msg.buf_idx));
 }
@@ -126,57 +124,66 @@ int32_t write_serial(const uint8_t *buf, uint16_t count,
 	if (HAL_UART_AbortReceive(&huart2) != HAL_OK) {
 		Error_Handler();
 	}
-	packet_sended = 1; //устанавливаем флаг отправки пакета, чтобы при modbus poll сразу настроить на вход
 	if (HAL_UART_Transmit_IT(&huart2, buf, count) != HAL_OK) {
 		NMBS_DEBUG_PRINT("HAL_UART_Transmit_IT error\n");
-		// @todo об ошибках надо сообщать индикацией и отказом дальнейшей работы
-		//ошибка, конечно, фатальная, но не надо пока зависать в этом месте
-		//Error_Handler();
+		Error_Handler();
 	}
 	return count;
 }
 
 void nano_RecieveMode(void) {
 	SetRS485Receive();
-	MX_TIM6_Init();
-	msg_rec_reset(&nmbs);
+	/* Generate an update event to reload the Prescaler
+	 and the repetition counter (only for advanced timer) value immediately */
+	htim6.Instance->EGR = TIM_EGR_UG;
 
-//Receive an amount of data in DMA mode till either the expected number of data is received or an IDLE event occurs
+	/* Check if the update flag is set after the Update Generation, if so clear the UIF flag */
+	if (HAL_IS_BIT_SET(htim6.Instance->SR, TIM_FLAG_UPDATE)) {
+		/* Clear the update flag */
+		CLEAR_BIT(htim6.Instance->SR, TIM_FLAG_UPDATE);
+	}
+	if (HAL_TIM_Base_Start_IT(&htim6) != HAL_OK) {
+		/* Starting Error */
+		Error_Handler();
+	}
+	msg_rec_reset(&nmbs);
+//Receive of data in IRQ Mode
 	if (HAL_UART_Receive_IT(&huart2, nmbs.msg.buf, 1) != HAL_OK) {
 		NMBS_DEBUG_PRINT("HAL_UART_Receive_IT error\n");
-
-		// @todo об ошибках надо сообщать индикацией и отказом дальнейшей работы
-		//ошибка, конечно, фатальная, но не надо пока зависать в этом месте
-		//Error_Handler();
+		Error_Handler();
 	}
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
-
 	if (huart == &huart2) {
-
+		//after end of transmit go in receive mode
 		nano_RecieveMode();
 	}
-
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart == &huart2) {
+#ifdef NMBS_DEBUG
+		//printf("%ld uart2\n", HAL_GetTick());
+#endif
 		//restart 3.5 timer
-		if (HAL_TIM_Base_Init(&htim6) != HAL_OK) {
-			Error_Handler();
-		}
 
-		MX_TIM6_Init(); //run 3.5 timer after
+		/* Generate an update event to reload the Prescaler
+		 and the repetition counter (only for advanced timer) value immediately */
+		htim6.Instance->EGR = TIM_EGR_UG;
+
+		/* Check if the update flag is set after the Update Generation, if so clear the UIF flag */
+		if (HAL_IS_BIT_SET(htim6.Instance->SR, TIM_FLAG_UPDATE)) {
+			/* Clear the update flag */
+			CLEAR_BIT(htim6.Instance->SR, TIM_FLAG_UPDATE);
+		}
 		if (msg_buf_inc(&nmbs)) {
 			//Receive next symbol
 			if (HAL_UART_Receive_IT(&huart2, &nmbs.msg.buf[nmbs.msg.buf_rec], 1)
 					!= HAL_OK) {
 				NMBS_DEBUG_PRINT("HAL_UART_Receive_IT error\n");
 
-				// @todo об ошибках надо сообщать индикацией и отказом дальнейшей работы
-				//ошибка, конечно, фатальная, но не надо пока зависать в этом месте
-				//Error_Handler();
+				Error_Handler();
 			}
 		} else { //overflow input buffer
 			nano_RecieveMode();
@@ -187,12 +194,16 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if (htim->Instance == TIM6) {
 		uint32_t Size = msg_buf_get(&nmbs);
-		if (Size) { //received symbol
-			//stop and deinit timer 3.5 word
-			if (HAL_TIM_Base_DeInit(&htim6) != HAL_OK) {
+		if (Size) { //number of received symbol
+#ifdef NMBS_DEBUG
+			//printf("%ld timer\n", HAL_GetTick());
+#endif
+			//stop timer 3.5 word
+			if (HAL_TIM_Base_Stop_IT(&htim6) != HAL_OK) {
+				// Starting Error
 				Error_Handler();
 			}
-			HAL_UART_AbortReceive(&huart2);
+
 			nmbs_error res_poll = nmbs_server_poll(&nmbs);
 			if (NMBS_ERROR_NONE != res_poll) {
 				NMBS_DEBUG_PRINT(
@@ -201,13 +212,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 				NMBS_DEBUG_PRINT("%s\n", nmbs_strerror(res_poll));
 				NMBS_DEBUG_DUMP((uint8_t* )&nmbs, (uint16_t )Size);
 
-				//HAL_UART_Abort(&huart2);
+				if (HAL_UART_AbortReceive(&huart2) != HAL_OK) {
+					Error_Handler();
+				}
 				nano_RecieveMode();
-			} else {
-				if (!packet_sended) //если в процессе nmbs_server_poll режим не переводили на передачу
-					nano_RecieveMode();
 			}
-
 		}
 	}
 }
@@ -222,8 +231,12 @@ nmbs_error handle_read_coils(uint16_t address, uint16_t quantity,
 		bool value = nmbs_bitfield_read(server_coils, address + i);
 		nmbs_bitfield_write(coils_out, i, value);
 	}
-
 	return NMBS_ERROR_NONE;
+}
+
+void onError(nmbs_error err) {
+	printf("error: %d\n", err);
+	exit(0);
 }
 
 #ifdef NMBS_DEBUG
@@ -278,7 +291,7 @@ int main(void) {
 	/* Initialize all configured peripherals */
 	MX_GPIO_Init();
 	MX_USART2_UART_Init();
-	//MX_TIM6_Init();
+	MX_TIM6_Init();
 	MX_USART1_UART_Init();
 	/* USER CODE BEGIN 2 */
 
@@ -305,15 +318,18 @@ int main(void) {
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
+	//run server in interrupt mode
+	nano_RecieveMode();
 	while (1) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
+		//Here you can add the logic of the main program. At this point, modbus communication is in interrupt mode
+		RED_TOGGLE();
 #ifdef NMBS_DEBUG
 		flush_debug();
-		HAL_Delay(500);
 #endif
-
+		HAL_Delay(500);
 	}
 	/* USER CODE END 3 */
 }

@@ -103,19 +103,30 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 
   /* USER CODE END USART1_MspInit 0 */
     /* USART1 clock enable */
+      /*##-1- Enable peripherals and GPIO Clocks #################################*/
+      /* Enable GPIO TX/RX clock */
+      USARTx_TX_GPIO_CLK_ENABLE();
+      //USARTx_RX_GPIO_CLK_ENABLE();
     __HAL_RCC_USART1_CLK_ENABLE();
 
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**USART1 GPIO Configuration
-    PA9     ------> USART1_TX
-    PA10     ------> USART1_RX
-    */
-    GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10;
+      /* Enable USARTx clock */
+      USARTx_CLK_ENABLE();
+
+      /*##-2- Configure peripheral GPIO ##########################################*/
+      /* UART TX GPIO pin configuration  */
+      GPIO_InitStruct.Pin = USARTx_TX_PIN;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF1_USART1;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+      GPIO_InitStruct.Pull = GPIO_PULLUP;
+      //GPIO_InitStruct.Speed     = GPIO_SPEED_FAST; // also kown as GPIO_SPEED_FREQ_HIGH
+      GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH; // also kown as GPIO_SPEED_FREQ_HIGH
+      GPIO_InitStruct.Alternate = USARTx_TX_AF;
+
+      HAL_GPIO_Init(USARTx_TX_GPIO_PORT, &GPIO_InitStruct);
+
+      /* UART RX GPIO pin configuration          */
+      //GPIO_InitStruct.Pin = USARTx_RX_PIN;
+      //GPIO_InitStruct.Alternate = USARTx_RX_AF;
+      //HAL_GPIO_Init(USARTx_RX_GPIO_PORT, &GPIO_InitStruct);
 
     /* USART1 interrupt Init */
     HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
@@ -162,13 +173,14 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
   /* USER CODE END USART1_MspDeInit 0 */
     /* Peripheral clock disable */
-    __HAL_RCC_USART1_CLK_DISABLE();
+      USARTx_CLK_DISABLE();
 
-    /**USART1 GPIO Configuration
-    PA9     ------> USART1_TX
-    PA10     ------> USART1_RX
-    */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_9|GPIO_PIN_10);
+      /* Peripheral clock disable */
+      USARTx_TX_GPIO_CLK_DISABLE();
+      //USARTx_RX_GPIO_CLK_DISABLE();
+
+      HAL_GPIO_DeInit(USARTx_TX_GPIO_PORT, USARTx_TX_PIN);
+      // HAL_GPIO_DeInit(USARTx_RX_GPIO_PORT, USARTx_RX_PIN);
 
     /* USART1 interrupt Deinit */
     HAL_NVIC_DisableIRQ(USART1_IRQn);
