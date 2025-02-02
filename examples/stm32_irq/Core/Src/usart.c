@@ -22,6 +22,7 @@
 
 /* USER CODE BEGIN 0 */
 
+extern uint16_t Speed;
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart1;
@@ -71,7 +72,7 @@ void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = Speed;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -198,18 +199,5 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 }
 
 /* USER CODE BEGIN 1 */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-  if (htim->Instance == modbusTimer->Instance)
-  {
-    timerCounter++;
-
-    if (timerCounter == timerPeriod)
-    {
-      prvvTIMERExpiredISR();
-      FMB_DEBUG_PRINT(DEBUG_TRACE, "timer");
-    }
-  }
-}
 
 /* USER CODE END 1 */

@@ -237,7 +237,9 @@ typedef struct nmbs_t {
     struct {
         uint8_t buf[260];
         uint16_t buf_idx;
-
+        //Counter for receiving bytes from the interrupt(or DMA) to buf[].
+        //some embedded system have hardware control of reception delays (pauses) when the modbus packet is received 
+        volatile uint16_t buf_rec; 
         uint8_t unit_id;
         uint8_t fc;
         uint16_t transaction_id;

@@ -21,7 +21,7 @@
 #include "tim.h"
 
 /* USER CODE BEGIN 0 */
-
+extern uint16_t Speed;
 /* USER CODE END 0 */
 
 TIM_HandleTypeDef htim6;
@@ -35,12 +35,21 @@ void MX_TIM6_Init(void)
   /* USER CODE END TIM6_Init 0 */
 
   /* USER CODE BEGIN TIM6_Init 1 */
+        /* If baudrate > 19200 then we should use the fixed timer values
+         * t35 = 1750us. Otherwise t35 must be 3.5 times the character time.
+
+         */
+  if (Speed>19200){
+   htim6.Init.Period = (1750/50)-1;
+  }else{
+     htim6.Init.Period = ((7UL*1000000UL*11UL/(50UL*2UL))/Speed); //-1 absent for rounding up
+  }
 
   /* USER CODE END TIM6_Init 1 */
   htim6.Instance = TIM6;
-  htim6.Init.Prescaler = SystemCoreClock/1000000-1;
+  htim6.Init.Prescaler = SystemCoreClock/(1000000UL/50UL);
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 50-1;
+  //htim6.Init.Period = 50-1;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
   {
