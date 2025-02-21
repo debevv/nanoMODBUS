@@ -42,6 +42,7 @@ void setup() {
 
 void loop() {
   nmbs_platform_conf platform_conf;
+  nmbs_platform_conf_create(&platform_conf);
   platform_conf.transport = NMBS_TRANSPORT_RTU;
   platform_conf.read = read_serial;
   platform_conf.write = write_serial;
