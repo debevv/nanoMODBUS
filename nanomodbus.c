@@ -69,7 +69,7 @@ static void discard_n(nmbs_t* nmbs, uint16_t n) {
 
 static uint16_t get_2(nmbs_t* nmbs) {
     const uint16_t result =
-            ((uint16_t) nmbs->msg.buf[nmbs->msg.buf_idx]) << 8 | (uint16_t) nmbs->msg.buf[nmbs->msg.buf_idx + 1];
+            (uint16_t)(((uint16_t) nmbs->msg.buf[nmbs->msg.buf_idx]) << 8) | (uint16_t) nmbs->msg.buf[nmbs->msg.buf_idx + 1];
     nmbs->msg.buf_idx += 2;
     return result;
 }
@@ -131,7 +131,7 @@ static void put_regs(nmbs_t* nmbs, const uint16_t* data, uint16_t n) {
     uint16_t* msg_buf_ptr = (uint16_t*) (nmbs->msg.buf + nmbs->msg.buf_idx);
     nmbs->msg.buf_idx += n * 2;
     while (n--) {
-        msg_buf_ptr[n] = (data[n] << 8) | ((data[n] >> 8) & 0xFF);
+        msg_buf_ptr[n] = (uint16_t)(data[n] << 8) | ((data[n] >> 8) & 0xFF);
     }
 }
 #endif
@@ -139,7 +139,7 @@ static void put_regs(nmbs_t* nmbs, const uint16_t* data, uint16_t n) {
 
 static void swap_regs(uint16_t* data, uint16_t n) {
     while (n--) {
-        data[n] = (data[n] << 8) | ((data[n] >> 8) & 0xFF);
+        data[n] = (uint16_t)(data[n] << 8) | ((data[n] >> 8) & 0xFF);
     }
 }
 
@@ -861,7 +861,7 @@ nmbs_error recv_read_device_identification_res(nmbs_t* nmbs, uint8_t buffers_cou
         *next_object_id_out = next_object_id;
 
     uint8_t res_size_left = 253 - 7;
-    for (int i = 0; i < objects_count; i++) {
+    for (uint8_t i = 0; i < objects_count; i++) {
         err = recv(nmbs, 2);
         if (err != NMBS_ERROR_NONE)
             return err;
@@ -2071,7 +2071,7 @@ nmbs_error nmbs_write_multiple_coils(nmbs_t* nmbs, uint16_t address, uint16_t qu
     if ((uint32_t) address + (uint32_t) quantity > ((uint32_t) 0xFFFF) + 1)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
-    uint8_t coils_bytes = (quantity + 7) / 8;
+    uint8_t coils_bytes = (uint8_t)((quantity + 7) / 8);
 
     msg_state_req(nmbs, 15);
     put_req_header(nmbs, 5 + coils_bytes);
@@ -2105,7 +2105,7 @@ nmbs_error nmbs_write_multiple_registers(nmbs_t* nmbs, uint16_t address, uint16_
     if ((uint32_t) address + (uint32_t) quantity > ((uint32_t) 0xFFFF) + 1)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
-    uint8_t registers_bytes = quantity * 2;
+    uint8_t registers_bytes = (uint8_t)(quantity * 2);
 
     msg_state_req(nmbs, 16);
     put_req_header(nmbs, 5 + registers_bytes);
@@ -2178,7 +2178,7 @@ nmbs_error nmbs_write_file_record(nmbs_t* nmbs, uint16_t file_number, uint16_t r
     msg_state_req(nmbs, 21);
     put_req_header(nmbs, 8 + data_size);
 
-    put_1(nmbs, 7 + data_size);    // add Byte Count
+    put_1(nmbs, (uint8_t)(7 + data_size));    // add Byte Count
     put_1(nmbs, 6);                // add Reference Type const
     put_2(nmbs, file_number);
     put_2(nmbs, record_number);
@@ -2212,7 +2212,7 @@ nmbs_error nmbs_read_write_registers(nmbs_t* nmbs, uint16_t read_address, uint16
     if ((uint32_t) write_address + (uint32_t) write_quantity > ((uint32_t) 0xFFFF) + 1)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
-    uint8_t registers_bytes = write_quantity * 2;
+    uint8_t registers_bytes = (uint8_t)(write_quantity * 2);
 
     msg_state_req(nmbs, 23);
     put_req_header(nmbs, 9 + registers_bytes);
