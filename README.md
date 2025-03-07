@@ -8,7 +8,7 @@ resource-constrained systems like microcontrollers.
 Its main features are:
 
 - Compact size
-    - Only ~1500 lines of code
+    - Only ~2000 lines of code
     - Client and server code can be disabled, if not needed
 - No dynamic memory allocations
 - Transports:
@@ -32,7 +32,7 @@ Its main features are:
     - 43/14 (0x2B/0x0E) Read Device Identification
 - Platform-agnostic
     - Requires only C99 and its standard library
-    - Data transport read/write function are implemented by the user
+    - Data transport read/write functions are implemented by the user
 - User-definable CRC function for better performance
 - Broadcast requests and responses
 
@@ -96,13 +96,13 @@ int main(int argc, char* argv[]) {
 
 ## Installation
 
-### Integrate source code to your project
+### Manual
 
 Just copy `nanomodbus.c` and `nanomodbus.h` inside your application codebase.
 
 ### CMake project
 
-nanomodbus supports library linking by using cmake.
+nanomodbus supports library linking by using CMake.
 
 ```cmake
 FetchContent_Declare(
