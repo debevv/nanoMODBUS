@@ -2126,7 +2126,7 @@ nmbs_error nmbs_write_multiple_registers(nmbs_t* nmbs, uint16_t address, uint16_
         return err;
 
     if (!nmbs->msg.broadcast)
-        return recv_write_single_register_res(nmbs, address, quantity);
+        return recv_write_multiple_registers_res(nmbs, address, quantity);
 
     return NMBS_ERROR_NONE;
 }
