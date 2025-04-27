@@ -276,6 +276,7 @@ void nmbs_set_platform_arg(nmbs_t* nmbs, void* arg) {
 }
 
 
+
 uint16_t nmbs_crc_calc(const uint8_t* data, uint32_t length, void* arg) {
     NMBS_UNUSED_PARAM(arg);
     uint16_t crc = 0xFFFF;
