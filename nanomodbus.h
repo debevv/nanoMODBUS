@@ -92,17 +92,17 @@ typedef uint8_t nmbs_bitfield_256[32];
 /**
  * Read a bit from the nmbs_bitfield bf at position b
  */
-#define nmbs_bitfield_read(bf, b) ((bool) ((bf)[(b) >> 3] & (0x1 << ((b) & 7))))
+#define nmbs_bitfield_read(bf, b) ((bool) ((bf)[(b) >> 3] & (0x1 << ((b) & (8 - 1)))))
 
 /**
  * Set a bit of the nmbs_bitfield bf at position b
  */
-#define nmbs_bitfield_set(bf, b) (((bf)[(b) >> 3]) = (((bf)[(b) >> 3]) | (0x1 << ((b) & 7))))
+#define nmbs_bitfield_set(bf, b) (((bf)[(b) >> 3]) = (((bf)[(b) >> 3]) | (0x1 << ((b) & (8 - 1)))))
 
 /**
  * Reset a bit of the nmbs_bitfield bf at position b
  */
-#define nmbs_bitfield_unset(bf, b) (((bf)[(b) >> 3]) = (((bf)[(b) >> 3]) & ~(0x1 << ((b) & 7))))
+#define nmbs_bitfield_unset(bf, b) (((bf)[(b) >> 3]) = (((bf)[(b) >> 3]) & ~(0x1 << ((b) & (8 - 1)))))
 
 /**
  * Write value v to the nmbs_bitfield bf at position b
