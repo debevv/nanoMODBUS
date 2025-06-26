@@ -78,11 +78,21 @@ typedef enum nmbs_error {
  */
 #define nmbs_error_is_exception(e) ((e) > 0 && (e) < 5)
 
+#ifndef NMBS_MAX_COILS
+ #define NMBS_MAX_COILS 2000
+#endif
+
+/* check coil count divisible by 8 */
+#if ((NMBS_MAX_COILS & 7) > 0)
+ #error "NMBS_MAX_COILS must be disible by 8"
+#endif
+
+#define NMBS_MAX_COIL_BYTES (NMBS_MAX_COILS / 8)
 
 /**
  * Bitfield consisting of 2000 coils/discrete inputs
  */
-typedef uint8_t nmbs_bitfield[250];
+typedef uint8_t nmbs_bitfield[NMBS_MAX_COIL_BYTES];
 
 /**
  * Bitfield consisting of 256 values
