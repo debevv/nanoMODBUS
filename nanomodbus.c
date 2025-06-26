@@ -546,7 +546,7 @@ static nmbs_error recv_read_discrete_res(nmbs_t* nmbs, nmbs_bitfield values) {
     uint8_t coils_bytes = get_1(nmbs);
     NMBS_DEBUG_PRINT("b %d\t", coils_bytes);
 
-    if (coils_bytes > NMBS_MAX_COIL_BYTES) {
+    if (coils_bytes > NMBS_BITFIELD_BYTES_MAX) {
         return NMBS_ERROR_INVALID_RESPONSE;
     }
 
@@ -1958,7 +1958,7 @@ nmbs_error nmbs_client_create(nmbs_t* nmbs, const nmbs_platform_conf* platform_c
 
 
 static nmbs_error read_discrete(nmbs_t* nmbs, uint8_t fc, uint16_t address, uint16_t quantity, nmbs_bitfield values) {
-    if (quantity < 1 || quantity > NMBS_MAX_COILS)
+    if (quantity < 1 || quantity > NMBS_BITFIELD_MAX)
         return NMBS_ERROR_INVALID_ARGUMENT;
 
     if ((uint32_t) address + (uint32_t) quantity > ((uint32_t) 0xFFFF) + 1)

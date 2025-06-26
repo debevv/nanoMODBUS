@@ -187,4 +187,5 @@ Please refer to `examples/arduino/README.md` for more info about building and ru
         - `NMBS_SERVER_READ_WRITE_REGISTERS_DISABLED`
         - `NMBS_SERVER_READ_DEVICE_IDENTIFICATION_DISABLED`
     - `NMBS_STRERROR_DISABLED` to disable the code that converts `nmbs_error`s to strings
+    - `NMBS_BITFIELD_MAX` to set the size of the `nmbs_bitfield` type, used to store coil values (default is `2000`)
 - Debug prints about received and sent messages can be enabled by defining `NMBS_DEBUG`
