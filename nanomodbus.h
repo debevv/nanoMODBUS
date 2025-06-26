@@ -305,7 +305,7 @@ void nmbs_callbacks_create(nmbs_callbacks* callbacks);
 
 /** Create a new Modbus server.
  * @param nmbs pointer to the nmbs_t instance where the client will be created.
- * @param address_rtu RTU address of this server. Can be 0 if transport is not RTU.
+ * @param address_rtu RTU address of this server (255 will accept all requests). Can be 0 if transport is not RTU.
  * @param platform_conf nmbs_platform_conf struct with platform configuration. It may be discarded after calling this method.
  * @param callbacks nmbs_callbacks struct with server request callbacks. It may be discarded after calling this method.
  *

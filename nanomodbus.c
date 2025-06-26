@@ -438,6 +438,8 @@ static nmbs_error recv_req_header(nmbs_t* nmbs, bool* first_byte_received) {
         // Check if request is for us
         if (nmbs->msg.unit_id == NMBS_BROADCAST_ADDRESS)
             nmbs->msg.broadcast = true;
+        else if (nmbs->address_rtu == 255)
+            nmbs->msg.ignored = false;
         else if (nmbs->msg.unit_id != nmbs->address_rtu)
             nmbs->msg.ignored = true;
         else
