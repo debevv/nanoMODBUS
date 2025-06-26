@@ -1,0 +1,3 @@
+[submodule "examples/xmega128a1au/Modbus-TCP/external/Wiznet"]
+	path = examples/xmega128a1au/Modbus-TCP/external/Wiznet
+	url = https://github.com/Wiznet/ioLibrary_Driver.git

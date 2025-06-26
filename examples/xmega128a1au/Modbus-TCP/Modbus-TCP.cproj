@@ -1,0 +1,669 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="14.0">
+  <PropertyGroup>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectVersion>7.0</ProjectVersion>
+    <ToolchainName>com.Atmel.AVRGCC8.C</ToolchainName>
+    <ProjectGuid>dce6c7e3-ee26-4d79-826b-08594b9ad897</ProjectGuid>
+    <avrdevice>ATxmega128A1U</avrdevice>
+    <avrdeviceseries>none</avrdeviceseries>
+    <OutputType>Executable</OutputType>
+    <Language>C</Language>
+    <OutputFileName>$(MSBuildProjectName)</OutputFileName>
+    <OutputFileExtension>.elf</OutputFileExtension>
+    <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
+    <AssemblyName>Modbus-TCP</AssemblyName>
+    <Name>Modbus-TCP</Name>
+    <RootNamespace>Modbus-TCP</RootNamespace>
+    <ToolchainFlavour>Native</ToolchainFlavour>
+    <KeepTimersRunning>true</KeepTimersRunning>
+    <OverrideVtor>false</OverrideVtor>
+    <CacheFlash>true</CacheFlash>
+    <ProgFlashFromRam>true</ProgFlashFromRam>
+    <RamSnippetAddress>0x20000000</RamSnippetAddress>
+    <UncachedRange />
+    <preserveEEPROM>true</preserveEEPROM>
+    <OverrideVtorValue>exception_table</OverrideVtorValue>
+    <BootSegment>2</BootSegment>
+    <ResetRule>0</ResetRule>
+    <eraseonlaunchrule>0</eraseonlaunchrule>
+    <EraseKey />
+    <AsfFrameworkConfig>
+      <framework-data xmlns="">
+        <options />
+        <configurations />
+        <files />
+        <documentation help="" />
+        <offline-documentation help="" />
+        <dependencies>
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.52.0" />
+        </dependencies>
+      </framework-data>
+    </AsfFrameworkConfig>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <ToolchainSettings>
+      <AvrGcc>
+        <avrgcc.common.Device>-mmcu=atxmega128a1u -B "%24(PackRepoDir)\atmel\XMEGAA_DFP\1.3.146\gcc\dev\atxmega128a1u"</avrgcc.common.Device>
+        <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+        <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
+        <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+        <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
+        <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
+        <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+        <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+        <avrgcc.compiler.symbols.DefSymbols>
+          <ListValues>
+            <Value>NDEBUG</Value>
+          </ListValues>
+        </avrgcc.compiler.symbols.DefSymbols>
+        <avrgcc.compiler.directories.IncludePaths>
+          <ListValues>
+            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.3.146\include\</Value>
+          </ListValues>
+        </avrgcc.compiler.directories.IncludePaths>
+        <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
+        <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
+        <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+        <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
+        <avrgcc.linker.libraries.Libraries>
+          <ListValues>
+            <Value>libm</Value>
+          </ListValues>
+        </avrgcc.linker.libraries.Libraries>
+        <avrgcc.assembler.general.IncludePaths>
+          <ListValues>
+            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.3.146\include\</Value>
+          </ListValues>
+        </avrgcc.assembler.general.IncludePaths>
+      </AvrGcc>
+    </ToolchainSettings>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <ToolchainSettings>
+      <AvrGcc>
+  <avrgcc.common.Device>-mmcu=atxmega128a1u -B "%24(PackRepoDir)\atmel\XMEGAA_DFP\1.3.146\gcc\dev\atxmega128a1u"</avrgcc.common.Device>
+  <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+  <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
+  <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+  <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
+  <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
+  <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcc.compiler.symbols.DefSymbols>
+    <ListValues>
+      <Value>DEBUG</Value>
+    </ListValues>
+  </avrgcc.compiler.symbols.DefSymbols>
+  <avrgcc.compiler.directories.IncludePaths>
+    <ListValues>
+      <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.3.146\include\</Value>
+      <Value>../external/Wiznet/Application/loopback</Value>
+      <Value>../external/Wiznet/Application/multicast</Value>
+      <Value>../external/Wiznet/Ethernet</Value>
+      <Value>../port</Value>
+      <Value>../port/wizchip</Value>
+      <Value>../port/nmbs</Value>
+      <Value>../../../..</Value>
+    </ListValues>
+  </avrgcc.compiler.directories.IncludePaths>
+  <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
+  <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcc.compiler.optimization.DebugLevel>Default (-g2)</avrgcc.compiler.optimization.DebugLevel>
+  <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
+  <avrgcc.linker.libraries.Libraries>
+    <ListValues>
+      <Value>libm</Value>
+    </ListValues>
+  </avrgcc.linker.libraries.Libraries>
+  <avrgcc.assembler.general.IncludePaths>
+    <ListValues>
+      <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.3.146\include\</Value>
+    </ListValues>
+  </avrgcc.assembler.general.IncludePaths>
+  <avrgcc.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcc.assembler.debugging.DebugLevel>
+</AvrGcc>
+    </ToolchainSettings>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\..\nanomodbus.c">
+      <SubType>compile</SubType>
+      <Link>external\nanoModbus\nanomodbus.c</Link>
+    </Compile>
+    <Compile Include="..\..\..\nanomodbus.h">
+      <SubType>compile</SubType>
+      <Link>external\nanoModbus\nanomodbus.h</Link>
+    </Compile>
+    <Compile Include="port\nmbs\nmbs.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="port\nmbs\nmbs_port.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="port\nmbs\nmbs_port.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="port\wizchip\wizchip.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="port\wizchip\wizchip_port.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="port\wizchip\wizchip_port.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="external\Wiznet\Application\Application.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="external\Wiznet\Application\loopback\loopback.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="external\Wiznet\Application\loopback\loopback.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="external\Wiznet\Application\multicast\multicast.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="external\Wiznet\Application\multicast\multicast.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="external\Wiznet\Ethernet\socket.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="external\Wiznet\Ethernet\socket.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Ethernet\W5100S\w5100s.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Ethernet\W5100S\w5100s.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Ethernet\W5100\w5100.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Ethernet\W5100\w5100.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Ethernet\W5200\w5200.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Ethernet\W5200\w5200.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Ethernet\W5300\w5300.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Ethernet\W5300\w5300.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="external\Wiznet\Ethernet\W5500\w5500.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="external\Wiznet\Ethernet\W5500\w5500.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Ethernet\W6100\w6100.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Ethernet\W6100\w6100.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Ethernet\W6300\w6300.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Ethernet\W6300\w6300.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="external\Wiznet\Ethernet\wizchip_conf.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="external\Wiznet\Ethernet\wizchip_conf.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\AAC\AddressAutoConfig.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\AAC\AddressAutoConfig.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\DHCP6\dhcpv6.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\DHCP6\dhcpv6.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\DHCP\dhcp.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\DHCP\dhcp.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\DNS\dns.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\DNS\dns.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\httpServer\httpParser.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\httpServer\httpParser.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\httpServer\httpServer.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\httpServer\httpServer.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\httpServer\httpUtil.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\httpServer\httpUtil.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\MQTT\MQTTClient.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\MQTT\MQTTClient.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTConnect.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTConnectClient.c">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTConnectServer.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTDeserializePublish.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTFormat.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTFormat.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTPacket.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTPacket.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTPublish.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTSerializePublish.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTSubscribe.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTSubscribeClient.c">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTSubscribeServer.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTUnsubscribe.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTUnsubscribeClient.c">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTUnsubscribeServer.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\StackTrace.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\MQTT\mqtt_interface.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\MQTT\mqtt_interface.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\SNMP\snmp.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\SNMP\snmp.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\SNMP\snmp_custom.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\SNMP\snmp_custom.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\SNTP\sntp.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\SNTP\sntp.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\TFTP\netutil.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\TFTP\netutil.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="external\Wiznet\Internet\TFTP\tftp.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="external\Wiznet\Internet\TFTP\tftp.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="main.c">
+      <SubType>compile</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Debug\" />
+    <Folder Include="Debug\external\" />
+    <Folder Include="Debug\external\Wiznet\" />
+    <Folder Include="Debug\external\Wiznet\Application\" />
+    <Folder Include="Debug\external\Wiznet\Application\loopback\" />
+    <Folder Include="Debug\external\Wiznet\Application\multicast\" />
+    <Folder Include="Debug\external\Wiznet\Ethernet\" />
+    <Folder Include="Debug\external\Wiznet\Ethernet\W5100S\" />
+    <Folder Include="Debug\external\Wiznet\Ethernet\W5100\" />
+    <Folder Include="Debug\external\Wiznet\Ethernet\W5200\" />
+    <Folder Include="Debug\external\Wiznet\Ethernet\W5300\" />
+    <Folder Include="Debug\external\Wiznet\Ethernet\W5500\" />
+    <Folder Include="Debug\external\Wiznet\Ethernet\W6100\" />
+    <Folder Include="Debug\external\Wiznet\Ethernet\W6300\" />
+    <Folder Include="Debug\external\Wiznet\Internet\" />
+    <Folder Include="Debug\external\Wiznet\Internet\AAC\" />
+    <Folder Include="Debug\external\Wiznet\Internet\DHCP6\" />
+    <Folder Include="Debug\external\Wiznet\Internet\DHCP\" />
+    <Folder Include="Debug\external\Wiznet\Internet\DNS\" />
+    <Folder Include="Debug\external\Wiznet\Internet\httpServer\" />
+    <Folder Include="Debug\external\Wiznet\Internet\MQTT\" />
+    <Folder Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\" />
+    <Folder Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\" />
+    <Folder Include="Debug\external\Wiznet\Internet\SNMP\" />
+    <Folder Include="Debug\external\Wiznet\Internet\SNMP\tools\" />
+    <Folder Include="Debug\external\Wiznet\Internet\SNMP\tools\net-snmp-5.7%2528win32-bin%2529\" />
+    <Folder Include="Debug\external\Wiznet\Internet\SNMP\tools\OID_Converter\" />
+    <Folder Include="Debug\external\Wiznet\Internet\SNTP\" />
+    <Folder Include="Debug\external\Wiznet\Internet\TFTP\" />
+    <Folder Include="external\" />
+    <Folder Include="external\nanoModbus" />
+    <Folder Include="external\Wiznet\" />
+    <Folder Include="external\Wiznet\Application\" />
+    <Folder Include="external\Wiznet\Application\loopback\" />
+    <Folder Include="external\Wiznet\Application\multicast\" />
+    <Folder Include="external\Wiznet\Ethernet\" />
+    <Folder Include="external\Wiznet\Ethernet\W5100S\" />
+    <Folder Include="external\Wiznet\Ethernet\W5100\" />
+    <Folder Include="external\Wiznet\Ethernet\W5200\" />
+    <Folder Include="external\Wiznet\Ethernet\W5300\" />
+    <Folder Include="external\Wiznet\Ethernet\W5500\" />
+    <Folder Include="external\Wiznet\Ethernet\W6100\" />
+    <Folder Include="external\Wiznet\Ethernet\W6300\" />
+    <Folder Include="external\Wiznet\Internet\" />
+    <Folder Include="external\Wiznet\Internet\AAC\" />
+    <Folder Include="external\Wiznet\Internet\DHCP6\" />
+    <Folder Include="external\Wiznet\Internet\DHCP\" />
+    <Folder Include="external\Wiznet\Internet\DNS\" />
+    <Folder Include="external\Wiznet\Internet\httpServer\" />
+    <Folder Include="external\Wiznet\Internet\MQTT\" />
+    <Folder Include="external\Wiznet\Internet\MQTT\MQTTPacket\" />
+    <Folder Include="external\Wiznet\Internet\MQTT\MQTTPacket\src\" />
+    <Folder Include="external\Wiznet\Internet\SNMP\" />
+    <Folder Include="external\Wiznet\Internet\SNMP\tools\" />
+    <Folder Include="external\Wiznet\Internet\SNMP\tools\net-snmp-5.7%28win32-bin%29\" />
+    <Folder Include="external\Wiznet\Internet\SNMP\tools\OID_Converter\" />
+    <Folder Include="external\Wiznet\Internet\SNTP\" />
+    <Folder Include="external\Wiznet\Internet\TFTP\" />
+    <Folder Include="port" />
+    <Folder Include="port\nmbs" />
+    <Folder Include="port\wizchip" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Debug\external\Wiznet\Application\loopback\loopback.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Application\loopback\loopback.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Application\multicast\multicast.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Application\multicast\multicast.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\socket.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\socket.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\W5100S\w5100s.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\W5100S\w5100s.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\W5100\w5100.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\W5100\w5100.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\W5200\w5200.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\W5200\w5200.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\W5300\w5300.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\W5300\w5300.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\W5500\w5500.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\W5500\w5500.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\W6100\w6100.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\W6100\w6100.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\W6300\w6300.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\W6300\w6300.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\wizchip_conf.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Ethernet\wizchip_conf.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\AAC\AddressAutoConfig.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\AAC\AddressAutoConfig.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\DHCP6\dhcpv6.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\DHCP6\dhcpv6.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\DHCP\dhcp.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\DHCP\dhcp.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\DNS\dns.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\DNS\dns.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\httpServer\httpParser.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\httpServer\httpParser.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\httpServer\httpServer.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\httpServer\httpServer.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\httpServer\httpUtil.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\httpServer\httpUtil.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTClient.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTClient.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTConnectClient.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTConnectClient.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTConnectServer.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTConnectServer.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTDeserializePublish.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTDeserializePublish.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTFormat.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTFormat.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTPacket.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTPacket.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTSerializePublish.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTSerializePublish.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTSubscribeClient.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTSubscribeClient.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTSubscribeServer.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTSubscribeServer.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTUnsubscribeClient.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTUnsubscribeClient.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTUnsubscribeServer.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\MQTTPacket\src\MQTTUnsubscribeServer.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\mqtt_interface.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\MQTT\mqtt_interface.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\SNMP\snmp.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\SNMP\snmp.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\SNMP\snmp_custom.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\SNMP\snmp_custom.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\SNTP\sntp.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\SNTP\sntp.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\TFTP\netutil.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\TFTP\netutil.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\TFTP\tftp.d">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Debug\external\Wiznet\Internet\TFTP\tftp.o">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="external\Wiznet\.git">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="external\Wiznet\.gitattributes">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="external\Wiznet\.gitignore">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="external\Wiznet\.gitmodules">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="external\Wiznet\Ethernet\Socket_APIs_V3.0.3.chm">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="external\Wiznet\Internet\SNMP\tools\net-snmp-5.7%28win32-bin%29\snmptrapd.conf">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="external\Wiznet\Internet\SNMP\tools\OID_Converter\Readme.txt">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="external\Wiznet\iolibrary.chm">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="external\Wiznet\license.txt">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="external\Wiznet\README.md">
+      <SubType>compile</SubType>
+    </None>
+  </ItemGroup>
+  <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />
+</Project>

@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Store xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="AtmelPackComponentManagement">
+	<ProjectComponents>
+		<ProjectComponent z:Id="i1" xmlns:z="http://schemas.microsoft.com/2003/10/Serialization/">
+			<CApiVersion></CApiVersion>
+			<CBundle></CBundle>
+			<CClass>Device</CClass>
+			<CGroup>Startup</CGroup>
+			<CSub></CSub>
+			<CVariant></CVariant>
+			<CVendor>Atmel</CVendor>
+			<CVersion>1.3.0</CVersion>
+			<DefaultRepoPath>E:/Atmel\7.0\Packs</DefaultRepoPath>
+			<DependentComponents xmlns:d4p1="http://schemas.microsoft.com/2003/10/Serialization/Arrays" />
+			<Description></Description>
+			<Files xmlns:d4p1="http://schemas.microsoft.com/2003/10/Serialization/Arrays">
+				<d4p1:anyType i:type="FileInfo">
+					<AbsolutePath>E:/Atmel\7.0\Packs\atmel\XMEGAA_DFP\1.3.146\include\</AbsolutePath>
+					<Attribute></Attribute>
+					<Category>include</Category>
+					<Condition>C</Condition>
+					<FileContentHash i:nil="true" />
+					<FileVersion></FileVersion>
+					<Name>include/</Name>
+					<SelectString></SelectString>
+					<SourcePath></SourcePath>
+				</d4p1:anyType>
+				<d4p1:anyType i:type="FileInfo">
+					<AbsolutePath>E:/Atmel\7.0\Packs\atmel\XMEGAA_DFP\1.3.146\include\avr\iox128a1u.h</AbsolutePath>
+					<Attribute></Attribute>
+					<Category>header</Category>
+					<Condition>C</Condition>
+					<FileContentHash>3j/QYVtqPvlOIyfF2OCESQ==</FileContentHash>
+					<FileVersion></FileVersion>
+					<Name>include/avr/iox128a1u.h</Name>
+					<SelectString></SelectString>
+					<SourcePath></SourcePath>
+				</d4p1:anyType>
+				<d4p1:anyType i:type="FileInfo">
+					<AbsolutePath>E:/Atmel\7.0\Packs\atmel\XMEGAA_DFP\1.3.146\templates\main.c</AbsolutePath>
+					<Attribute>template</Attribute>
+					<Category>source</Category>
+					<Condition>C Exe</Condition>
+					<FileContentHash>Xk5f457oKDcrbTuCtwd/hw==</FileContentHash>
+					<FileVersion></FileVersion>
+					<Name>templates/main.c</Name>
+					<SelectString>Main file (.c)</SelectString>
+					<SourcePath></SourcePath>
+				</d4p1:anyType>
+				<d4p1:anyType i:type="FileInfo">
+					<AbsolutePath>E:/Atmel\7.0\Packs\atmel\XMEGAA_DFP\1.3.146\templates\main.cpp</AbsolutePath>
+					<Attribute>template</Attribute>
+					<Category>source</Category>
+					<Condition>C Exe</Condition>
+					<FileContentHash>mkKaE95TOoATsuBGv6jmxg==</FileContentHash>
+					<FileVersion></FileVersion>
+					<Name>templates/main.cpp</Name>
+					<SelectString>Main file (.cpp)</SelectString>
+					<SourcePath></SourcePath>
+				</d4p1:anyType>
+				<d4p1:anyType i:type="FileInfo">
+					<AbsolutePath>E:/Atmel\7.0\Packs\atmel\XMEGAA_DFP\1.3.146\gcc\dev\atxmega128a1u</AbsolutePath>
+					<Attribute></Attribute>
+					<Category>libraryPrefix</Category>
+					<Condition>GCC</Condition>
+					<FileContentHash i:nil="true" />
+					<FileVersion></FileVersion>
+					<Name>gcc/dev/atxmega128a1u</Name>
+					<SelectString></SelectString>
+					<SourcePath></SourcePath>
+				</d4p1:anyType>
+			</Files>
+			<PackName>XMEGAA_DFP</PackName>
+			<PackPath>E:/Atmel/7.0/Packs/atmel/XMEGAA_DFP/1.3.146/Atmel.XMEGAA_DFP.pdsc</PackPath>
+			<PackVersion>1.3.146</PackVersion>
+			<PresentInProject>true</PresentInProject>
+			<ReferenceConditionId>ATxmega128A1U</ReferenceConditionId>
+			<RteComponents xmlns:d4p1="http://schemas.microsoft.com/2003/10/Serialization/Arrays">
+				<d4p1:string></d4p1:string>
+			</RteComponents>
+			<Status>Resolved</Status>
+			<VersionMode>Fixed</VersionMode>
+			<IsComponentInAtProject>true</IsComponentInAtProject>
+		</ProjectComponent>
+	</ProjectComponents>
+</Store>
