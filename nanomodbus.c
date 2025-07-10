@@ -1513,10 +1513,6 @@ static nmbs_error handle_write_file_record(nmbs_t* nmbs) {
 
         if (!nmbs->msg.broadcast) {
             // The normal response to 'Write File' is an echo of the request.
-            // We can restore buffer index and response msg.
-            nmbs->msg.buf_idx = msg_buf_idx;
-            discard_n(nmbs, request_size);
-
             err = send_msg(nmbs);
             if (err != NMBS_ERROR_NONE)
                 return err;
