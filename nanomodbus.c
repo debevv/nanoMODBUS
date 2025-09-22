@@ -218,7 +218,7 @@ static void msg_state_req(nmbs_t* nmbs, uint8_t fc) {
     nmbs->msg.unit_id = nmbs->dest_address_rtu;
     nmbs->msg.fc = fc;
     nmbs->msg.transaction_id = nmbs->current_tid;
-    if (nmbs->msg.unit_id == 0 && nmbs->platform.transport == NMBS_TRANSPORT_RTU)
+    if (nmbs->msg.unit_id == NMBS_BROADCAST_ADDRESS && nmbs->platform.transport == NMBS_TRANSPORT_RTU)
         nmbs->msg.broadcast = true;
 }
 #endif
@@ -455,6 +455,10 @@ static void put_res_header(nmbs_t* nmbs, uint16_t data_length) {
 
 
 static nmbs_error send_exception_msg(nmbs_t* nmbs, uint8_t exception) {
+    if (nmbs->msg.broadcast) {
+        return NMBS_ERROR_NONE;
+    }
+
     nmbs->msg.fc += 0x80;
     put_msg_header(nmbs, 1);
     put_1(nmbs, exception);
@@ -1878,7 +1882,7 @@ static nmbs_error handle_req_fc(nmbs_t* nmbs) {
 #endif
         default:
             flush(nmbs);
-            if (!nmbs->msg.ignored && !nmbs->msg.broadcast)
+            if (!nmbs->msg.ignored)
                 err = send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
     }
 
@@ -2236,11 +2240,7 @@ nmbs_error nmbs_read_write_registers(nmbs_t* nmbs, uint16_t read_address, uint16
     if (err != NMBS_ERROR_NONE)
         return err;
 
-    if (!nmbs->msg.broadcast) {
-        return recv_read_registers_res(nmbs, read_quantity, registers_out);
-    }
-
-    return NMBS_ERROR_NONE;
+    return recv_read_registers_res(nmbs, read_quantity, registers_out);
 }
 
 
