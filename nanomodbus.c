@@ -889,7 +889,11 @@ nmbs_error recv_read_device_identification_res(nmbs_t* nmbs, uint8_t buffers_cou
         if (order)
             buf_index = order[object_id];
         if (buffers_out) {
+#ifndef WIN32
             strncpy(buffers_out[buf_index], str, buffers_length);
+#else
+            strncpy_s(buffers_out[buf_index], buffers_length, str, object_length);
+#endif
             buffers_out[buf_index][object_length] = 0;
         }
     }
