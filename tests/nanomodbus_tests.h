@@ -220,7 +220,7 @@ void start_client_and_server(nmbs_transport transport, const nmbs_callbacks* ser
     nmbs_set_read_timeout(&SERVER, 500);
     nmbs_set_byte_timeout(&SERVER, 100);
 
-    nmbs_set_read_timeout(&CLIENT, 5000);
+    nmbs_set_read_timeout(&CLIENT, 1000);
     nmbs_set_byte_timeout(&CLIENT, 100);
 
     expect(pthread_mutex_lock(&server_stopped_m) == 0);
