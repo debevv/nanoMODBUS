@@ -1689,7 +1689,7 @@ static nmbs_error handle_read_device_identification(nmbs_t* nmbs) {
                 put_1(nmbs, 1);    // Number of objects
 
                 str[0] = 0;
-                err = nmbs->callbacks.read_device_identification(object_id, str);
+                err = nmbs->callbacks.read_device_identification(object_id, str, nmbs->callbacks.arg);
                 if (err != NMBS_ERROR_NONE) {
                     if (nmbs_error_is_exception(err))
                         return send_exception_msg(nmbs, err);
@@ -1752,7 +1752,7 @@ static nmbs_error handle_read_device_identification(nmbs_t* nmbs) {
                 }
 
                 str[0] = 0;
-                err = nmbs->callbacks.read_device_identification((uint8_t) id, str);
+                err = nmbs->callbacks.read_device_identification((uint8_t) id, str, nmbs->callbacks.arg);
                 if (err != NMBS_ERROR_NONE) {
                     if (nmbs_error_is_exception(err))
                         return send_exception_msg(nmbs, err);
