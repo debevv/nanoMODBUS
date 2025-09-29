@@ -195,6 +195,11 @@ int32_t write_socket(const uint8_t* buf, uint16_t count, int32_t byte_timeout_ms
 #ifdef NMBS_RTU
 static int32_t read_serial(uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg) {
 #if MB_UART_DMA
+    if(byte_timeout_ms==0)
+    {
+        xQueueReset(rtu_rx_q);
+        return 0;
+    }
     uint32_t tick_start = HAL_GetTick();
     while (uxQueueMessagesWaiting(rtu_rx_q) < count) {
         if (HAL_GetTick() - tick_start >= (uint32_t) byte_timeout_ms) {
