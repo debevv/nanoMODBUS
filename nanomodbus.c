@@ -1520,10 +1520,6 @@ static nmbs_error handle_write_file_record(nmbs_t* nmbs) {
 
         if (!nmbs->msg.broadcast) {
             // The normal response to 'Write File' is an echo of the request.
-            // We can restore buffer index and response msg.
-            nmbs->msg.buf_idx = msg_buf_idx;
-            discard_n(nmbs, request_size);
-
             err = send_msg(nmbs);
             if (err != NMBS_ERROR_NONE)
                 return err;
@@ -1700,7 +1696,7 @@ static nmbs_error handle_read_device_identification(nmbs_t* nmbs) {
                 put_1(nmbs, 1);    // Number of objects
 
                 str[0] = 0;
-                err = nmbs->callbacks.read_device_identification(object_id, str);
+                err = nmbs->callbacks.read_device_identification(object_id, str, nmbs->callbacks.arg);
                 if (err != NMBS_ERROR_NONE) {
                     if (nmbs_error_is_exception(err))
                         return send_exception_msg(nmbs, err);
@@ -1763,7 +1759,7 @@ static nmbs_error handle_read_device_identification(nmbs_t* nmbs) {
                 }
 
                 str[0] = 0;
-                err = nmbs->callbacks.read_device_identification((uint8_t) id, str);
+                err = nmbs->callbacks.read_device_identification((uint8_t) id, str, nmbs->callbacks.arg);
                 if (err != NMBS_ERROR_NONE) {
                     if (nmbs_error_is_exception(err))
                         return send_exception_msg(nmbs, err);
