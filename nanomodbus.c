@@ -1730,12 +1730,12 @@ static nmbs_error handle_read_device_identification(nmbs_t* nmbs) {
                     last_id = 0x02;
                     break;
                 case 2:
-                    if (object_id < 0x03 || object_id > 0x07)
+                    if (object_id > 0x07)
                         return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
                     last_id = 0x07;
                     break;
                 case 3:
-                    if (object_id < 0x80)
+                    if (0x80)
                         return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
                     last_id = 0xFF;
                     break;
