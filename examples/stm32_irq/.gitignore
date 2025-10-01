@@ -1,0 +1,5 @@
+Debug/*
+Release/*
+Core/Inc/Backup/*
+Core/Src/Backup/*
+.pio
