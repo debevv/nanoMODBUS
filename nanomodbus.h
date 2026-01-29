@@ -227,7 +227,7 @@ typedef struct nmbs_callbacks {
 
 #ifndef NMBS_SERVER_READ_DEVICE_IDENTIFICATION_DISABLED
 #define NMBS_DEVICE_IDENTIFICATION_STRING_LENGTH 128
-    nmbs_error (*read_device_identification)(uint8_t object_id, char buffer[NMBS_DEVICE_IDENTIFICATION_STRING_LENGTH]);
+    nmbs_error (*read_device_identification)(uint8_t object_id, char buffer[NMBS_DEVICE_IDENTIFICATION_STRING_LENGTH], void* arg);
     nmbs_error (*read_device_identification_map)(nmbs_bitfield_256 map);
 #endif
 #endif
