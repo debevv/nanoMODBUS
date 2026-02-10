@@ -236,6 +236,10 @@ typedef struct nmbs_callbacks {
 #endif
 #endif
 
+#ifdef NMBS_SERVER_CUSTOM_FUNCTION_ENABLED
+    nmbs_error (*custom_function)(uint8_t function_code, uint8_t* payload, uint16_t* size);
+#endif
+
     void* arg;               // User data, will be passed to functions above
     uint32_t initialized;    // Reserved, workaround for older user code not calling nmbs_callbacks_create()
 } nmbs_callbacks;

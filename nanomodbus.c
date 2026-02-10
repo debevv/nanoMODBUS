@@ -1805,6 +1805,60 @@ static nmbs_error handle_read_device_identification(nmbs_t* nmbs) {
 }
 #endif
 
+#ifdef NMBS_SERVER_CUSTOM_FUNCTION_ENABLED
+static nmbs_error handle_custom_function(nmbs_t* nmbs, 
+                                         nmbs_error (*callback)(uint8_t, uint8_t*, uint16_t*)) {
+
+    uint8_t function_code = nmbs->msg.buf[nmbs->msg.buf_idx - 1];   // Function code is 1 byte ahead of payload
+    uint8_t *payload = &nmbs->msg.buf[nmbs->msg.buf_idx];           // Pointer to start of payload bytes
+    uint16_t *payload_size = nmbs->platform.arg;                    // Pointer to frame size excluding Modbus CRC bytes
+    uint16_t size = (*payload_size - nmbs->msg.buf_idx);            // Skip over header bytes (addr / func)
+
+    // Receive the data bytes from driver into the nanoModbus buffer (excluding CRC)
+    nmbs_error err = recv(nmbs, size);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    // Patch buf_idx to point to Modbus CRC and validate
+    nmbs->msg.buf_idx += size;
+    err = recv_msg_footer(nmbs);
+        if (err != NMBS_ERROR_NONE)
+            return err;
+
+    NMBS_DEBUG_PRINT("Handle custom function: [0x%02X]", function_code);
+
+    if (!nmbs->msg.ignored) {
+
+        /* Call custom function callback with payload and size, the callback is responsible 
+           for modifying the Modbus payload and report the updated size  (excluding CRC bytes). */
+        if (callback) {
+            err = callback(function_code, payload, &size);
+            if (err != NMBS_ERROR_NONE) {
+                if (nmbs_error_is_exception(err))
+                    return send_exception_msg(nmbs, err);
+
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+            }
+
+            if (!nmbs->msg.broadcast) {
+                put_res_header(nmbs, size);
+                nmbs->msg.buf_idx += size; // Patch size as nanoModbus payload is handled by callback
+                err = send_msg(nmbs);
+                if (err != NMBS_ERROR_NONE)
+                    return err;
+            }
+        }
+        else {
+            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+        }
+    }
+    else {
+        return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+    }
+
+    return NMBS_ERROR_NONE;
+}
+#endif
 
 static nmbs_error handle_req_fc(nmbs_t* nmbs) {
     NMBS_DEBUG_PRINT("fc %d\t", nmbs->msg.fc);
@@ -1883,6 +1937,12 @@ static nmbs_error handle_req_fc(nmbs_t* nmbs) {
             break;
 #endif
         default:
+#ifdef NMBS_SERVER_CUSTOM_FUNCTION_ENABLED
+            if (nmbs->callbacks.custom_function != NULL) {
+                err = handle_custom_function(nmbs, nmbs->callbacks.custom_function);
+                break;
+            }
+#endif
             nmbs->platform.flush(nmbs, nmbs->platform.arg);
             if (!nmbs->msg.ignored)
                 err = send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
