@@ -1,11 +1,16 @@
 #include "nanomodbus_tests.h"
+#include "nanomodbus.h"
 
-#include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+// #include <cstdio>
+// #include <cstdint>
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <string.h>
+
+// #define NMBS_DEBUG
 
 static int64_t callbacks_user_data = -64;
+
 
 uint8_t check_user_data(void* data) {
     return *((int64_t*) data) == callbacks_user_data;
@@ -1457,8 +1462,137 @@ void test_fc43_14(nmbs_transport transport) {
     stop_client_and_server();
 }
 
+//new_fc_0x18->
+#define fifo_max_size 31
+static uint16_t server_fifo_sz = 0;
+static uint16_t fifo_head_adr = 0x0000;
+static uint16_t server_regs[fifo_max_size] = {10, 11, 12, 13, 14, 15, 16, 17, 10, 11, 12, 13, 14, 15, 16, 17,
+                                              0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0};
+
+nmbs_error server_read_fifo(uint16_t address, uint16_t* registers, uint16_t* size, uint8_t unit_id, void* arg) {
+
+    UNUSED_PARAM(arg);
+    UNUSED_PARAM(unit_id);
+
+    if (check_user_data(arg) != 1)
+        return NMBS_EXCEPTION_SERVER_DEVICE_FAILURE;
+
+    //  Condition check from
+    //  MODBUS Application Protocol Specification
+    if (address != fifo_head_adr)
+        return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+    //  Condition check from
+    //  MODBUS Application Protocol Specification
+    if (!(server_fifo_sz <= fifo_max_size))
+        return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE;
+
+    registers[0] = *size = server_fifo_sz;
+
+    for (uint16_t i = 0; i < *size; i++)
+        registers[i + 1] = server_regs[i];
+
+
+    for (uint16_t i = 0; i < fifo_max_size; i++) {
+        if (i < (fifo_max_size - *size))
+            server_regs[i] = server_regs[i + *size];
+        else
+            server_regs[i] = 0;
+    }
+
+    *size += 1;
+
+    return NMBS_ERROR_NONE;
+}
+//<-new_fc_0x18
+
+
+void test_fc24(nmbs_transport transport) {
+    const uint8_t fc = 24;
+    uint16_t raw_res[260];
+    uint16_t quantity_read = 0;
+    nmbs_callbacks callbacks_empty;
+    nmbs_callbacks_create(&callbacks_empty);
+    start_client_and_server(transport, &callbacks_empty);
+    should("return NMBS_EXCEPTION_ILLEGAL_FUNCTION when callback is not registered server-side");
+    expect(nmbs_read_fifo_queue(&CLIENT, 0, &quantity_read, NULL) == NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+    // nmbs_error err = NMBS_ERROR_NONE;
+    // err = nmbs_read_holding_registers(&CLIENT, 0, 1, raw_res);
+    // err = nmbs_read_fifo_queue(&CLIENT, 0, &quantity_read, raw_res);
+    // printf("err  %d\n", err);
+    // asm("NOP");
+    // expect(err == NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+    stop_client_and_server();
+
+    nmbs_callbacks callbacks;
+    nmbs_callbacks_create(&callbacks);
+    callbacks.read_fifo = server_read_fifo;
+    start_client_and_server(transport, &callbacks);
+    nmbs_set_callbacks_arg(&SERVER, (void*) &callbacks_user_data);
+
+    // NMBS_ERROR_INVALID_ARGUMENT not need
+
+    should("immediately return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS when calling with address 1(is not a haed if fifo "
+           "queue) ");
+    expect(nmbs_read_fifo_queue(&CLIENT, 1, 0, NULL) == NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE from server when calling with quantity 0");
+    server_fifo_sz = 33;
+    expect(nmbs_read_fifo_queue(&CLIENT, 0, 0, NULL) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+    should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE from server when calling with quantity 0");
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]) {htons(0)}, 2));
+    expect(nmbs_receive_raw_pdu_response(&CLIENT, (uint8_t*) raw_res, 4) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+
+    should("return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS from server when calling with address 1(is not a haed if fifo");
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]) {htons(0xFFFF)}, 2));
+    expect(nmbs_receive_raw_pdu_response(&CLIENT, (uint8_t*) raw_res, 4) == NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+    server_fifo_sz = 8;
+    uint16_t regs[16];
+    should("read with no error");
+    check(nmbs_read_fifo_queue(&CLIENT, 0, &quantity_read, regs));
+    expect((regs[0] == server_fifo_sz) && (quantity_read == (server_fifo_sz + 1)));
+    asm("NOP");
+    expect(regs[1] == 10);
+    expect(regs[2] == 11);
+    expect(regs[3] == 12);
+    expect(regs[4] == 13);
+    expect(regs[5] == 14);
+    expect(regs[6] == 15);
+    expect(regs[7] == 16);
+    expect(regs[8] == 17);
+    asm("NOP");
+
+    server_fifo_sz = 0;
+    if (transport == NMBS_TRANSPORT_RTU) {
+        nmbs_set_destination_rtu_address(&CLIENT, NMBS_BROADCAST_ADDRESS);
+
+        should("receive no response when sending to broadcast address");
+        expect(nmbs_read_fifo_queue(&CLIENT, 0, &quantity_read, regs) == NMBS_ERROR_TIMEOUT);
+
+        should("receive no response when sending invalid request to broadcast address");
+        check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]) {htons(0)}, 2));
+        expect(nmbs_receive_raw_pdu_response(&CLIENT, (uint8_t*) raw_res, 4) == NMBS_ERROR_TIMEOUT);
+
+        should("receive no response when sending valid request to broadcast address");
+        check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]) {htons(0)}, 2));
+        expect(nmbs_receive_raw_pdu_response(&CLIENT, (uint8_t*) raw_res, 4) == NMBS_ERROR_TIMEOUT);
+    }
+
+    stop_client_and_server();
+}
+
+
 nmbs_transport transports[2] = {NMBS_TRANSPORT_RTU, NMBS_TRANSPORT_TCP};
 const char* transports_str[2] = {"RTU", "TCP"};
+
+// nmbs_transport transports[1] = {NMBS_TRANSPORT_TCP};
+// const char* transports_str[1] = {"TCP"};
+
+// nmbs_transport transports[1] = {NMBS_TRANSPORT_RTU};
+// const char* transports_str[1] = {"RTU"};
+
 
 void for_transports(void (*test_fn)(nmbs_transport), const char* should_str) {
     for (unsigned long t = 0; t < sizeof(transports) / sizeof(nmbs_transport); t++) {
@@ -1498,6 +1632,6 @@ int main(int argc, char* argv[]) {
     for_transports(test_fc23, "send and receive FC 23 (0x17) Read/Write Multiple Registers");
 
     for_transports(test_fc43_14, "send and receive FC 43 / 14 (0x2B / 0x0E) Read Device Identification");
-
+    for_transports(test_fc24, "send and receive FC 24 (0x18) Read Fifo Queue Registers");
     return 0;
 }

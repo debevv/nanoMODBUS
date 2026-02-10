@@ -900,6 +900,43 @@ nmbs_error recv_read_device_identification_res(nmbs_t* nmbs, uint8_t buffers_cou
     return recv_msg_footer(nmbs);
 }
 
+//->new_fc_0x18
+#if !defined(NMBS_CLIENT_DISABLED) || (!defined(NMBS_SERVER_DISABLED) && !defined(NMBS_SERVER_READ_FIFO_QUEUE_DISABLED))
+static nmbs_error recv_read_fifo_queue_registers(nmbs_t* nmbs, uint16_t* quantity, uint16_t* registers) {
+    nmbs_error err = recv_res_header(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    err = recv(nmbs, 2);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    const uint8_t registers_bytes = get_2(nmbs);
+    NMBS_DEBUG_PRINT("b %d\t", registers_bytes);
+
+    if (registers_bytes > 62)
+        return NMBS_ERROR_INVALID_RESPONSE;
+
+    err = recv(nmbs, registers_bytes);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    NMBS_DEBUG_PRINT("regs ");
+    for (int i = 0; i < registers_bytes / 2; i++) {
+        uint16_t reg = get_2(nmbs);
+        if (registers)
+            registers[i] = reg;
+        NMBS_DEBUG_PRINT("%d ", reg);
+    }
+    err = recv_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    *quantity = registers_bytes / 2;
+    return NMBS_ERROR_NONE;
+}
+#endif
+//<-new_fc_0x18
 
 #ifndef NMBS_SERVER_DISABLED
 #if !defined(NMBS_SERVER_READ_COILS_DISABLED) || !defined(NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED)
@@ -1805,6 +1842,73 @@ static nmbs_error handle_read_device_identification(nmbs_t* nmbs) {
 }
 #endif
 
+//new_fc_0x18->
+#ifndef NMBS_SERVER_READ_FIFO_QUEUE
+static nmbs_error handle_read_fifo_queue(nmbs_t* nmbs) {
+
+    nmbs_error err = recv(nmbs, 2);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+
+    const int32_t fifo_pointer_address = get_2(nmbs);
+
+
+    NMBS_DEBUG_PRINT("a %d\tq 0", fifo_pointer_address);
+
+    err = recv_msg_footer(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    if (!nmbs->msg.ignored) {
+        //  trange condition check
+        //  MODBUS Application Protocol Specification
+        if ((fifo_pointer_address < 0) || (fifo_pointer_address > 65535))
+            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS);
+
+        if (nmbs->callbacks.read_fifo) {
+            uint16_t regs[32] = {0};
+            uint16_t fifo_sz = 0;
+            err = nmbs->callbacks.read_fifo((uint16_t) fifo_pointer_address, regs, &fifo_sz, nmbs->msg.unit_id,
+                                            nmbs->callbacks.arg);
+            if (err != NMBS_ERROR_NONE) {
+                if (nmbs_error_is_exception(err))
+                    return send_exception_msg(nmbs, err);
+
+                return send_exception_msg(nmbs, NMBS_EXCEPTION_SERVER_DEVICE_FAILURE);
+            }
+
+            if (!nmbs->msg.broadcast) {
+                const uint8_t regs_bytes = fifo_sz * 2;
+                put_res_header(nmbs, 2 + regs_bytes);
+
+                put_2(nmbs, regs_bytes);
+
+                NMBS_DEBUG_PRINT("b %d\t", regs_bytes);
+
+                NMBS_DEBUG_PRINT("regs ");
+                for (int i = 0; i < fifo_sz; i++) {
+                    put_2(nmbs, regs[i]);
+                    NMBS_DEBUG_PRINT("%d ", regs[i]);
+                }
+
+                err = send_msg(nmbs);
+                if (err != NMBS_ERROR_NONE)
+                    return err;
+            }
+        }
+        else {
+            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_FUNCTION);
+        }
+    }
+    else {
+        //return recv_read_registers_res(nmbs, quantity, NULL);
+    }
+
+    return NMBS_ERROR_NONE;
+}
+#endif
+//<-new_fc_0x18
 
 static nmbs_error handle_req_fc(nmbs_t* nmbs) {
     NMBS_DEBUG_PRINT("fc %d\t", nmbs->msg.fc);
@@ -1882,6 +1986,16 @@ static nmbs_error handle_req_fc(nmbs_t* nmbs) {
             err = handle_read_device_identification(nmbs);
             break;
 #endif
+
+//new_fc_0x18->
+#ifndef NMBS_SERVER_READ_FIFO_QUEUE_DISABLED
+        case 24:
+            err = handle_read_fifo_queue(nmbs);
+            break;
+#endif
+            //<-new_fc_0x18
+
+
         default:
             nmbs->platform.flush(nmbs, nmbs->platform.arg);
             if (!nmbs->msg.ignored)
@@ -2411,6 +2525,27 @@ nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, uint8_t* data_out, uint8_
 
     return NMBS_ERROR_NONE;
 }
+
+nmbs_error nmbs_read_fifo_queue(nmbs_t* nmbs, uint16_t address, uint16_t* read_quantity, uint16_t* registers_out) {
+
+
+    // if ((uint32_t) address > ((uint32_t) 0xFFFF))
+    //     return NMBS_ERROR_INVALID_ARGUMENT;
+
+    msg_state_req(nmbs, 24);
+    put_req_header(nmbs, 2);
+
+    put_2(nmbs, address);
+
+    NMBS_DEBUG_PRINT("a %d\tq %d ", address, 0);
+
+    const nmbs_error err = send_msg(nmbs);
+    if (err != NMBS_ERROR_NONE)
+        return err;
+
+    return recv_read_fifo_queue_registers(nmbs, read_quantity, registers_out);
+}
+//<-new_fc_0x18
 #endif
 
 

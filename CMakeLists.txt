@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
 project(nanomodbus C)
+#set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -pedantic -Wswitch-enum -Wcast-qual -Woverflow")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -g0")
+
 
 include_directories(tests examples/linux .)
 
@@ -13,10 +15,12 @@ add_library(nanomodbus nanomodbus.c)
 target_include_directories(nanomodbus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if (BUILD_EXAMPLES)
-    add_executable(client-tcp examples/linux/client-tcp.c)
-    target_link_libraries(client-tcp nanomodbus)
-    add_executable(server-tcp examples/linux/server-tcp.c)
-    target_link_libraries(server-tcp nanomodbus)
+    if(!WIN32)
+        add_executable(client-tcp examples/linux/client-tcp.c)
+        target_link_libraries(client-tcp nanomodbus)
+        add_executable(server-tcp examples/linux/server-tcp.c)
+        target_link_libraries(server-tcp nanomodbus)
+    endif()
 endif ()
 
 if (BUILD_TESTS)
@@ -32,6 +36,10 @@ if (BUILD_TESTS)
     add_executable(multi_server_rtu nanomodbus.c tests/multi_server_rtu.c)
     target_compile_definitions(multi_server_rtu PUBLIC NMBS_DEBUG)
     target_link_libraries(multi_server_rtu pthread)
+
+    if(WIN32)
+        target_link_libraries(nanomodbus_tests ws2_32 )
+    endif()
 
     enable_testing()
     add_test(NAME test_general COMMAND $<TARGET_FILE:nanomodbus_tests>)
