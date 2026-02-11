@@ -900,9 +900,7 @@ nmbs_error recv_read_device_identification_res(nmbs_t* nmbs, uint8_t buffers_cou
     return recv_msg_footer(nmbs);
 }
 
-//->new_fc_0x18
-#if !defined(NMBS_CLIENT_DISABLED) || (!defined(NMBS_SERVER_DISABLED) && !defined(NMBS_SERVER_READ_FIFO_QUEUE_DISABLED))
-static nmbs_error recv_read_fifo_queue_registers(nmbs_t* nmbs, uint16_t* quantity, uint16_t* registers) {
+nmbs_error recv_read_fifo_queue_registers(nmbs_t* nmbs, uint16_t* quantity, uint16_t* registers) {
     nmbs_error err = recv_res_header(nmbs);
     if (err != NMBS_ERROR_NONE)
         return err;
@@ -935,7 +933,6 @@ static nmbs_error recv_read_fifo_queue_registers(nmbs_t* nmbs, uint16_t* quantit
     *quantity = registers_bytes / 2;
     return NMBS_ERROR_NONE;
 }
-#endif
 
 #ifndef NMBS_SERVER_DISABLED
 #if !defined(NMBS_SERVER_READ_COILS_DISABLED) || !defined(NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED)

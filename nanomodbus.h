@@ -542,7 +542,6 @@ nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const uint8_t* data, uint
  */
 nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, uint8_t* data_out, uint8_t data_out_len);
 
-//->new_fc_0x18
 /* Send a FC 24 (0x18) Read fifo queues
  * @param nmbs pointer to the nmbs_t instance
  * @param address starting address
