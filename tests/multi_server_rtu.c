@@ -1,3 +1,16 @@
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#endif
+#ifdef _WIN32
+#include <windows.h>
+typedef SOCKET socket_t;
+#else
+#include <netinet/in.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#endif
+
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
