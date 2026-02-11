@@ -2,10 +2,11 @@
 #include "nanomodbus.h"
 #undef NDEBUG
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #endif
+
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 typedef SOCKET socket_t;
@@ -276,7 +277,7 @@ void start_client_and_server(nmbs_transport transport, const nmbs_callbacks* ser
     expect(pthread_create(&server_thread, NULL, server_listen_thread, &SERVER) == 0);
 }
 
-
+#if defined(_WIN32) || defined(_WIN64)
 int create_socket_pair(SOCKET socks[2]) {
 
     WSACleanup();
@@ -307,3 +308,4 @@ int create_socket_pair(SOCKET socks[2]) {
     closesocket(listener);
     return 0;
 }
+#endif
