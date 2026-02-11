@@ -30,6 +30,7 @@ Its main features are:
     - 21 (0x15) Write File Record
     - 23 (0x17) Read/Write Multiple registers
     - 43/14 (0x2B/0x0E) Read Device Identification
+    - 24 (0x18) Read Fifo Queue
 - Platform-agnostic
     - Requires only C99 and its standard library
     - Data transport read/write functions are implemented by the user
@@ -198,6 +199,7 @@ examples.
         - `NMBS_SERVER_WRITE_FILE_RECORD_DISABLED`
         - `NMBS_SERVER_READ_WRITE_REGISTERS_DISABLED`
         - `NMBS_SERVER_READ_DEVICE_IDENTIFICATION_DISABLED`
+        - `NMBS_SERVER_READ_FIFO_QUEUE`
     - `NMBS_STRERROR_DISABLED` to disable the code that converts `nmbs_error`s to strings
     - `NMBS_BITFIELD_MAX` to set the size of the `nmbs_bitfield` type, used to store coil values (
       default is `2000`)

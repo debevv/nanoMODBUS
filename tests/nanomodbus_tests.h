@@ -6,7 +6,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #endif
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 typedef SOCKET socket_t;
 #else
@@ -236,10 +236,6 @@ void* server_listen_thread(void* arg) {
         if (is_server_listen_thread_stopped())
             break;
         check(nmbs_server_poll(&SERVER));
-        // nmbs_error err = nmbs_server_poll(&SERVER);
-        // asm("nop");
-        // printf("server err: %d\n", err);
-        // check(err);
     }
 
     return NULL;

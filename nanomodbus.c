@@ -936,7 +936,6 @@ static nmbs_error recv_read_fifo_queue_registers(nmbs_t* nmbs, uint16_t* quantit
     return NMBS_ERROR_NONE;
 }
 #endif
-//<-new_fc_0x18
 
 #ifndef NMBS_SERVER_DISABLED
 #if !defined(NMBS_SERVER_READ_COILS_DISABLED) || !defined(NMBS_SERVER_READ_DISCRETE_INPUTS_DISABLED)
@@ -1842,7 +1841,6 @@ static nmbs_error handle_read_device_identification(nmbs_t* nmbs) {
 }
 #endif
 
-//new_fc_0x18->
 #ifndef NMBS_SERVER_READ_FIFO_QUEUE
 static nmbs_error handle_read_fifo_queue(nmbs_t* nmbs) {
 
@@ -1908,7 +1906,6 @@ static nmbs_error handle_read_fifo_queue(nmbs_t* nmbs) {
     return NMBS_ERROR_NONE;
 }
 #endif
-//<-new_fc_0x18
 
 static nmbs_error handle_req_fc(nmbs_t* nmbs) {
     NMBS_DEBUG_PRINT("fc %d\t", nmbs->msg.fc);
@@ -1987,14 +1984,11 @@ static nmbs_error handle_req_fc(nmbs_t* nmbs) {
             break;
 #endif
 
-//new_fc_0x18->
 #ifndef NMBS_SERVER_READ_FIFO_QUEUE_DISABLED
         case 24:
             err = handle_read_fifo_queue(nmbs);
             break;
 #endif
-            //<-new_fc_0x18
-
 
         default:
             nmbs->platform.flush(nmbs, nmbs->platform.arg);
@@ -2545,7 +2539,6 @@ nmbs_error nmbs_read_fifo_queue(nmbs_t* nmbs, uint16_t address, uint16_t* read_q
 
     return recv_read_fifo_queue_registers(nmbs, read_quantity, registers_out);
 }
-//<-new_fc_0x18
 #endif
 
 

@@ -1,11 +1,15 @@
 #include "nanomodbus_tests.h"
 #include "nanomodbus.h"
 
-// #include <cstdio>
-// #include <cstdint>
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <string.h>
+#if defined(_WIN32) || defined(_WIN64)
+#else
+#include <netinet/in.h>
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 
 // #define NMBS_DEBUG
 
@@ -1462,8 +1466,8 @@ void test_fc43_14(nmbs_transport transport) {
     stop_client_and_server();
 }
 
-//new_fc_0x18->
-#define fifo_max_size 31
+// #define fifo_max_size 31
+enum SZ { fifo_max_size = 31 };
 static uint16_t server_fifo_sz = 0;
 static uint16_t fifo_head_adr = 0x0000;
 static uint16_t server_regs[fifo_max_size] = {10, 11, 12, 13, 14, 15, 16, 17, 10, 11, 12, 13, 14, 15, 16, 17,
@@ -1488,11 +1492,11 @@ nmbs_error server_read_fifo(uint16_t address, uint16_t* registers, uint16_t* siz
 
     registers[0] = *size = server_fifo_sz;
 
-    for (uint16_t i = 0; i < *size; i++)
+    for (int i = 0; i < *size; i++)
         registers[i + 1] = server_regs[i];
 
 
-    for (uint16_t i = 0; i < fifo_max_size; i++) {
+    for (int i = 0; i < fifo_max_size; i++) {
         if (i < (fifo_max_size - *size))
             server_regs[i] = server_regs[i + *size];
         else
@@ -1503,8 +1507,6 @@ nmbs_error server_read_fifo(uint16_t address, uint16_t* registers, uint16_t* siz
 
     return NMBS_ERROR_NONE;
 }
-//<-new_fc_0x18
-
 
 void test_fc24(nmbs_transport transport) {
     const uint8_t fc = 24;
@@ -1553,7 +1555,6 @@ void test_fc24(nmbs_transport transport) {
     should("read with no error");
     check(nmbs_read_fifo_queue(&CLIENT, 0, &quantity_read, regs));
     expect((regs[0] == server_fifo_sz) && (quantity_read == (server_fifo_sz + 1)));
-    asm("NOP");
     expect(regs[1] == 10);
     expect(regs[2] == 11);
     expect(regs[3] == 12);
@@ -1562,7 +1563,6 @@ void test_fc24(nmbs_transport transport) {
     expect(regs[6] == 15);
     expect(regs[7] == 16);
     expect(regs[8] == 17);
-    asm("NOP");
 
     server_fifo_sz = 0;
     if (transport == NMBS_TRANSPORT_RTU) {

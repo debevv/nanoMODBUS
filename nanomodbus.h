@@ -236,13 +236,10 @@ typedef struct nmbs_callbacks {
 #endif
 #endif
 
-//new_fc_0x18->
 #ifndef NMBS_SERVER_READ_FIFO_QUEUE
     nmbs_error (*read_fifo_sz)(uint16_t address);
     nmbs_error (*read_fifo)(uint16_t address, uint16_t* registers_out, uint16_t* fifo_size, uint8_t unit_id, void* arg);
 #endif
-    //<-new_fc_0x18
-
 
     void* arg;               // User data, will be passed to functions above
     uint32_t initialized;    // Reserved, workaround for older user code not calling nmbs_callbacks_create()
@@ -546,7 +543,7 @@ nmbs_error nmbs_send_raw_pdu(nmbs_t* nmbs, uint8_t fc, const uint8_t* data, uint
 nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, uint8_t* data_out, uint8_t data_out_len);
 
 //->new_fc_0x18
-/* Send a FC 24 (0x04) Read fifo queues
+/* Send a FC 24 (0x18) Read fifo queues
  * @param nmbs pointer to the nmbs_t instance
  * @param address starting address
  * @param quantity quantity of read registers
@@ -556,8 +553,6 @@ nmbs_error nmbs_receive_raw_pdu_response(nmbs_t* nmbs, uint8_t* data_out, uint8_
  */
 
 nmbs_error nmbs_read_fifo_queue(nmbs_t* nmbs, uint16_t address, uint16_t* read_quantity, uint16_t* registers_out);
-//<-new_fc_0x18
-
 #endif
 
 /** Calculate the Modbus CRC of some data.
