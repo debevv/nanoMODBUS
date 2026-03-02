@@ -1,3 +1,34 @@
+
+<div align="right">
+  <details>
+    <summary >🌐 Language</summary>
+    <div>
+      <div align="center">
+        <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=en">English</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=zh-CN">简体中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=zh-TW">繁體中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=ja">日本語</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=ko">한국어</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=hi">हिन्दी</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=th">ไทย</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=fr">Français</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=de">Deutsch</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=es">Español</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=it">Italiano</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=ru">Русский</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=pt">Português</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=nl">Nederlands</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=pl">Polski</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=ar">العربية</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=fa">فارسی</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=tr">Türkçe</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=vi">Tiếng Việt</a>
+        | <a href="https://openaitx.github.io/view.html?user=debevv&project=nanoMODBUS&lang=id">Bahasa Indonesia</a>
+      </div>
+    </div>
+  </details>
+</div>
+
 # nanoMODBUS - A compact MODBUS RTU/TCP C library for embedded/microcontrollers
 
 **If you found this library useful, buy me a coffee on**
