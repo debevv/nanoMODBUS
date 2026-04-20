@@ -1177,9 +1177,6 @@ static nmbs_error handle_write_multiple_coils(nmbs_t* nmbs) {
 
     NMBS_DEBUG_PRINT("a %d\tq %d\tb %d\tcoils ", address, quantity, coils_bytes);
 
-    if (coils_bytes > 246)
-        return NMBS_ERROR_INVALID_REQUEST;
-
     err = recv(nmbs, coils_bytes);
     if (err != NMBS_ERROR_NONE)
         return err;
