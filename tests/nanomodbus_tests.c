@@ -822,8 +822,14 @@ void test_fc15(nmbs_transport transport) {
     check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(1), htons(0), htons(0x0100)}, 6));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
-    should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE from server when calling with quantity > 2000");
-    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*) (uint16_t[]){htons(1), htons(2000), htons(0x0100)}, 6));
+    should("return NMBS_EXCEPTION_ILLEGAL_DATA_VALUE from server when calling with quantity > 0x07B0");
+
+    const uint16_t max_multiple_coil_pdu_size = 5 + 247;
+    uint16_t pdu_data[3+123] = {0};
+    pdu_data[0] = htons(1);
+    pdu_data[1] = htons(0x07B1);
+    pdu_data[2] = htons(0xF700);
+    check(nmbs_send_raw_pdu(&CLIENT, fc, (uint8_t*)pdu_data, max_multiple_coil_pdu_size));
     expect(nmbs_receive_raw_pdu_response(&CLIENT, raw_res, 2) == NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
 
     should("return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS from server when calling with address + quantity > 0xFFFF + 1");
