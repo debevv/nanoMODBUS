@@ -368,7 +368,7 @@ static nmbs_error recv_msg_header(nmbs_t* nmbs, bool* first_byte_received) {
         nmbs->msg.unit_id = get_1(nmbs);
         nmbs->msg.fc = get_1(nmbs);
 
-        if (length < 2 || length > 255)
+        if (length < 2 || length > 254)
             return NMBS_ERROR_INVALID_TCP_MBAP;
 
         // Receive the rest of the message
