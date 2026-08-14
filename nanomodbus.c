@@ -138,8 +138,12 @@ static void put_regs(nmbs_t* nmbs, const uint16_t* data, uint16_t n) {
 
 
 static void swap_regs(uint16_t* data, uint16_t n) {
-    while (n--) {
-        data[n] = (data[n] << 8) | ((data[n] >> 8) & 0xFF);
+    // Swap bytes in place to avoid unaligned 16-bit access, which hardfaults on e.g. Cortex-M0/M0+
+    uint8_t* bytes = (uint8_t*) data;
+    for (uint16_t i = 0; i < n; i++) {
+        uint8_t tmp = bytes[2 * i];
+        bytes[2 * i] = bytes[2 * i + 1];
+        bytes[2 * i + 1] = tmp;
     }
 }
 
