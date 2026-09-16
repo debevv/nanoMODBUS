@@ -43,6 +43,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/**
+ * Optionally include a user config to configure nanoMODBUS.
+ */
+#ifdef NMBS_USER_CONFIG
+ #include "nanomodbus_conf.h"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
