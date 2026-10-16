@@ -175,8 +175,8 @@ typedef struct nmbs_platform_conf {
 /**
  * Modbus server request callbacks. Passed to nmbs_server_create().
  *
- * These methods accept a pointer to arbitrary user data, which is the arg member of the nmbs_platform_conf that was passed
- * to nmbs_server_create together with this struct.
+ * These methods accept a pointer to arbitrary user data, which is the arg member of this struct.
+ * After the creation of an instance it can be changed with nmbs_set_callbacks_arg().
  *
  * `unit_id` is the RTU unit ID of the request sender. It is always 0 on TCP.
  */
@@ -308,7 +308,7 @@ void nmbs_set_platform_arg(nmbs_t* nmbs, void* arg);
 void nmbs_callbacks_create(nmbs_callbacks* callbacks);
 
 /** Create a new Modbus server.
- * @param nmbs pointer to the nmbs_t instance where the client will be created.
+ * @param nmbs pointer to the nmbs_t instance where the server will be created.
  * @param address_rtu RTU address of this server. Can be 0 if transport is not RTU.
  * @param platform_conf nmbs_platform_conf struct with platform configuration. It may be discarded after calling this method.
  * @param callbacks nmbs_callbacks struct with server request callbacks. It may be discarded after calling this method.
