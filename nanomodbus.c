@@ -521,16 +521,16 @@ static nmbs_error recv_res_header(nmbs_t* nmbs) {
 static void put_req_header(nmbs_t* nmbs, uint16_t data_length) {
     put_msg_header(nmbs, data_length);
 #ifdef NMBS_DEBUG
-    printf("%d ", nmbs->address_rtu);
-    printf("NMBS req -> ");
+    NMBS_DEBUG_PRINT("%d ", nmbs->address_rtu);
+    NMBS_DEBUG_PRINT("NMBS req -> ");
     if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
         if (nmbs->msg.broadcast)
-            printf("broadcast\t");
+            NMBS_DEBUG_PRINT("broadcast\t");
         else
-            printf("address_rtu %d\t", nmbs->dest_address_rtu);
+            NMBS_DEBUG_PRINT("address_rtu %d\t", nmbs->dest_address_rtu);
     }
 
-    printf("fc %d\t", nmbs->msg.fc);
+    NMBS_DEBUG_PRINT("fc %d\t", nmbs->msg.fc);
 #endif
 }
 #endif
@@ -1930,13 +1930,13 @@ nmbs_error nmbs_server_poll(nmbs_t* nmbs) {
     }
 
 #ifdef NMBS_DEBUG
-    printf("%d ", nmbs->address_rtu);
-    printf("NMBS req <- ");
+    NMBS_DEBUG_PRINT("%d ", nmbs->address_rtu);
+    NMBS_DEBUG_PRINT("NMBS req <- ");
     if (nmbs->platform.transport == NMBS_TRANSPORT_RTU) {
         if (nmbs->msg.broadcast)
-            printf("broadcast\t");
+            NMBS_DEBUG_PRINT("broadcast\t");
         else
-            printf("address_rtu %d\t", nmbs->msg.unit_id);
+            NMBS_DEBUG_PRINT("address_rtu %d\t", nmbs->msg.unit_id);
     }
 #endif
 
