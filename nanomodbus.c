@@ -818,8 +818,9 @@ nmbs_error recv_write_file_record_res(nmbs_t* nmbs, uint16_t file_number, uint16
 }
 
 nmbs_error recv_read_device_identification_res(nmbs_t* nmbs, uint8_t buffers_count, char** buffers_out,
-                                               uint8_t buffers_length, const uint8_t* order, uint8_t* ids_out,
-                                               uint8_t* next_object_id_out, uint8_t* objects_count_out) {
+                                               uint8_t buffers_length, const uint8_t* order, uint8_t order_length,
+                                               uint8_t* ids_out, uint8_t* next_object_id_out,
+                                               uint8_t* objects_count_out) {
     nmbs_error err = recv_res_header(nmbs);
     if (err != NMBS_ERROR_NONE)
         return err;
@@ -885,15 +886,23 @@ nmbs_error recv_read_device_identification_res(nmbs_t* nmbs, uint8_t buffers_cou
             ids_out[i] = object_id;
 
         uint8_t buf_index = i;
-        if (order)
+        if (order) {
+            // object_id comes from the wire: never use it to index order[] unchecked
+            if (object_id >= order_length)
+                return NMBS_ERROR_INVALID_RESPONSE;
             buf_index = order[object_id];
+        }
         if (buffers_out) {
-#ifndef _WIN32
-            strncpy(buffers_out[buf_index], str, buffers_length);
-#else
-            strncpy_s(buffers_out[buf_index], buffers_length, str, object_length);
-#endif
-            buffers_out[buf_index][object_length] = 0;
+            if (buf_index >= buffers_count)
+                return NMBS_ERROR_INVALID_RESPONSE;
+
+            // object_length comes from the wire: never write more than the caller's buffer can hold,
+            // NUL terminator included. Longer values are truncated.
+            if (buffers_length > 0) {
+                const uint8_t copy_length = object_length < buffers_length ? object_length : buffers_length - 1;
+                memcpy(buffers_out[buf_index], str, copy_length);
+                buffers_out[buf_index][copy_length] = 0;
+            }
         }
     }
 
@@ -1347,7 +1356,7 @@ static nmbs_error handle_read_file_record(nmbs_t* nmbs) {
     subreq[subreq_count];
 #endif
 
-    uint8_t response_data_size = 0;
+    uint32_t response_data_size = 0;    // wide on purpose: up to 35 sub-requests of up to 65535 records each
 
     for (uint8_t i = 0; i < subreq_count; i++) {
         subreq[i].reference_type = get_1(nmbs);
@@ -1355,7 +1364,7 @@ static nmbs_error handle_read_file_record(nmbs_t* nmbs) {
         subreq[i].record_number = get_2(nmbs);
         subreq[i].record_length = get_2(nmbs);
 
-        response_data_size += 2 + (subreq[i].record_length * 2);
+        response_data_size += 2 + ((uint32_t) subreq[i].record_length * 2);
     }
 
     discard_n(nmbs, request_size % subreq_header_size);
@@ -1388,8 +1397,12 @@ static nmbs_error handle_read_file_record(nmbs_t* nmbs) {
                              subreq[i].record_length);
         }
 
-        put_res_header(nmbs, 1 + response_data_size);
-        put_1(nmbs, response_data_size);
+        // The whole response must fit in a single PDU (max 253 bytes = function code + length byte + 251 data bytes)
+        if (response_data_size > 251)
+            return send_exception_msg(nmbs, NMBS_EXCEPTION_ILLEGAL_DATA_VALUE);
+
+        put_res_header(nmbs, (uint8_t) (1 + response_data_size));
+        put_1(nmbs, (uint8_t) response_data_size);
 
         if (nmbs->callbacks.read_file_record) {
             for (uint8_t i = 0; i < subreq_count; i++) {
@@ -1798,7 +1811,7 @@ static nmbs_error handle_read_device_identification(nmbs_t* nmbs) {
         }
     }
     else {
-        return recv_read_device_identification_res(nmbs, 0, NULL, 0, NULL, NULL, NULL, NULL);
+        return recv_read_device_identification_res(nmbs, 0, NULL, 0, NULL, 0, NULL, NULL, NULL);
     }
 
     return NMBS_ERROR_NONE;
@@ -2265,7 +2278,7 @@ nmbs_error nmbs_read_device_identification_basic(nmbs_t* nmbs, char* vendor_name
             return err;
 
         uint8_t objects_received = 0;
-        err = recv_read_device_identification_res(nmbs, 3, buffers, buffers_length, order, NULL, &next_object_id,
+        err = recv_read_device_identification_res(nmbs, 3, buffers, buffers_length, order, 3, NULL, &next_object_id,
                                                   &objects_received);
         if (err != NMBS_ERROR_NONE)
             return err;
@@ -2301,7 +2314,7 @@ nmbs_error nmbs_read_device_identification_regular(nmbs_t* nmbs, char* vendor_ur
             return err;
 
         uint8_t objects_received = 0;
-        err = recv_read_device_identification_res(nmbs, 4, buffers, buffers_length, order, NULL, &next_object_id,
+        err = recv_read_device_identification_res(nmbs, 4, buffers, buffers_length, order, 7, NULL, &next_object_id,
                                                   &objects_received);
         if (err != NMBS_ERROR_NONE)
             return err;
@@ -2340,7 +2353,7 @@ nmbs_error nmbs_read_device_identification_extended(nmbs_t* nmbs, uint8_t object
 
         uint8_t objects_received = 0;
         err = recv_read_device_identification_res(nmbs, ids_length - total_received, &buffers[total_received],
-                                                  buffer_length, NULL, &ids[total_received], &next_object_id,
+                                                  buffer_length, NULL, 0, &ids[total_received], &next_object_id,
                                                   &objects_received);
         if (err != NMBS_ERROR_NONE)
             return err;
@@ -2369,7 +2382,7 @@ nmbs_error nmbs_read_device_identification(nmbs_t* nmbs, uint8_t object_id, char
         return err;
 
     char* buf[1] = {buffer};
-    return recv_read_device_identification_res(nmbs, 1, buf, buffer_length, NULL, NULL, NULL, NULL);
+    return recv_read_device_identification_res(nmbs, 1, buf, buffer_length, NULL, 0, NULL, NULL, NULL);
 }
 
 
